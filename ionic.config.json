@@ -1,0 +1,8 @@
+{
+  "name": "Enforcement Pro",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "id": "cd261c82"
+}
