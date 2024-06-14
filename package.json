@@ -1,8 +1,8 @@
 {
   "name": "enforcement-pro",
   "version": "0.0.1",
-  "author": "Ionic Framework",
-  "homepage": "https://ionicframework.com/",
+  "author": "Gomolemo Kekana",
+  "homepage": "https://www.nationalenforcementsolutions.co.uk/",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -22,7 +22,9 @@
     "@angular/platform-browser-dynamic": "^18.0.0",
     "@angular/router": "^18.0.0",
     "@ionic/angular": "^8.0.0",
+    "bootstrap": "^5.3.3",
     "ionicons": "^7.0.0",
+    "leaflet": "^1.9.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.2"
@@ -39,6 +41,7 @@
     "@angular/language-service": "^18.0.0",
     "@ionic/angular-toolkit": "^11.0.1",
     "@types/jasmine": "~5.1.0",
+    "@types/leaflet": "^1.9.12",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.57.0",
@@ -54,5 +57,8 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.4.0"
   },
-  "description": "An Ionic project"
+  "description": "enforcement Pro Mobile Application",
+  "config": {
+      "ionic_sass": "./sass.config.js" 
+  }
 }
