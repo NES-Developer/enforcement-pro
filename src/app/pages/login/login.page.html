@@ -12,7 +12,6 @@
  
 	<body class="img js-fullheight" style="background-image: url(assets/bg.png);">
 	<section class="ftco-section">
-        hi
 		<div class="container">
 			<div class="row justify-content-center">
 				<div class="col-md-6 text-center mb-5">
@@ -27,18 +26,21 @@
 					<div class="login-wrap p-0">
 		      	<h3 class="mb-4 text-center">Enforcement Pro</h3>
                 <h5 class="text-center text-white">Welcome Back, Let's Login</h5>
-		      	<form action="#" class="signin-form">
-		      		<div class="form-group">
-		      			<input type="number" name="id" class="form-control text-center" placeholder="ID" required>
-		      		</div>
-	            <div class="form-group">
-	              <input name="pin" id="pin-field" type="number" class="form-control text-center" placeholder="Pin" required>
-	              <span toggle="#pin-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
-	            </div>
-	            <div class="form-group">
-	            	<button type="submit" class="form-control btn btn-primary submit px-3">Sign In</button>
-	            </div>
-	          </form>
+                <!-- src/app/pages/login/login.page.html -->
+
+<form (submit)="onSubmit($event)" class="signin-form">
+    <div class="form-group">
+      <input #idInput type="number" name="id" class="form-control text-center" placeholder="ID" required>
+    </div>
+    <div class="form-group">
+      <input #pinInput name="pin" id="pin-field" type="number" class="form-control text-center" placeholder="Pin" required>
+      <span toggle="#pin-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+    </div>
+    <div class="form-group">
+      <button type="submit" class="form-control btn btn-primary submit px-3">Sign In</button>
+    </div>
+  </form>
+  
 
 		      </div>
 				</div>
@@ -46,13 +48,7 @@
 		</div>
 	</section>
 
-	<script src="js/jquery.min.js"></script>
-  <script src="js/popper.js"></script>
-  <script src="js/bootstrap.min.js"></script>
-  <script src="js/main.js"></script>
-
 	</body>
 
-hu
 
 </ion-content>
