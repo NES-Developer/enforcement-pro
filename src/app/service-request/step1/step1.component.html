@@ -59,6 +59,7 @@
 </ion-item>
 
 
+<!-- I want to assigned [(ngModel)] to the input and select below. But I want the variable we assign each input to be og a object called dynamic_form_data, exists as dynamic_form_data: any[] in the type script. After use data.id as the key and obiously the users input as the value of that key -->
 <div *ngIf="selected_request_type !== 0">
     <div *ngFor="let dynamic_feild of dynamic_feilds">
         <div *ngIf="dynamic_feild.request_type_id == selected_request_type">
@@ -66,20 +67,19 @@
                 <ion-label>{{ dynamic_feild.label }}</ion-label>
             </ion-item>
         
-            <ion-item *ngIf=" dynamic_feild.type == 'dropdown' && dynamic_feild.request_type_id == selected_request_type">
-                <ion-select interface="action-sheet" multiple="false" *ngIf="dynamic_feild.values.length > 0">
+            <ion-item *ngIf="dynamic_feild.type == 'dropdown' && dynamic_feild.request_type_id == selected_request_type" >
+                <ion-select interface="action-sheet" (ngModel)]="dynamic_form_data[dynamic_feild.id]" *ngIf="dynamic_feild.values.length > 0" >
                     <ion-select-option *ngFor="let value of dynamic_feild.values" [value]="value.id">{{ value.value }}</ion-select-option>
                 </ion-select>
-                <ion-select interface="action-sheet" multiple="false" *ngIf="dynamic_feild.values.length == 0  && dynamic_feild.request_type_id == selected_request_type">
+                <ion-select interface="action-sheet" (ngModel)]="dynamic_form_data[dynamic_feild.id]" *ngIf="dynamic_feild.values.length == 0  && dynamic_feild.request_type_id == selected_request_type">
                     <ion-select-option *ngFor="let data of dynamic_feild.data" [value]="data.id">{{ data.type_name }}</ion-select-option>
                 </ion-select>
             </ion-item>
 
             <ion-item *ngIf=" dynamic_feild.type == 'textarea' ">
-                <ion-input type="text" [(ngModel)]="dynamic_feild.value"></ion-input>
+                <ion-input type="text" (ngModel)]="dynamic_form_data[dynamic_feild.id]"></ion-input>
             </ion-item>
         </div>
-        
     </div>
 </div>
 

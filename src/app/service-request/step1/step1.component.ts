@@ -19,6 +19,8 @@ export class Step1Component  implements OnInit {
     sr_via: any[] = [];
     sites: any[] = [];
     
+    dynamic_form_data: any;
+    
     selected_request_type: number = 0;
     selected_complaint_option: number = 0;
     selected_officer: number = 0;
