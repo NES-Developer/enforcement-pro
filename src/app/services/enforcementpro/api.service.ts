@@ -42,12 +42,10 @@ export class ApiService {
         return this.http.get(url, { headers: this.getHeaders() });
     }
 
-    getOffenceTypes(siteId: number, id: number): Observable<any> {
-        const url = `${this.baseUrl}/app/sites/${siteId}/offence/${id}/types`;
+    getOffenceTypes(site_id: number, id: number): Observable<any> {
+        const url = `${this.baseUrl}/sites/${site_id}/offence/${id}/types`;
         return this.http.get(url, { headers: this.getHeaders() });
     }
-
-    
 
     get(endpoint: string): Observable<any> {
         const url = `${this.baseUrl}/${endpoint}`;

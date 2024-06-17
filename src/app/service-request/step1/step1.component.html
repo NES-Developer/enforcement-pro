@@ -58,156 +58,30 @@
     </ion-select>
 </ion-item>
 
-<!-- Type of Land option -->
-<ion-item>
-    <ion-label>Type of Land (Customer Perception)</ion-label>
-</ion-item>
-<ion-item>
-    <ion-select interface="action-sheet" multiple="false" [(ngModel)]="selected_offence_type">
-    </ion-select>    
-</ion-item>
 
-<!-- Type of waste text -->
-<ion-item>
-    <ion-label>Type of Waste</ion-label>
-</ion-item>
-<ion-item>
-    <ion-input interface="action-sheet"/>
-</ion-item>
+<div *ngIf="selected_request_type !== 0">
+    <div *ngFor="let dynamic_feild of dynamic_feilds">
+        <div *ngIf="dynamic_feild.request_type_id == selected_request_type">
+                <ion-item>
+                <ion-label>{{ dynamic_feild.label }}</ion-label>
+            </ion-item>
+        
+            <ion-item *ngIf=" dynamic_feild.type == 'dropdown' && dynamic_feild.request_type_id == selected_request_type">
+                <ion-select interface="action-sheet" multiple="false" *ngIf="dynamic_feild.values.length > 0">
+                    <ion-select-option *ngFor="let value of dynamic_feild.values" [value]="value.id">{{ value.value }}</ion-select-option>
+                </ion-select>
+                <ion-select interface="action-sheet" multiple="false" *ngIf="dynamic_feild.values.length == 0  && dynamic_feild.request_type_id == selected_request_type">
+                    <ion-select-option *ngFor="let data of dynamic_feild.data" [value]="data.id">{{ data.type_name }}</ion-select-option>
+                </ion-select>
+            </ion-item>
 
-<!-- hazard confirmation option -->
-<ion-item>
-  <ion-label>Do you consider the waste to be a hazardous</ion-label>
-</ion-item>
-<ion-item>
-  <ion-select interface="action-sheet" multiple="false">
-  </ion-select>    
-</ion-item>
+            <ion-item *ngIf=" dynamic_feild.type == 'textarea' ">
+                <ion-input type="text" [(ngModel)]="dynamic_feild.value"></ion-input>
+            </ion-item>
+        </div>
+        
+    </div>
+</div>
 
-<!-- Type of further information text -->
-<ion-item>
-  <ion-label>Further Information (provided by complaint)</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"/>
-</ion-item>
 
-<ion-item>
-  <ion-label><strong><u>Witness Information</u></strong></ion-label>
-</ion-item>
 
-<!-- witness details text -->
-<ion-item>
-  <ion-label>Witness Details</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"/>
-</ion-item>
-
-<!-- further witness text -->
-<ion-item>
-  <ion-label>What did the complaint witness</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Witness 1 Full Name -->
-<ion-item>
-  <ion-label>Witness 1 - Full Name</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Witness 1 Full Address -->
-<ion-item>
-  <ion-label>Witness 1 - Full Address</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Witness 1 Telephone Number -->
-<ion-item>
-  <ion-label>Witness 1 - Telephone Number</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Witness 2 Full Name -->
-<ion-item>
-  <ion-label>Witness 2 - Full Name</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Witness 2 Full Address -->
-<ion-item>
-  <ion-label>Witness 2 - Full Address</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Witness 2 Telephone Number -->
-<ion-item>
-  <ion-label>Witness 2 - Telephone Number</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<ion-item>
-  <ion-label><strong><u>Vehicle Information</u></strong></ion-label>
-</ion-item>
-
-<!--Suspected Information -->
-<ion-item>
-  <ion-label>Suspected Vehicle</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Vehicle Registration Information -->
-<ion-item>
-  <ion-label>Vehicle Registration Mark</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Vehicle Make Information -->
-<ion-item>
-  <ion-label>Vehicle Make</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Vehicle Model Information -->
-<ion-item>
-  <ion-label>Vehicle Model</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Detail of incident Information -->
-<ion-item>
-  <ion-label>Details of the incident</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>
-
-<!-- Incident Description -->
-<ion-item>
-  <ion-label>Incident Description</ion-label>
-</ion-item>
-<ion-item>
-  <ion-input interface="action-sheet"></ion-input>
-</ion-item>

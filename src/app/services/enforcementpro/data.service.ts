@@ -115,6 +115,10 @@ export class DataService {
         return this.ethnicities.length > 0 && this.sites.length > 0 && this.request_types.length > 0;
     }
 
+    checkOffenceType(): boolean {
+        return this.offence_types.length > 0;
+    }
+
     checkSites(): boolean {
         return this.sites.length > 0;
     }

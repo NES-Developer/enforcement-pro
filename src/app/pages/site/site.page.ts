@@ -58,7 +58,8 @@ export class SitePage implements OnInit {
 
     loadData() {
         this.sites = this.data.getSites();
-        this.selected_site = this.data.getSelectedSite() || 0;
+        this.selected_site = this.data.getSelectedSite() || null;
+        this.url = this.data.getUrl();
     }
 
     getImageUrl(prefix: string) { 

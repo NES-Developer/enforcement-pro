@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ApiService } from 'src/app/services/enforcementpro/api.service';
 import { AuthService } from 'src/app/services/enforcementpro/auth.service';
 import { DataService } from 'src/app/services/enforcementpro/data.service';
@@ -22,39 +23,39 @@ export class Step1Component  implements OnInit {
     selected_complaint_option: number = 0;
     selected_officer: number = 0;
     selected_offence_type: number = 0;
-    selected_site: number = 0;
+    selected_site: any;
 
     constructor(
         private api: ApiService,
         private auth: AuthService,
-        private data: DataService
+        private data: DataService,
+        private router: Router
     ) { }
 
-    ngOnInit() {
-        if(this.data.checkSRData() !== true) {
-            this.getSRData();
+    ngOnInit(): void {
+        this.Init();
+    }
+
+    Init() {
+        this.auth.checkLoggedIn();
+
+        if (this.data.checkSelectedSite() == false) {
+            this.navigate('site');
         }
         else {
-            this.loadData();
+            this.selected_site = this.data.getSelectedSite();
         }
 
-
-
+        if(this.data.checkSRData() == false) {
+            this.getSRData();
+        }
+        
+        this.loadData();
     }
 
-    getOffenceTypes() {
-        this.api.getOffenceTypes(1,1).subscribe({
-            next: (data) => {
-              this.data.setOffenceType(data);
-              this.loadData();
-            },
-            error: (error) => {
-              console.error('Error fetching SR Data:', error);
-              // Handle error as needed
-            }
-        });
+    navigate(route: string){
+        this.router.navigate([route]);
     }
-
 
 
     getSRData(): void {
@@ -77,7 +78,6 @@ export class Step1Component  implements OnInit {
         this.request_types = this.data.getRequestTypes();
         this.sr_via = this.data.getSRVia();
         this.sites = this.data.getSites();
-        this.selected_site = this.data.getSelectedSite() || 0;
     }
 
 }

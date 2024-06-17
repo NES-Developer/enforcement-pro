@@ -48,19 +48,12 @@ export class HomePage implements OnInit {
 
     getImageUrl(prefix: string) { 
         let url: string = this.url + '/' + prefix;
-        console.log(url);
-
         return url;
     }
 
     loadData() {
-        // this.sites = this.data.getSites();
-        // console.log(this.sites);
-        // alert(1);
         this.selected_site = this.data.getSelectedSite() || null;
         this.url = this.data.getUrl();
-
-        console.log(this.selected_site);
     }
 
     onSiteChange() {
