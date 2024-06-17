@@ -6,6 +6,7 @@ import { AlertController } from '@ionic/angular';
 import { Injectable } from '@angular/core';
 
 import { Router } from '@angular/router'; // Import Router
+import { DataService } from './data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +20,7 @@ export class AuthService {
     constructor(
         private http: HttpClient,
         private router: Router,
+        private data: DataService
         // private alertController: AlertController
 
     ) {}
@@ -76,10 +78,8 @@ export class AuthService {
 
     checkLoggedIn() {
         if (this.getToken() === '' || this.getUser() === null) {
-            this.router.navigate(['login']);
-        } else {
-            this.router.navigate(['']);
-        }
+            this.router.navigate(['/login']);
+        } 
     }
       
 
@@ -89,6 +89,10 @@ export class AuthService {
 
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+
+        //User Data
+        localStorage.removeItem('selectedSite');
+        this.data.removeAllData();
 
         this.router.navigate(['/login']);
     }

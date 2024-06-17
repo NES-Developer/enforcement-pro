@@ -1,11 +1,12 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 
 import { Router } from '@angular/router'; // Import Router
 import { AuthService } from './auth.service';
+import { DataService } from './data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,9 +15,12 @@ export class ApiService {
 
     private baseUrl: string = 'https://uat.enforcementpro.co.uk/api/app';
 
+    holder: any;
+
     constructor(
         private http: HttpClient,
-        private auth: AuthService // Inject AuthService for token handling
+        private auth: AuthService, // Inject AuthService for token handling
+        private data: DataService
     ) {}
 
     private getHeaders(): HttpHeaders {
@@ -26,6 +30,21 @@ export class ApiService {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
         });
+    }
+
+    getSRData(): Observable<any> {
+        const url = `${this.baseUrl}/sr/data`;
+        return this.http.get(url, { headers: this.getHeaders() });
+    }
+
+    getSites(): Observable<any> {
+        const url = `${this.baseUrl}/sites`;
+        return this.http.get(url, { headers: this.getHeaders() });
+    }
+
+    getOffenceTypes(siteId: number, id: number): Observable<any> {
+        const url = `${this.baseUrl}/app/sites/${siteId}/offence/${id}/types`;
+        return this.http.get(url, { headers: this.getHeaders() });
     }
 
     

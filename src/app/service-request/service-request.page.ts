@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AuthService } from '../services/enforcementpro/auth.service';
 //import * as L from 'leaflet';
 
 @Component({
@@ -8,14 +9,17 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ServiceRequestPage implements OnInit {
 
-  map: any;
+    map: any;
 
-  constructor() {
-  }
+    constructor(
+        private auth: AuthService,
+    ) {
+    }
 
-  ngOnInit() {
-    //this.initMap();
-  }
+    ngOnInit() {
+        //this.initMap();
+        this.auth.checkLoggedIn();
+    }
 
   
 

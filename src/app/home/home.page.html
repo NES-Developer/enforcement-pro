@@ -7,14 +7,56 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+
     <ion-header collapse="condense">
         <ion-toolbar>
-            <ion-title size="large">Welcome</ion-title>
+            <ion-title size="large">Home</ion-title>
         </ion-toolbar>
     </ion-header>
 
-    <button type="button" (click)="logout()" class="btn btn-primary">Logut</button> 
+    <ion-item>
+        <button type="button" (click)="Init()" class="mt-4 btn btn-light">
+            <ion-icon name="refresh"></ion-icon> Refresh
+        </button>
+    </ion-item>
+    
+
+    <ion-item>
+        <h2>
+            Hi, {{ user.name }}
+        </h2>
+    </ion-item>
+
+    <ion-item>
+        <p>
+            Welcome to the Enforcement Pro Mobile Application. 
+        </p>
+    </ion-item>
+
+    <ion-item>
+        <ion-label>Your Current Site is:</ion-label>
+    </ion-item>
+    <ion-item>
+        <div class="row">
+            <div class="col-4">
+                <img [src]="getImageUrl(selected_site.logo)" height="40px" />
+            </div>
+            <div class="col-8">
+                <ion-label>{{ selected_site.name }}</ion-label>
+            </div>
+        </div>
+    </ion-item>
 
 
-    <app-explore-container name="Home Page"></app-explore-container>
+
+    <ion-item>
+        <button type="button" (click)="navigate('site')" class="mt-4 btn btn-info">
+            <ion-icon name="pencil"></ion-icon> Change
+        </button> 
+    </ion-item>
+    
+    <button type="button" (click)="logout()" class="mt-4 btn btn-danger">Logut</button> 
+
+
 </ion-content>
+

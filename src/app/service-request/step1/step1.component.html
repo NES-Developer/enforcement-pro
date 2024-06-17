@@ -1,14 +1,15 @@
 <ion-item>
-  <ion-label><strong><u>Basic Information</u></strong></ion-label>
+    <ion-label><strong><u>Basic Information</u></strong></ion-label>
 </ion-item>
 
 <!-- Request Type -->
 <ion-item>
-  <ion-label>Request Type</ion-label>
+    <ion-label>Request Type</ion-label>
 </ion-item>
 <ion-item>
-  <ion-select interface="action-sheet" multiple="false">
-  </ion-select>    
+    <ion-select interface="action-sheet" multiple="false" [(ngModel)]="selected_request_type">
+        <ion-select-option *ngFor="let request_type of request_types" [value]="request_type.id">{{ request_type.type_name }}</ion-select-option>
+    </ion-select>
 </ion-item>
 
 <!-- Business Waste -->
@@ -16,18 +17,10 @@
   <ion-label>Business Waste</ion-label>  
 </ion-item>
 <ion-item>
-  <ion-grid>
-    <ion-row>
-      <ion-col size="6" text-center>
-        <ion-label>Yes</ion-label>
-        <ion-checkbox slot=""></ion-checkbox>
-      </ion-col>
-      <ion-col size="6" text-center>
-        <ion-label>No</ion-label>
-        <ion-checkbox slot=""></ion-checkbox>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+    <ion-select interface="action-sheet" multiple="false">
+        <ion-select-option>No</ion-select-option>
+        <ion-select-option >Yes</ion-select-option>
+    </ion-select>
 </ion-item>
 
 <!-- Complaint Options -->
@@ -35,17 +28,10 @@
   <ion-label>Complaint Options</ion-label>
 </ion-item>
 <ion-item>
-  <ion-select interface="action-sheet" multiple="false">
-  </ion-select>    
-</ion-item>
-
-<!-- Complaint Options -->
-<ion-item>
-  <ion-label>Complaint Options</ion-label>
-</ion-item>
-<ion-item>
-  <ion-select interface="action-sheet" multiple="false">
-  </ion-select>    
+    <ion-select interface="action-sheet" multiple="false" [(ngModel)]="selected_complaint_option">
+        <ion-select-option>Remain Anonymous</ion-select-option>
+        <ion-select-option>Provide Details</ion-select-option>
+    </ion-select>
 </ion-item>
 
 <ion-item>
@@ -57,34 +43,36 @@
   <ion-label>Select Reported Via</ion-label>
 </ion-item>
 <ion-item>
-  <ion-select interface="action-sheet" multiple="false">
-  </ion-select>    
+    <ion-select interface="action-sheet" multiple="false" [(ngModel)]="selected_request_type">
+        <ion-select-option *ngFor="let sr_via of sr_via" [value]="sr_via.id">{{ sr_via.reported_via }}</ion-select-option>
+    </ion-select>  
 </ion-item>
 
 <!-- Officer options -->
 <ion-item>
-  <ion-label>Select Officer</ion-label>
+    <ion-label>Select Officer</ion-label>
 </ion-item>
 <ion-item>
-  <ion-select interface="action-sheet" multiple="false">
-  </ion-select>    
+    <ion-select interface="action-sheet" multiple="false" [(ngModel)]="selected_officer">
+        <ion-select-option *ngFor="let officer of officers" [value]="officer.id">{{ officer.name }}</ion-select-option>
+    </ion-select>
 </ion-item>
 
 <!-- Type of Land option -->
 <ion-item>
-  <ion-label>Type of Land (Customer Perception)</ion-label>
+    <ion-label>Type of Land (Customer Perception)</ion-label>
 </ion-item>
 <ion-item>
-  <ion-select interface="action-sheet" multiple="false">
-  </ion-select>    
+    <ion-select interface="action-sheet" multiple="false" [(ngModel)]="selected_offence_type">
+    </ion-select>    
 </ion-item>
 
 <!-- Type of waste text -->
 <ion-item>
-  <ion-label>Type of Waste</ion-label>
+    <ion-label>Type of Waste</ion-label>
 </ion-item>
 <ion-item>
-  <ion-input interface="action-sheet"/>
+    <ion-input interface="action-sheet"/>
 </ion-item>
 
 <!-- hazard confirmation option -->
