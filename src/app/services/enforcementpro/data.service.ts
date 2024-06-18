@@ -10,6 +10,7 @@ export class DataService {
     private live_url: string = 'https://app.enforcementpro.co.uk';
     private dev_url: string = 'https://uat.enforcementpro.co.uk';
 
+    private dynamic_feilds_data: any = {};
     private selected_site: any;
 
     private dynamic_feilds: any[] = [];
@@ -35,6 +36,7 @@ export class DataService {
         this.offence_types = this.loadArrayFromLocalStorage('offence_types')
 
         this.selected_site = this.loadObjectFromLocalStorage('selected_site');
+        this.dynamic_feilds_data = this.loadObjectFromLocalStorage('dynamic_feilds_data')
 
         // this.selected_site = parseInt(this.loadStringFromLocalStorage('selected_site'));
     }
@@ -68,6 +70,10 @@ export class DataService {
     }
 
 
+    setDynamicFeildData(dynamic_feilds_data: any): void {
+        this.dynamic_feilds_data = dynamic_feilds_data;
+        this.saveObjectToLocalStorage('dynamic_feilds_data', this.dynamic_feilds_data)
+    }
 
     setSelectedSite(selected_site: any): void {
         this.selected_site = selected_site;
@@ -125,6 +131,10 @@ export class DataService {
 
     getUrl(): string {
         return this.dev_url;
+    }
+
+    getDynamicFeildData(): any {
+        return this.dynamic_feilds_data;
     }
 
     getSelectedSite(): any {

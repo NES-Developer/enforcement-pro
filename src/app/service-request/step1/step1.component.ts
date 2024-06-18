@@ -80,7 +80,7 @@ export class Step1Component  implements OnInit {
                 this.dynamic_form_data[dynamic_id] = ''; // Initialize with 0 or appropriate default
             }
         }
-        console.log(this.dynamic_form_data);
+        this.data.setDynamicFeildData(this.dynamic_form_data);
     }
 
     navigate(route: string){
@@ -108,6 +108,8 @@ export class Step1Component  implements OnInit {
         this.request_types = this.data.getRequestTypes();
         this.sr_via = this.data.getSRVia();
         this.sites = this.data.getSites();
+
+        this.dynamic_form_data = this.data.getDynamicFeildData();
     }
 
 }
