@@ -36,8 +36,8 @@ export class SitePage implements OnInit {
         this.auth.checkLoggedIn();
         this.user = this.auth.getUser();
 
-        if (this.data.checkSelectedSite() === false) {
-            this.navigate('site');
+        if (this.data.checkSites() === false) {
+            this.getSites();
         } 
         
         this.loadData();
@@ -50,7 +50,7 @@ export class SitePage implements OnInit {
                 this.loadData();
             },
             error: (error) => {
-                console.error('Error fetching SR Data:', error);
+                console.error('Error fetching sites Data:', error);
                 // Handle error as needed
             }
         });
