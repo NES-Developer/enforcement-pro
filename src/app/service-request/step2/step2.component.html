@@ -1,9 +1,16 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Map</ion-title>
+    <ion-title>Maps</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <div id="map" style="height: 100%;"></div>
+    <ion-item>
+        <div #mapContainer style="height: 200px; width: 100%;"></div>
+    </ion-item>
+
+    <ion-item>
+        <button (click)="createMap()">Refresh Map</button>
+    </ion-item>
+
 </ion-content>

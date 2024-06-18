@@ -1,5 +1,5 @@
 import { IonicModule } from '@ionic/angular';
-import { NgModule } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ServiceRequestPage } from './service-request.page';
@@ -24,6 +24,8 @@ import { Step2Component } from './step2/step2.component';
     Step2Component
   ],
   providers: [],
-  bootstrap: [ServiceRequestPage]
+  bootstrap: [ServiceRequestPage],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA] // Add this line
+
 })
 export class ServiceRequestPageModule {}

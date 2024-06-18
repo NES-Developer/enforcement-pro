@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^18.0.0",
     "@angular/platform-browser-dynamic": "^18.0.0",
     "@angular/router": "^18.0.0",
+    "@capacitor/google-maps": "^5.4.1",
     "@ionic/angular": "^8.0.0",
     "bootstrap": "^5.3.3",
     "ionicons": "^7.0.0",
@@ -59,6 +60,6 @@
   },
   "description": "enforcement Pro Mobile Application",
   "config": {
-      "ionic_sass": "./sass.config.js" 
+    "ionic_sass": "./sass.config.js"
   }
 }
