@@ -13,13 +13,14 @@ import { DataService } from 'src/app/services/enforcementpro/data.service';
 export class Step1Component  implements OnInit {
 
     dynamic_feilds: any[] = [];
+    dynamic_feilds_filtered: any[] = [];
     ethnicities: any[] = [];
     officers: any[] = [];
     request_types: any[] = [];
     sr_via: any[] = [];
     sites: any[] = [];
     
-    dynamic_form_data: any;
+    dynamic_form_data: any = {};
     
     selected_request_type: number = 0;
     selected_complaint_option: number = 0;
@@ -53,6 +54,33 @@ export class Step1Component  implements OnInit {
         }
         
         this.loadData();
+    }
+
+    getDynamicFeild() {
+        this.dynamic_form_data = {};
+        this.dynamic_feilds_filtered = [];
+
+        // Exit early if selected_request_type is 0
+        if (this.selected_request_type === 0) {
+            console.log(this.dynamic_form_data); // Log empty object
+            return;
+        }
+
+        for (let x = 0; x < this.dynamic_feilds.length; x++){
+
+            let dynamic_request_type_id: number = parseInt(this.dynamic_feilds[x]?.request_type_id);
+            
+            if (dynamic_request_type_id === this.selected_request_type) {
+                let dynamic_id: number = this.dynamic_feilds[x]?.id;
+
+                // Populate dynamic_feilds_filtered
+                this.dynamic_feilds_filtered.push(this.dynamic_feilds[x]);
+
+                // Populate dynamic_form_data
+                this.dynamic_form_data[dynamic_id] = ''; // Initialize with 0 or appropriate default
+            }
+        }
+        console.log(this.dynamic_form_data);
     }
 
     navigate(route: string){
