@@ -163,9 +163,6 @@ export class DataService {
         return this.offence_types;
     }
 
-    
-
-
     removeAllData(): void {
         // Clear all private arrays
         this.selected_site = null,
