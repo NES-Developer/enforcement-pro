@@ -8,6 +8,7 @@ import { ExploreContainerComponentModule } from '../explore-container/explore-co
 import { ServiceRequestPageRoutingModule } from './service-request-routing.module';
 import { Step1Component } from './step1/step1.component';
 import { Step2Component } from './step2/step2.component';
+import { Step3Component } from './step3/step3.component';
 
 
 @NgModule({
@@ -21,7 +22,8 @@ import { Step2Component } from './step2/step2.component';
   declarations: [
     ServiceRequestPage,
     Step1Component,
-    Step2Component
+    Step2Component,
+    Step3Component
   ],
   providers: [],
   bootstrap: [ServiceRequestPage],

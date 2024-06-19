@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+// import { ServiceRequest } from './models/service-request';
+import { ServiceRequest } from '../../models/service-request';
 
 @Injectable({
   providedIn: 'root'
@@ -9,8 +11,10 @@ export class DataService {
 
     private live_url: string = 'https://app.enforcementpro.co.uk';
     private dev_url: string = 'https://uat.enforcementpro.co.uk';
+    private google_key: string = 'AIzaSyAfk02RCKQgVc4__wbyFgnpraBOhMeK6K4';
 
     private dynamic_feilds_data: any = {};
+    private service_request: ServiceRequest;
     private selected_site: any;
 
     private dynamic_feilds: any[] = [];
@@ -22,6 +26,8 @@ export class DataService {
     private offence_types: any[] = [];
     
     constructor() {
+        this.service_request = new ServiceRequest();
+
         this.loadFromLocalStorage();
     }
 
@@ -36,6 +42,7 @@ export class DataService {
         this.offence_types = this.loadArrayFromLocalStorage('offence_types')
 
         this.selected_site = this.loadObjectFromLocalStorage('selected_site');
+        this.service_request = this.loadObjectFromLocalStorage('service_request');
         this.dynamic_feilds_data = this.loadObjectFromLocalStorage('dynamic_feilds_data')
 
         // this.selected_site = parseInt(this.loadStringFromLocalStorage('selected_site'));
@@ -46,7 +53,7 @@ export class DataService {
         return data ? data : '';
     }
 
-    private loadObjectFromLocalStorage(key: string): string {
+    private loadObjectFromLocalStorage(key: string): any {
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : null;
     }
@@ -61,7 +68,7 @@ export class DataService {
         localStorage.setItem(key, data);
     }
 
-    private saveObjectToLocalStorage(key: string, data: string): void {
+    private saveObjectToLocalStorage(key: string, data: any): void {
         localStorage.setItem(key, JSON.stringify(data));
     }
 
@@ -83,6 +90,11 @@ export class DataService {
     setSites(sites: any): void {
         this.sites = sites;
         this.saveArrayToLocalStorage('sites', this.sites);
+    }
+
+    setServiceRequest(service_request: ServiceRequest): void {
+        this.service_request = service_request;
+        this.saveObjectToLocalStorage('service_request', this.service_request);
     }
 
     setSRData(data: any): void {
@@ -129,6 +141,10 @@ export class DataService {
         return this.sites.length > 0;
     }
 
+    getGoogleKey(): string {
+        return this.google_key;
+    }
+
     getUrl(): string {
         return this.dev_url;
     }
@@ -139,6 +155,10 @@ export class DataService {
 
     getSelectedSite(): any {
         return this.selected_site;
+    }
+
+    getServiceRequest(): ServiceRequest {
+        return this.service_request;
     }
 
     getSelectedOffenseType(): any {

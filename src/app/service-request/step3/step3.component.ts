@@ -5,11 +5,11 @@ import { DataService } from 'src/app/services/enforcementpro/data.service';
 import { Step1Component } from '../step1/step1.component';
 
 @Component({
-  selector: 'app-step2',
-  templateUrl: './step2.component.html',
-  styleUrls: ['./step2.component.scss'],
+  selector: 'app-step3',
+  templateUrl: './step3.component.html',
+  styleUrls: ['./step3.component.scss'],
 })
-export class Step2Component  implements OnInit {
+export class Step3Component  implements OnInit {
     // @ViewChild('map') mapRef!: ElementRef<HTMLElement>;
     @ViewChild('mapContainer', { static: false }) mapRef!: ElementRef<HTMLElement>;
 

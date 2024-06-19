@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ServiceRequest } from 'src/app/models/service-request';
 import { ApiService } from 'src/app/services/enforcementpro/api.service';
 import { AuthService } from 'src/app/services/enforcementpro/auth.service';
 import { DataService } from 'src/app/services/enforcementpro/data.service';
@@ -12,6 +13,16 @@ import { DataService } from 'src/app/services/enforcementpro/data.service';
 })
 export class Step1Component  implements OnInit {
 
+    // selected_request_type: number = 0;
+    selected_complaint_option: number = 0;
+    selected_officer: number = 0;
+    selected_offence_type: number = 0;
+    selected_site: any;
+
+    service_request: ServiceRequest;
+    
+    dynamic_form_data: any = {};
+
     dynamic_feilds: any[] = [];
     dynamic_feilds_filtered: any[] = [];
     ethnicities: any[] = [];
@@ -19,36 +30,31 @@ export class Step1Component  implements OnInit {
     request_types: any[] = [];
     sr_via: any[] = [];
     sites: any[] = [];
-    
-    dynamic_form_data: any = {};
-    
-    selected_request_type: number = 0;
-    selected_complaint_option: number = 0;
-    selected_officer: number = 0;
-    selected_offence_type: number = 0;
-    selected_site: any;
 
+    
+    
     constructor(
         private api: ApiService,
         private auth: AuthService,
         private data: DataService,
         private router: Router
-    ) { }
+    ) { 
+        this.service_request = new ServiceRequest();
 
-    ngOnInit(): void {
-        this.Init();
     }
 
-    Init() {
+    ngOnInit(): void {
+        this.init();
+    }
+
+    init() {
         this.auth.checkLoggedIn();
 
         if (this.data.checkSelectedSite() == false) {
             this.navigate('site');
         }
-        else {
-            this.selected_site = this.data.getSelectedSite();
-        }
-
+        this.selected_site = this.data.getSelectedSite();
+        
         if(this.data.checkSRData() == false) {
             this.getSRData();
         }
@@ -56,13 +62,17 @@ export class Step1Component  implements OnInit {
         this.loadData();
     }
 
-    getDynamicFeild() {
-        this.dynamic_form_data = {};
-        this.dynamic_feilds_filtered = [];
+    getDynamicFeild(filter: boolean, form: boolean) {
+        if (form) {
+            this.service_request.dynamic_form_data = {};
+        }
+        if (filter) {
+            this.dynamic_feilds_filtered = [];
+        }
 
-        // Exit early if selected_request_type is 0
-        if (this.selected_request_type === 0) {
-            console.log(this.dynamic_form_data); // Log empty object
+        // Exit early if service_request.request_type_id is 0
+        if (this.service_request.request_type_id === 0) {
+            console.log(this.request_types);
             return;
         }
 
@@ -70,17 +80,23 @@ export class Step1Component  implements OnInit {
 
             let dynamic_request_type_id: number = parseInt(this.dynamic_feilds[x]?.request_type_id);
             
-            if (dynamic_request_type_id === this.selected_request_type) {
+            
+            if (dynamic_request_type_id == this.service_request.request_type_id) {
                 let dynamic_id: number = this.dynamic_feilds[x]?.id;
 
                 // Populate dynamic_feilds_filtered
-                this.dynamic_feilds_filtered.push(this.dynamic_feilds[x]);
+                if (filter) {
+                    this.dynamic_feilds_filtered.push(this.dynamic_feilds[x]);
+                }
 
                 // Populate dynamic_form_data
-                this.dynamic_form_data[dynamic_id] = ''; // Initialize with 0 or appropriate default
+                if (form) {
+                    this.service_request.dynamic_form_data[dynamic_id] = ''; // Initialize with 0 or appropriate default
+                }
+
             }
         }
-        this.data.setDynamicFeildData(this.dynamic_form_data);
+        this.storeServiceRequest();
     }
 
     navigate(route: string){
@@ -101,6 +117,10 @@ export class Step1Component  implements OnInit {
         });
     }
 
+    storeServiceRequest() {
+        this.data.setServiceRequest(this.service_request);
+    }
+
     loadData() {
         this.dynamic_feilds = this.data.getDynamicFields();
         this.ethnicities = this.data.getEthnicities();
@@ -109,7 +129,12 @@ export class Step1Component  implements OnInit {
         this.sr_via = this.data.getSRVia();
         this.sites = this.data.getSites();
 
-        this.dynamic_form_data = this.data.getDynamicFeildData();
+        let sr_data = this.data.getServiceRequest();
+        if (sr_data) {
+            this.service_request = sr_data;
+            this.service_request.site_id = this.selected_site.id;
+            this.getDynamicFeild(true,false);
+        }        
     }
 
 }
