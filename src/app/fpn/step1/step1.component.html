@@ -1,0 +1,123 @@
+  <!-- Offence Group Select -->
+  <ion-item>
+    <ion-label>
+        Offence Group
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select (ionChange)="filterOffences()" multiple="false" [(ngModel)]="selected_offence_group_id">
+        <ion-select-option *ngFor="let group of offenceGroups" [value]="group.id">
+            {{ group.englishName }}
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- Offence Select -->
+<ion-item *ngIf="filteredOffences.length > 0">
+    <ion-label>Offence</ion-label>
+</ion-item>
+<ion-item *ngIf="filteredOffences.length > 0">
+    <ion-select multiple="false">
+        <ion-select-option *ngFor="let offence of filteredOffences" [value]="offence.id">
+            {{ offence.name }}
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- Title Select -->
+<ion-item *ngIf="filteredOffences.length > 0">
+    <ion-label>Title</ion-label>
+</ion-item>
+<ion-item *ngIf="filteredOffences.length > 0">
+        <ion-select multiple="false">
+            <ion-select-option> Mr </ion-select-option>
+            <ion-select-option> Mrs </ion-select-option>
+            <ion-select-option> Ms </ion-select-option>
+        </ion-select>
+</ion-item>
+
+<!-- Full Name Text -->
+<ion-item>
+    <ion-label>
+        Forename
+    </ion-label>
+    <ion-label>
+        Surname
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text" ></ion-input>
+    <ion-input type="text" ></ion-input>
+</ion-item>
+
+<!-- House Number Text -->
+<ion-item>
+    <ion-label>
+        House No/Flat
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text" ></ion-input>
+</ion-item>
+
+<!-- Town Text -->
+<ion-item>
+    <ion-label>
+        Town
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text" ></ion-input>
+</ion-item>
+
+
+<!-- Country and Postal Code Text -->
+<ion-item>
+    <ion-label>
+        Country
+    </ion-label>
+    <ion-label>
+        Postal Code
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text" ></ion-input>
+    <ion-input type="text" ></ion-input>
+</ion-item>
+
+<!-- Date of birth date -->
+<ion-item>
+    <ion-label>
+        Date of Birth
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="date" ></ion-input>
+</ion-item>
+
+<!-- Gender Select -->
+<ion-item>
+    <ion-label>
+        Gender
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select interface="action-sheet" multiple="false">
+        <ion-select-option>Male</ion-select-option>
+        <ion-select-option>Female</ion-select-option>
+        <ion-select-option>Other</ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- BWC Text -->
+<ion-item>
+    <ion-label>
+        Did you activate BWC
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select interface="action-sheet" multiple="false">
+        <ion-select-option>Yes</ion-select-option>
+        <ion-select-option>No</ion-select-option>
+    </ion-select>
+</ion-item>

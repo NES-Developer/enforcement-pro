@@ -16,8 +16,8 @@ const routes: Routes = [
         loadChildren: () => import('../service-request/service-request.module').then(m => m.ServiceRequestPageModule)
       },
       {
-        path: 'tab3',
-        loadChildren: () => import('../tab3/tab3.module').then(m => m.Tab3PageModule)
+        path: 'fpn',
+        loadChildren: () => import('../fpn/fpn.module').then(m => m.FPNPageModule)
       },
       {
         path: '',

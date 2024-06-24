@@ -11,7 +11,7 @@ import { DataService } from '../../services/enforcementpro/data.service';
   templateUrl: './step1.component.html',
   styleUrls: ['./step1.component.scss'],
 })
-export class Step1Component  implements OnInit {
+export class Step1Component implements OnInit {
 
     // selected_request_type: number = 0;
     selected_complaint_option: number = 0;

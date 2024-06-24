@@ -229,7 +229,15 @@
 <div *ngIf="service_request.business_waste_status == 'No' && service_request.complaint_option_status == 'Remain Anonymous'">
     <ion-item>
         <ion-label>
-            You Have Selected to 'Remain Anonymous' and Not a 'Business Waste'. Please click next.
+            You Have Selected to 'Remain Anonymous' and No to 'Business Waste'. Please click Next.
+        </ion-label>
+    </ion-item>
+</div>
+
+<div *ngIf="service_request.business_waste_status == '' && service_request.complaint_option_status == ''">
+    <ion-item>
+        <ion-label>
+            Please click Next.
         </ion-label>
     </ion-item>
 </div>

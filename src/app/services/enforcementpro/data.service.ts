@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 // import { ServiceRequest } from './models/service-request';
 import { ServiceRequest } from '../../models/service-request';
+import { SiteOffence } from '../../models/site-offence';
+import { Offence } from '../../models/offence';
+import { OffenceGroup } from '../../models/offence-group';
+import { AddressVerifiedBy } from '../../models/address-verified-by';
+import { Ethnicity } from '../../models/ethnicity';
+import { IDShown } from '../../models/id-shown';
+import { OffenceLocationSuffix } from 'src/app/models/offence-location-suffix';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +23,14 @@ export class DataService {
     private dynamic_feilds_data: any = {};
     private service_request: ServiceRequest;
     private selected_site: any;
+
+    private site_offences: SiteOffence[] = [];
+    private offences: Offence[] = [];
+    private selected_offence!: Offence;
+    private offence_groups: OffenceGroup[] = [];
+    private address_verifed_by: AddressVerifiedBy[] = [];
+    private id_shown: IDShown[] = [];
+    private offence_location_suffix: OffenceLocationSuffix[] = [];
 
     private dynamic_feilds: any[] = [];
     private ethnicities: any[] = [];
@@ -34,6 +49,12 @@ export class DataService {
     private loadFromLocalStorage(): void {
         // Load each data array from localStorage if available
         this.dynamic_feilds = this.loadArrayFromLocalStorage('dynamic_feilds');
+        this.site_offences = this.loadArrayFromLocalStorage('site_offences');
+        this.offences = this.loadArrayFromLocalStorage('offences');
+        this.offence_groups = this.loadArrayFromLocalStorage('offence_groups');
+        this.address_verifed_by = this.loadArrayFromLocalStorage('address_verifed_by');
+        this.id_shown = this.loadArrayFromLocalStorage('id_shown');
+        this.offence_location_suffix = this.loadArrayFromLocalStorage('offence_location_suffix');
         this.ethnicities = this.loadArrayFromLocalStorage('ethnicities');
         this.officers = this.loadArrayFromLocalStorage('officers');
         this.request_types = this.loadArrayFromLocalStorage('request_types');
@@ -120,6 +141,46 @@ export class DataService {
         // this.saveArrayToLocalStorage('sites', this.sites);
     }
 
+    setSiteOffences(site_offences: SiteOffence[]): void {
+        this.site_offences = site_offences || [];
+        this.saveArrayToLocalStorage('site_offences', this.site_offences);
+    }
+
+    setOffences(offences: Offence[]): void {
+        this.offences = offences || [];
+        this.saveArrayToLocalStorage('offences', this.offences);
+    }
+
+    setOffenceGroups(offence_groups: OffenceGroup[]): void {
+        this.offence_groups = offence_groups || [];
+        this.saveArrayToLocalStorage('offence_groups', this.offence_groups);
+    }
+
+    setAddressVerifiedBy(address_verifed_by: AddressVerifiedBy[]): void {
+        this.address_verifed_by = address_verifed_by || [];
+        this.saveArrayToLocalStorage('address_verifed_by', this.address_verifed_by);
+    }
+
+    setIDShown(id_shown: IDShown[]): void {
+        this.id_shown = id_shown || [];
+        this.saveArrayToLocalStorage('id_shown', this.id_shown);
+    }
+
+    setOffenceLocationSuffix(offence_location_suffix: OffenceLocationSuffix[]): void {
+        this.offence_location_suffix = offence_location_suffix || [];
+        this.saveArrayToLocalStorage('offence_location_suffix', this.offence_location_suffix);
+    }
+
+    setEthnicities(ethnicities: Ethnicity[]): void {
+        this.ethnicities = ethnicities || [];
+        this.saveArrayToLocalStorage('ethnicities', this.ethnicities);
+    }
+
+    setIdShown(id_shown: IDShown[]): void {
+        this.id_shown = id_shown || [];
+        this.saveArrayToLocalStorage('id_shown', this.id_shown);
+    }
+
     setOffenceType(data: any): void {
         this.offence_types = data.offence_types || [];
         this.saveArrayToLocalStorage('offence_types', this.offence_types);
@@ -169,7 +230,19 @@ export class DataService {
         return this.dynamic_feilds;
     }
 
-    getEthnicities(): any[] {
+    getAddressVerifiedBy(): AddressVerifiedBy[] {
+        return this.address_verifed_by;
+    }
+
+    getIDShown(): IDShown[] {
+        return this.id_shown;
+    }
+
+    getOffenceLocationSuffix(): OffenceLocationSuffix[] {
+        return this.offence_location_suffix;
+    }
+
+    getEthnicities(): Ethnicity[] {
         return this.ethnicities;
     }
 
@@ -204,6 +277,11 @@ export class DataService {
         this.sr_via = [];
         this.sites = [];
         this.service_request = new ServiceRequest();
+        this.address_verifed_by = [];
+        this.offences = [];
+        this.offence_groups = [];
+        this.id_shown = [];
+        this.offence_location_suffix = [];
 
         // Clear localStorage
         localStorage.removeItem('selected_site')
@@ -214,5 +292,12 @@ export class DataService {
         localStorage.removeItem('sr_via');
         localStorage.removeItem('sites');
         localStorage.removeItem('service_request');
+        localStorage.removeItem('address_verifed_by');
+        localStorage.removeItem('offences');
+        localStorage.removeItem('offence_groups');
+        localStorage.removeItem('id_shown');
+        localStorage.removeItem('offence_location_suffix');
+
+        
     }
 }

@@ -1,0 +1,46 @@
+<ion-header [translucent]="true">
+    <ion-toolbar>
+        <ion-title>
+            FPN
+        </ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+    <ion-header collapse="condense">
+        <ion-toolbar>
+        <ion-title size="large">FPN</ion-title>
+        </ion-toolbar>
+    </ion-header>
+
+    {{ this.currentStep }}
+
+    <div *ngIf="currentStep === 1">
+        <app-step1 (next)="nextStep()"></app-step1>
+    </div>
+     <div *ngIf="currentStep === 2">
+        <app-step2 (previous)="previousStep()" (next)="nextStep()"></app-step2>
+    </div>
+    <div *ngIf="currentStep === 3">
+        <app-step3 (previous)="previousStep()" (next)="submitForm()"></app-step3>
+    </div> 
+
+  <app-explore-container name="Tab 3 page"></app-explore-container>
+</ion-content>
+
+
+<ion-footer :translucent="true">
+    <ion-toolbar>
+        <ion-row>
+            <ion-col size="6" *ngIf="currentStep > 1">
+                <ion-button expand="block" shape="full" (click)="previousStep()">Previous</ion-button>
+            </ion-col>
+            <ion-col size="6" *ngIf="currentStep < 3">
+                <ion-button expand="block" shape="full" (click)="nextStep()">Next</ion-button>
+            </ion-col>
+            <ion-col size="6" *ngIf="currentStep === 3">
+                <ion-button expand="block" shape="full" (click)="nextStep()">Submit</ion-button>
+            </ion-col>
+        </ion-row>
+    </ion-toolbar>
+</ion-footer>
