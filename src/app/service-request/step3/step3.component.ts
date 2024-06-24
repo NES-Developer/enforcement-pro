@@ -1,6 +1,8 @@
 import { Component, ElementRef, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import * as L from 'leaflet';
 import { GoogleMap } from '@capacitor/google-maps';
+// import { GoogleMaps, GoogleMap, GoogleMapsEvent, GoogleMapOptions } from '@ionic-native/google-maps/ngx';
+
 import { DataService } from 'src/app/services/enforcementpro/data.service';
 import { Step1Component } from '../step1/step1.component';
 
@@ -26,7 +28,7 @@ export class Step3Component  implements OnInit {
     ) { }
 
     ngOnInit() {
-        // this.createMap();
+
     }
 
     ngAfterViewInit() {

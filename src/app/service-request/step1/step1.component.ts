@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ServiceRequest } from 'src/app/models/service-request';
-import { ApiService } from 'src/app/services/enforcementpro/api.service';
-import { AuthService } from 'src/app/services/enforcementpro/auth.service';
-import { DataService } from 'src/app/services/enforcementpro/data.service';
+import { ServiceRequest } from '../../models/service-request';
+import { ApiService } from '../../services/enforcementpro/api.service';
+import { AuthService } from '../../services/enforcementpro/auth.service';
+import { DataService } from '../../services/enforcementpro/data.service';
 //import * as L from 'leaflet';
 
 @Component({

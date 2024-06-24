@@ -1,8 +1,15 @@
-import { Component, ElementRef, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { ElementRef, AfterViewInit, ViewChild } from '@angular/core';
 import * as L from 'leaflet';
 import { GoogleMap } from '@capacitor/google-maps';
-import { DataService } from 'src/app/services/enforcementpro/data.service';
 import { Step1Component } from '../step1/step1.component';
+
+
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { ServiceRequest } from '../../models/service-request';
+import { ApiService } from '../../services/enforcementpro/api.service';
+import { AuthService } from '../../services/enforcementpro/auth.service';
+import { DataService } from '../../services/enforcementpro/data.service';
 
 @Component({
   selector: 'app-step2',
@@ -10,56 +17,73 @@ import { Step1Component } from '../step1/step1.component';
   styleUrls: ['./step2.component.scss'],
 })
 export class Step2Component  implements OnInit {
-    // @ViewChild('map') mapRef!: ElementRef<HTMLElement>;
-    @ViewChild('mapContainer', { static: false }) mapRef!: ElementRef<HTMLElement>;
-
-    newMap!: GoogleMap;
-
-    apiKey: string = '';
-
-    map: any;
+    
+  
+    service_request: ServiceRequest;
+    selected_site: any;
 
     constructor(
+        private api: ApiService,
+        private auth: AuthService,
         private data: DataService,
-        // private step1: Step1Component,
-        // private step2: Step2Component
-    ) { }
+        private router: Router
+    ) { 
+        this.service_request = new ServiceRequest();
 
-    ngOnInit() {
+    }
+
+    ngOnInit(): void {
         // this.createMap();
+        this.init();
+    }
+
+    init() {
+        this.auth.checkLoggedIn();
+
+        if (this.data.checkSelectedSite() == false) {
+            this.navigate('site');
+        }
+        this.selected_site = this.data.getSelectedSite();
+        
+        if(this.data.checkSRData() == false) {
+            this.getSRData();
+        }
+        
+        this.loadData();
+    }
+
+    getSRData(): void {
+        this.api.getSRData().subscribe({
+          next: (data) => {
+            this.data.setSRData(data);
+            this.loadData();
+          },
+          error: (error) => {
+            console.error('Error fetching SR Data:', error);
+            // Handle error as needed
+          }
+        });
+    }
+
+    navigate(route: string){
+        this.router.navigate([route]);
     }
 
     ngAfterViewInit() {
-        this.createMap();
+    }
+
+    storeServiceRequest() {
+        this.data.setServiceRequest(this.service_request);
     }
 
     loadData() {
-        this.apiKey = this.data.getGoogleKey();
+        let sr_data = this.data.getServiceRequest();
+        if (sr_data) {
+            this.service_request = sr_data;
+            this.service_request.site_id = this.selected_site.id;
+        }    
     }
 
-    async createMap() {
-        if (!this.mapRef) {
-          console.error('Map element reference is not available.');
-          return;
-        }
-    
-        try {
-          this.newMap = await GoogleMap.create({
-            id: 'map',
-            element: this.mapRef.nativeElement,
-            apiKey: this.apiKey,
-            config: {
-              center: {
-                lat: 33.6,
-                lng: -117.9,
-              },
-              zoom: 8,
-            },
-          });
-        } catch (error) {
-          console.error('Error creating the map:', error);
-        }
-    }
 
 
 }

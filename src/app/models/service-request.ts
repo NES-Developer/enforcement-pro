@@ -14,13 +14,17 @@ export class ServiceRequest {
     title: string = '';
     job_title: string = '';
     first_name: string = '';
+    last_name: string = '';
     home_telephone: string = '';
     work_telephone: string = '';
     address: string = '';
+    email: string = '';
+    address2: string = '';
     ethnicity: string = '';
     complaint_town: string = '';
     gender: string = '';
     complaint_country: string = '';
+    date_of_birth!: Date;
     complaint_postal_code: string = '';
     business_name: string = '';
     business_address: string = '';

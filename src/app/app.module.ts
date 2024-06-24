@@ -10,6 +10,7 @@ import { AppComponent } from './app.component';
 import { ApiService } from './services/enforcementpro/api.service';
 import { provideHttpClient } from '@angular/common/http'; // New import
 
+// import { Camera } from '@awesome-cordova-plugins/camera/ngx';
 
 
 

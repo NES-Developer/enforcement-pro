@@ -203,6 +203,7 @@ export class DataService {
         this.request_types = [];
         this.sr_via = [];
         this.sites = [];
+        this.service_request = new ServiceRequest();
 
         // Clear localStorage
         localStorage.removeItem('selected_site')
@@ -212,5 +213,6 @@ export class DataService {
         localStorage.removeItem('request_types');
         localStorage.removeItem('sr_via');
         localStorage.removeItem('sites');
+        localStorage.removeItem('service_request');
     }
 }
