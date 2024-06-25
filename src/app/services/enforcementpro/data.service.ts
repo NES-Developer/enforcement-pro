@@ -7,8 +7,11 @@ import { OffenceGroup } from '../../models/offence-group';
 import { AddressVerifiedBy } from '../../models/address-verified-by';
 import { Ethnicity } from '../../models/ethnicity';
 import { IDShown } from '../../models/id-shown';
-import { OffenceLocationSuffix } from 'src/app/models/offence-location-suffix';
-import { OffenceHow } from 'src/app/models/offence-how';
+import { OffenceLocationSuffix } from '../../models/offence-location-suffix';
+import { OffenceHow } from '../../models/offence-how';
+import { Weather } from '../../models/weather';
+import { Visibility } from '../../models/visibility';
+import { POIPrefix } from '../../models/poi-prefix';
 
 @Injectable({
   providedIn: 'root'
@@ -33,6 +36,10 @@ export class DataService {
     private address_verifed_by: AddressVerifiedBy[] = [];
     private id_shown: IDShown[] = [];
     private offence_location_suffix: OffenceLocationSuffix[] = [];
+    private weather: Weather[] = [];
+    private visibility: Visibility[] = [];
+    private poi_prefix: POIPrefix[] = [];
+    
 
     private dynamic_feilds: any[] = [];
     private ethnicities: any[] = [];
@@ -50,6 +57,10 @@ export class DataService {
 
     private loadFromLocalStorage(): void {
         // Load each data array from localStorage if available
+        this.weather = this.loadArrayFromLocalStorage('weather');
+        this.visibility = this.loadArrayFromLocalStorage('visibility');
+        this.poi_prefix = this.loadArrayFromLocalStorage('poi_prefix');
+
         this.dynamic_feilds = this.loadArrayFromLocalStorage('dynamic_feilds');
         this.site_offences = this.loadArrayFromLocalStorage('site_offences');
         this.offence_how = this.loadArrayFromLocalStorage('offence_how');
@@ -99,7 +110,6 @@ export class DataService {
     private saveArrayToLocalStorage(key: string, data: any[]): void {
         localStorage.setItem(key, JSON.stringify(data));
     }
-
 
     setDynamicFeildData(dynamic_feilds_data: any): void {
         this.dynamic_feilds_data = dynamic_feilds_data;
@@ -172,6 +182,24 @@ export class DataService {
     setIDShown(id_shown: IDShown[]): void {
         this.id_shown = id_shown || [];
         this.saveArrayToLocalStorage('id_shown', this.id_shown);
+    }
+
+
+    setWeather(weather: Weather[]): void {
+        this.weather = weather;
+        this.saveArrayToLocalStorage('weather', this.weather);
+    }
+
+
+    setVisibility(visibility: Visibility[]): void {
+        this.visibility = visibility;
+        this.saveArrayToLocalStorage('visibility', this.visibility);
+    }
+
+
+    setPOIPrefix(poi_prefix: POIPrefix[]): void {
+        this.poi_prefix = poi_prefix;
+        this.saveArrayToLocalStorage('poi_prefix', this.poi_prefix);
     }
 
     setOffenceLocationSuffix(offence_location_suffix: OffenceLocationSuffix[]): void {
@@ -256,6 +284,18 @@ export class DataService {
 
     getEthnicities(): Ethnicity[] {
         return this.ethnicities;
+    }
+
+    getWeather(): Weather[] {
+        return this.weather;
+    }
+
+    getVisibility(): Visibility[] {
+        return this.visibility;
+    }
+
+    getPOIPrefix(): POIPrefix[] {
+        return this.poi_prefix;
     }
 
     getOfficers(): any[] {

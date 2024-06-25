@@ -24,6 +24,9 @@
     <div *ngIf="currentStep === 3">
         <app-step3 (previous)="previousStep()" (next)="submitForm()"></app-step3>
     </div> 
+    <div *ngIf="currentStep === 4">
+        <app-step4 (previous)="previousStep()" (next)="nextStep()"></app-step4>
+    </div> 
 
 </ion-content>
 

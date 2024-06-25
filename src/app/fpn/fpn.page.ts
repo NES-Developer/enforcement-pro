@@ -31,7 +31,7 @@ export class FPNPage implements OnInit {
     currentStep: number = 1;
 
     nextStep() {
-        if (this.currentStep < 4) {
+        if (this.currentStep < 5) {
         this.currentStep++;
         }
   } 

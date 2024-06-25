@@ -1,3 +1,161 @@
-<p>
-  step4 works!
-</p>
+<!-- Offence Location Text -->
+<ion-item>
+    <ion-label>
+        Offence Location
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text"></ion-input>
+</ion-item>
+
+<!-- Offender Reply Select -->
+<ion-item>
+    <ion-label>
+        Type of Land
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false">
+        <ion-select-option>
+            Public
+        </ion-select-option>
+        <ion-select-option>
+            Private
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- Town/Ward Select -->
+<ion-item>
+    <ion-label>
+        Town/Ward
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false">
+        <ion-select-option>
+            AreaX
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+  <!-- Poi Prefix Select -->
+  <ion-item>
+    <ion-label>
+        POI Prefix
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false" >
+        <ion-select-option *ngFor="let group of poi_prefix" [value]="group.id">
+            {{ group.textOnMachine }}
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- POI Text -->
+<ion-item>
+    <ion-label>
+        POI
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text"></ion-input>
+</ion-item>
+
+ <!-- Visibility Select -->
+ <ion-item>
+    <ion-label>
+        Visibility
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false" >
+        <ion-select-option *ngFor="let group of visibility" [value]="group.id">
+            {{ group.visibility }}
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+ <!-- Weather Select -->
+ <ion-item>
+    <ion-label>
+        Weather
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false" >
+        <ion-select-option *ngFor="let group of weather" [value]="group.id">
+            {{ group.textOnMachine }}
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- Offence Date & Time Text -->
+<ion-item>
+    <ion-label>
+        Offence Date & Time
+    </ion-label>
+  </ion-item>
+  <ion-item>
+    <ion-input type="datetime"></ion-input>
+    <ion-input type="time"></ion-input>
+</ion-item>
+
+<!-- FPN issued on the spot -->
+<ion-item>
+    <ion-label>FPN issued on the spot</ion-label>  
+  </ion-item>
+  <ion-item>
+      <ion-select interface="action-sheet" multiple="false">
+          <ion-select-option >Yes</ion-select-option>
+          <ion-select-option>No</ion-select-option>
+      </ion-select>
+  </ion-item>
+
+
+<!-- Is witness available -->
+<ion-item>
+    <ion-label>Is witness available?</ion-label>  
+  </ion-item>
+  <ion-item>
+      <ion-select interface="action-sheet" multiple="false">
+          <ion-select-option>Yes</ion-select-option>
+          <ion-select-option>No</ion-select-option>
+      </ion-select>
+  </ion-item>
+
+
+<!-- Witness Detail 1 Text -->
+<ion-item>
+    <ion-label>
+        Witness Name
+    </ion-label>
+    <ion-label>
+        Witness Phone
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text"></ion-input>
+    <ion-input type="text"></ion-input>
+</ion-item>
+
+<!-- Witness Detail 2 Text -->
+<ion-item>
+    <ion-label>
+        Witness Address
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text"></ion-input>
+</ion-item>
+
+<!-- Officer Statement Select -->
+<ion-item>
+    <ion-label>
+        Officer Statement
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-textarea></ion-textarea>
+</ion-item>

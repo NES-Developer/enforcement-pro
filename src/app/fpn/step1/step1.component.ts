@@ -13,6 +13,9 @@ import { AddressVerifiedBy } from 'src/app/models/address-verified-by';
 import { IDShown } from 'src/app/models/id-shown';
 import { OffenceLocationSuffix } from 'src/app/models/offence-location-suffix';
 import { OffenceHow } from 'src/app/models/offence-how';
+import { Weather } from 'src/app/models/weather';
+import { Visibility } from 'src/app/models/visibility';
+import { POIPrefix } from 'src/app/models/poi-prefix';
 
 @Component({
     selector: 'app-step1',
@@ -67,6 +70,15 @@ export class Step1Component implements OnInit {
 
                 this.id_shown = data.data.id_shown;
                 this.data.setIdShown(this.id_shown);
+
+                let weather: Weather[] = data.data.weathers;
+                this.data.setWeather(weather);
+
+                let visibility: Visibility[] = data.data.visibility;
+                this.data.setVisibility(visibility);
+
+                let poi_prefix: POIPrefix[] = data.data.poi_prefix;
+                this.data.setPOIPrefix(poi_prefix);
 
                 this.site_offence = data.data.site_offences;
                 this.data.setSiteOffences(this.site_offence);
