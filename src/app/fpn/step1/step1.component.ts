@@ -11,6 +11,8 @@ import { SiteOffence } from '../../models/site-offence';
 import { Ethnicity } from 'src/app/models/ethnicity';
 import { AddressVerifiedBy } from 'src/app/models/address-verified-by';
 import { IDShown } from 'src/app/models/id-shown';
+import { OffenceLocationSuffix } from 'src/app/models/offence-location-suffix';
+import { OffenceHow } from 'src/app/models/offence-how';
 
 @Component({
     selector: 'app-step1',
@@ -23,6 +25,8 @@ export class Step1Component implements OnInit {
     form!: FormGroup;
 
     ethnicities: Ethnicity[] = [];
+    offence_how: OffenceHow[] = [];
+    offence_location_suffix: OffenceLocationSuffix[] = [];
     address_verified_by: AddressVerifiedBy[] = [];
     site_offence: SiteOffence[] = [];
     offences: Offence[] = [];
@@ -46,34 +50,39 @@ export class Step1Component implements OnInit {
         let site: any = this.data.getSelectedSite();
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
-          next: (data) => {
-            console.log(data.data);
-            this.address_verified_by = data.data.address_verified_via;
-            this.data.setAddressVerifiedBy(this.address_verified_by);
+            next: (data) => {
+                console.log(data.data);
 
-            this.ethnicities = data.data.ethnicities;
-            this.data.setEthnicities(this.ethnicities);
+                this.offence_how = data.data.offence_how;
+                this.data.setOffenceHow(this.offence_how);
 
-            this.id_shown = data.data.id_shown;
-            this.data.setIdShown(this.id_shown);
+                this.offence_location_suffix = data.data.offence_location_suffix;
+                this.data.setOffenceLocationSuffix(this.offence_location_suffix);
 
-            this.site_offence = data.data.site_offences;
-            this.data.setSiteOffences(this.site_offence);
+                this.address_verified_by = data.data.address_verified_via;
+                this.data.setAddressVerifiedBy(this.address_verified_by);
 
-            this.offences = this.extractOffence(this.site_offence);
-            this.data.setOffences(this.offences);
+                this.ethnicities = data.data.ethnicities;
+                this.data.setEthnicities(this.ethnicities);
 
-            this.offenceGroups = this.extractOffenceGroups(this.offences);
-            this.data.setOffenceGroups(this.offenceGroups);
+                this.id_shown = data.data.id_shown;
+                this.data.setIdShown(this.id_shown);
 
+                this.site_offence = data.data.site_offences;
+                this.data.setSiteOffences(this.site_offence);
 
+                this.offences = this.extractOffence(this.site_offence);
+                this.data.setOffences(this.offences);
 
-            this.loadData();
-          },
-          error: (error) => {
-            console.error('Error fetching SR Data:', error);
-            // Handle error as needed
-          }
+                this.offenceGroups = this.extractOffenceGroups(this.offences);
+                this.data.setOffenceGroups(this.offenceGroups);
+
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error fetching SR Data:', error);
+                // Handle error as needed
+            }
         });
     }
 

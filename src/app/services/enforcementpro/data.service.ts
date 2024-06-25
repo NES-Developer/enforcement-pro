@@ -8,6 +8,7 @@ import { AddressVerifiedBy } from '../../models/address-verified-by';
 import { Ethnicity } from '../../models/ethnicity';
 import { IDShown } from '../../models/id-shown';
 import { OffenceLocationSuffix } from 'src/app/models/offence-location-suffix';
+import { OffenceHow } from 'src/app/models/offence-how';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,7 @@ export class DataService {
     private selected_site: any;
 
     private site_offences: SiteOffence[] = [];
+    private offence_how: OffenceHow[] = [];
     private offences: Offence[] = [];
     private selected_offence!: Offence;
     private offence_groups: OffenceGroup[] = [];
@@ -50,6 +52,7 @@ export class DataService {
         // Load each data array from localStorage if available
         this.dynamic_feilds = this.loadArrayFromLocalStorage('dynamic_feilds');
         this.site_offences = this.loadArrayFromLocalStorage('site_offences');
+        this.offence_how = this.loadArrayFromLocalStorage('offence_how');
         this.offences = this.loadArrayFromLocalStorage('offences');
         this.offence_groups = this.loadArrayFromLocalStorage('offence_groups');
         this.address_verifed_by = this.loadArrayFromLocalStorage('address_verifed_by');
@@ -146,6 +149,11 @@ export class DataService {
         this.saveArrayToLocalStorage('site_offences', this.site_offences);
     }
 
+    setOffenceHow(offence_how: OffenceHow[]): void {
+        this.offence_how = offence_how || [];
+        this.saveArrayToLocalStorage('offence_how', this.offence_how);
+    }
+
     setOffences(offences: Offence[]): void {
         this.offences = offences || [];
         this.saveArrayToLocalStorage('offences', this.offences);
@@ -236,6 +244,10 @@ export class DataService {
 
     getIDShown(): IDShown[] {
         return this.id_shown;
+    }
+
+    getOffenceHow(): OffenceHow[] {
+        return this.offence_how;
     }
 
     getOffenceLocationSuffix(): OffenceLocationSuffix[] {
