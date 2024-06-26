@@ -12,6 +12,7 @@ import { OffenceHow } from '../../models/offence-how';
 import { Weather } from '../../models/weather';
 import { Visibility } from '../../models/visibility';
 import { POIPrefix } from '../../models/poi-prefix';
+import { EnviroPost } from 'src/app/models/enviro';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,7 @@ export class DataService {
     private google_key: string = 'AIzaSyAfk02RCKQgVc4__wbyFgnpraBOhMeK6K4';
 
     private dynamic_feilds_data: any = {};
+    private enviro_post: EnviroPost = new EnviroPost();
     private service_request: ServiceRequest;
     private selected_site: any;
 
@@ -79,6 +81,7 @@ export class DataService {
         this.selected_site = this.loadObjectFromLocalStorage('selected_site');
         this.service_request = this.loadObjectFromLocalStorage('service_request');
         this.dynamic_feilds_data = this.loadObjectFromLocalStorage('dynamic_feilds_data')
+        this.enviro_post = this.loadObjectFromLocalStorage('enviro_post');
 
         // this.selected_site = parseInt(this.loadStringFromLocalStorage('selected_site'));
     }
@@ -113,7 +116,12 @@ export class DataService {
 
     setDynamicFeildData(dynamic_feilds_data: any): void {
         this.dynamic_feilds_data = dynamic_feilds_data;
-        this.saveObjectToLocalStorage('dynamic_feilds_data', this.dynamic_feilds_data)
+        this.saveObjectToLocalStorage('dynamic_feilds_data', this.dynamic_feilds_data);
+    }
+
+    setEnviroPost(enviro_post: EnviroPost): void {
+        this.enviro_post = enviro_post;
+        this.saveObjectToLocalStorage('enviro_post', this.enviro_post);
     }
 
     setSelectedSite(selected_site: any): void {
@@ -238,6 +246,10 @@ export class DataService {
         return this.sites.length > 0;
     }
 
+    checkFPNData(): boolean {
+        return this.ethnicities.length > 0 && this.site_offences.length > 0 && this.address_verifed_by.length > 0 && this.id_shown.length > 0;
+    }
+
     getGoogleKey(): string {
         return this.google_key;
     }
@@ -248,6 +260,10 @@ export class DataService {
 
     getDynamicFeildData(): any {
         return this.dynamic_feilds_data;
+    }
+
+    getEnviroPost(): EnviroPost {
+        return this.enviro_post;
     }
 
     getSelectedSite(): any {
@@ -276,6 +292,18 @@ export class DataService {
 
     getOffenceHow(): OffenceHow[] {
         return this.offence_how;
+    }
+
+    getSiteOffence(): SiteOffence[] {
+        return this.site_offences;
+    }
+
+    getOffence(): Offence[] {
+        return this.offences;
+    }
+
+    getOffenceGroup(): OffenceGroup[] {
+        return this.offence_groups;
     }
 
     getOffenceLocationSuffix(): OffenceLocationSuffix[] {
@@ -334,6 +362,8 @@ export class DataService {
         this.offence_groups = [];
         this.id_shown = [];
         this.offence_location_suffix = [];
+        this.offence_how = [];
+        this.offence_types = [];
 
         // Clear localStorage
         localStorage.removeItem('selected_site')
@@ -349,6 +379,8 @@ export class DataService {
         localStorage.removeItem('offence_groups');
         localStorage.removeItem('id_shown');
         localStorage.removeItem('offence_location_suffix');
+        localStorage.removeItem('offence_how');
+        localStorage.removeItem('offence_types');
 
         
     }

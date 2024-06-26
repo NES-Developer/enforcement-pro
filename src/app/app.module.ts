@@ -10,16 +10,29 @@ import { AppComponent } from './app.component';
 import { ApiService } from './services/enforcementpro/api.service';
 import { provideHttpClient } from '@angular/common/http'; // New import
 
+// import { IonicSignaturePadModule,IonicsignaturepadProvider } from 'ionicsignaturepad';
+
+
 // import { Camera } from '@awesome-cordova-plugins/camera/ngx';
 
 
 
 @NgModule({
-  declarations: [AppComponent],
-  imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule],
-  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }, ApiService, provideHttpClient()],
-  bootstrap: [AppComponent],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA] // Add this line
+    declarations: [AppComponent],
+    imports: [
+        BrowserModule, 
+        IonicModule.forRoot(), 
+        AppRoutingModule, 
+        // IonicSignaturePadModule
+    ],
+    providers: [
+        { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }, 
+        // IonicsignaturepadProvider, 
+        ApiService, 
+        provideHttpClient()
+    ],
+    bootstrap: [AppComponent],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA] // Add this line
 
 })
 export class AppModule {}

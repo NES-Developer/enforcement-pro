@@ -8,6 +8,10 @@ import { OffenceGroup } from '../models/offence-group';
 import { Offence } from '../models/offence';
 import { FormGroup } from '@angular/forms';
 import { SiteOffence } from '../models/site-offence';
+import { Weather } from '../models/weather';
+import { Visibility } from '../models/visibility';
+import { POIPrefix } from '../models/poi-prefix';
+import { EnviroPost } from '../models/enviro';
 
 @Component({
   selector: 'app-fpn',
@@ -18,27 +22,100 @@ export class FPNPage implements OnInit {
 
     map: any;
 
+
+
+
     constructor(
         private auth: AuthService,
+        private data: DataService,
+        private api: ApiService
     ) {
+        this.auth.checkLoggedIn();
+
+        
+
+        if (!this.data.checkFPNData()){
+            alert(0);
+            this.getFPNData();
+        }
     }
 
     ngOnInit() {
-        //this.initMap();
-        this.auth.checkLoggedIn();
+        
     }
+
+    getFPNData(): void {
+        alert(1);
+        let site: any = this.data.getSelectedSite();
+        let site_id: number = site.id;
+        this.api.getFPNData(site_id).subscribe({
+            next: (data) => {
+
+                let offence_how = data.data.offence_how;
+                this.data.setOffenceHow(offence_how);
+
+                let offence_location_suffix = data.data.offence_location_suffix;
+                this.data.setOffenceLocationSuffix(offence_location_suffix);
+
+                let address_verified_by = data.data.address_verified_via;
+                this.data.setAddressVerifiedBy(address_verified_by);
+
+                let ethnicities = data.data.ethnicities;
+                this.data.setEthnicities(ethnicities);
+
+                let id_shown = data.data.id_shown;
+                this.data.setIdShown(id_shown);
+
+                let weather: Weather[] = data.data.weathers;
+                this.data.setWeather(weather);
+
+                let visibility: Visibility[] = data.data.visibility;
+                this.data.setVisibility(visibility);
+
+                let poi_prefix: POIPrefix[] = data.data.poi_prefix;
+                this.data.setPOIPrefix(poi_prefix);
+
+                let site_offence = data.data.site_offences;
+                this.data.setSiteOffences(site_offence);
+
+                let offences = this.extractOffence(site_offence);
+                this.data.setOffences(offences);
+
+                let offenceGroups = this.extractOffenceGroups(offences);
+                this.data.setOffenceGroups(offenceGroups);
+
+            },
+            error: (error) => {
+                console.error('Error fetching SR Data:', error);
+                // Handle error as needed
+            }
+        });
+    }
+
+    extractOffence(site_offences: SiteOffence[]): Offence[] {
+        const groups = site_offences.map(site_offence => site_offence.offences);
+        return Array.from(new Set(groups.map(group => group.id)))
+          .map(id => groups.find(group => group.id === id) as Offence);
+    }
+
+    extractOffenceGroups(offences: Offence[]): OffenceGroup[] {
+        const groups = offences.map(offence => offence.offenceGroup);
+        return Array.from(new Set(groups.map(group => group.id)))
+          .map(id => groups.find(group => group.id === id) as OffenceGroup);
+    }
+    
 
     currentStep: number = 1;
 
     nextStep() {
-        if (this.currentStep < 5) {
-        this.currentStep++;
+        if (this.currentStep < 6) {
+            this.currentStep++;
         }
-  } 
+    } 
 
     previousStep() {
         if (this.currentStep > 1) {
-        this.currentStep--;
+            this.currentStep--;
         }
     }
 

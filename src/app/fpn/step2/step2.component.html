@@ -5,7 +5,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false">
+    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.proof_of_address">
         <ion-select-option *ngFor="let group of address_verified_by" [value]="group.id">
             {{ group.textOnMachine }}
         </ion-select-option>
@@ -19,7 +19,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false">
+    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.proof_of_id">
         <ion-select-option *ngFor="let group of id_shown" [value]="group.id">
             {{ group.textOnMachine }}
         </ion-select-option>
@@ -33,7 +33,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" ></ion-input>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.ref_no"></ion-input>
 </ion-item>
 
 
@@ -44,7 +44,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-<ion-select multiple="false">
+<ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.ethnicity">
     <ion-select-option *ngFor="let group of ethnicities" [value]="group.id">
         {{ group.textOnMachine }}
     </ion-select-option>

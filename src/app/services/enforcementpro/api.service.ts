@@ -38,7 +38,7 @@ export class ApiService {
     }
 
     getFPNData(site_id: number): Observable<any> {
-        const url = `${this.baseUrl}/sites/${site_id}/offencetypes`;
+        const url = `${this.baseUrl}/sites/${site_id}/fpn`;
         return this.http.get(url, { headers: this.getHeaders() });
     }
 

@@ -8,7 +8,7 @@
     <ion-label>Request Type</ion-label>
 </ion-item>
 <ion-item>
-    <ion-select interface="action-sheet" multiple="false" (ionChange)="getDynamicFeild(true,true)">
+    <ion-select interface="action-sheet" multiple="false" (ionChange)="getDynamicFeild(true,true)" [(ngModel)]="service_request.request_type_id">
         <ion-select-option *ngFor="let request_type of request_types" [value]="request_type.id">{{ request_type.type_name }}</ion-select-option>
     </ion-select>
 </ion-item>
@@ -60,7 +60,6 @@
 </ion-item>
 
 
-<!-- I want to assigned [(ngModel)] to the input and select below. But I want the variable we assign each input to be og a object called dynamic_form_data, exists as dynamic_form_data: any[] in the type script. After use data.id as the key and obiously the users input as the value of that key -->
 <div *ngFor="let dynamic_feild of dynamic_feilds_filtered">
     <ion-item>
         <ion-label>{{ dynamic_feild.label }}</ion-label>

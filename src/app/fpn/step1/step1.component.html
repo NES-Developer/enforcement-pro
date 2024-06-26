@@ -5,7 +5,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select (ionChange)="filterOffences()" multiple="false" [(ngModel)]="selected_offence_group_id">
+    <ion-select (ionChange)="filterOffences()" multiple="false" [(ngModel)]="enviro_post.offence_type_id">
         <ion-select-option *ngFor="let group of offenceGroups" [value]="group.id">
             {{ group.englishName }}
         </ion-select-option>
@@ -17,19 +17,19 @@
     <ion-label>Offence</ion-label>
 </ion-item>
 <ion-item *ngIf="filteredOffences.length > 0">
-    <ion-select multiple="false">
-        <ion-select-option *ngFor="let offence of filteredOffences" [value]="offence.id">
+    <ion-select (ionChange)="saveEnviroData()" multiple="false">
+        <ion-select-option *ngFor="let offence of filteredOffences" [value]="offence.id" [(ngModel)]="enviro_post.offence_id">
             {{ offence.name }}
         </ion-select-option>
     </ion-select>
 </ion-item>
 
 <!-- Title Select -->
-<ion-item *ngIf="filteredOffences.length > 0">
+<ion-item>
     <ion-label>Title</ion-label>
 </ion-item>
-<ion-item *ngIf="filteredOffences.length > 0">
-        <ion-select multiple="false">
+<ion-item>
+        <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
             <ion-select-option> Mr </ion-select-option>
             <ion-select-option> Mrs </ion-select-option>
             <ion-select-option> Ms </ion-select-option>
@@ -46,8 +46,8 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" ></ion-input>
-    <ion-input type="text" ></ion-input>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.first_name"></ion-input>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.last_name"></ion-input>
 </ion-item>
 
 <!-- House Number Text -->
@@ -57,7 +57,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" ></ion-input>
+    <ion-input type="text" (ionChange)="saveEnviroData()"></ion-input>
 </ion-item>
 
 <!-- Town Text -->
@@ -67,7 +67,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" ></ion-input>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town"></ion-input>
 </ion-item>
 
 <!-- Country and Postal Code Text -->
@@ -80,8 +80,8 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" ></ion-input>
-    <ion-input type="text" ></ion-input>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.county"></ion-input>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.post_code"></ion-input>
 </ion-item>
 
 <!-- Date of birth date -->
@@ -91,7 +91,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="date" ></ion-input>
+    <ion-input type="date" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.date_of_birth"></ion-input>
 </ion-item>
 
 <!-- Gender Select -->
@@ -101,7 +101,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select interface="action-sheet" multiple="false">
+    <ion-select interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="enviro_post.gender">
         <ion-select-option>Male</ion-select-option>
         <ion-select-option>Female</ion-select-option>
         <ion-select-option>Other</ion-select-option>
@@ -115,7 +115,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select interface="action-sheet" multiple="false">
+    <ion-select interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="enviro_post.is_bwc_active">
         <ion-select-option>Yes</ion-select-option>
         <ion-select-option>No</ion-select-option>
     </ion-select>

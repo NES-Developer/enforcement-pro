@@ -27,7 +27,9 @@ import { Step3Component } from './step3/step3.component';
   ],
   providers: [],
   bootstrap: [ServiceRequestPage],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA] // Add this line
+  schemas: [
+    CUSTOM_ELEMENTS_SCHEMA
+  ] // Add this line
 
 })
 export class ServiceRequestPageModule {}
