@@ -2,12 +2,29 @@
   <ion-label><strong><u>Location Information</u></strong></ion-label>
 </ion-item>
 
-<ion-item>
+<!-- <ion-item>
   <div #mapContainer style="height: 400px; width: 100%;"></div>
 </ion-item>
 <ion-item>
   <button (click)="createMap()">Refresh Map</button>
+</ion-item> -->
+
+<ion-item>
+  <div class="">
+    <div id="map"></div>
+  </div>
 </ion-item>
+
+<ion-item>
+  <ion-label>Enter Location Address</ion-label>
+</ion-item>
+<ion-item>
+  <ion-input [(ngModel)]="address"></ion-input>
+</ion-item>
+<ion-item>
+  <ion-button expand="full" (click)="onSearch()">Search</ion-button>
+</ion-item>
+
 
 
 <!-- Offence Location Text -->

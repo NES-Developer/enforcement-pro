@@ -1,4 +1,6 @@
 import { AfterViewInit, Component, ElementRef, ViewChild } from "@angular/core";
+import { EnviroPost } from "../../models/enviro";
+import { DataService } from "../../services/enforcementpro/data.service";
 
 @Component({
   selector: 'app-photo',
@@ -14,12 +16,17 @@ export class PhotoComponent  implements AfterViewInit {
   
     @ViewChild("canvas")
     public canvas!: ElementRef;
+
+    enviro_post: EnviroPost = new EnviroPost();
+
   
     captures: string[] = [];
     error: any;
     isCaptured!: boolean;
 
-    constructor() { }
+    constructor(
+      private data: DataService,
+    ) { }
 
     ngOnInit() {}
 
@@ -49,6 +56,7 @@ export class PhotoComponent  implements AfterViewInit {
       capture() {
         this.drawImageToCanvas(this.video.nativeElement);
         this.captures.push(this.canvas.nativeElement.toDataURL("image/png"));
+        this.enviro_post.offence_images.push(this.canvas.nativeElement.toDataURL("image/png"));
         this.isCaptured = true;
       }
     
@@ -60,6 +68,7 @@ export class PhotoComponent  implements AfterViewInit {
         this.isCaptured = true;
         var image = new Image();
         image.src = this.captures[idx];
+        image.src = this.enviro_post.offence_images[idx];
         this.drawImageToCanvas(image);
       }
     
@@ -68,5 +77,16 @@ export class PhotoComponent  implements AfterViewInit {
           .getContext("2d")
           .drawImage(image, 0, 0, this.WIDTH, this.HEIGHT);
       }
+
+      loadData() {
+        let enviro_post =  this.data.getEnviroPost();
+        if (enviro_post !== null) {
+            this.enviro_post = enviro_post;
+        }
+    }
+
+    saveEnviroData() {
+        this.data.setEnviroPost(this.enviro_post);
+    }
 
 }

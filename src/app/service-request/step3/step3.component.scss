@@ -1,14 +1,11 @@
-:host {
-  display: block;
-  height: 100vh; /* Full viewport height */
+@import "~leaflet/dist/leaflet.css";
+
+
+#map {
+  height: 400px;
+  width: 100%;
+  max-width: 600px;
 }
-
-#mapContainer {
-  height: 100px; /* Full height of the parent */
-  width: 100%;  /* Full width of the parent */
-}
-
-
 
 ion-content {
   --background: WHITE; /* Set content background to white */
