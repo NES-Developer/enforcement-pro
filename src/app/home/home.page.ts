@@ -32,10 +32,10 @@ export class HomePage implements OnInit {
     }
 
     ngOnInit(): void {
-        this.Init();
+        this.init();
     }
 
-    Init() {
+    init() {
         this.auth.checkLoggedIn();
         this.user = this.auth.getUser();
 
@@ -53,6 +53,7 @@ export class HomePage implements OnInit {
 
     loadData() {
         this.selected_site = this.data.getSelectedSite() || null;
+        console.log(this.selected_site);
         this.url = this.data.getUrl();
     }
 

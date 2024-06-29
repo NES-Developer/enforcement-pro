@@ -19,7 +19,6 @@ export class Step2Component  implements OnInit {
 
     enviro_post: EnviroPost = new EnviroPost();
 
-
     constructor(
         private api: ApiService,
         private data:DataService

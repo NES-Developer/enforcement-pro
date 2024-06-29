@@ -52,5 +52,5 @@ export class EnviroPost {
    witness_statement: string = '';
    officer_statement: string = '';
    signature: any;
-   offence_images: any;
+   offence_images: string[] = [];
 }

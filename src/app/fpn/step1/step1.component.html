@@ -30,9 +30,9 @@
 </ion-item>
 <ion-item>
         <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
-            <ion-select-option> Mr </ion-select-option>
-            <ion-select-option> Mrs </ion-select-option>
-            <ion-select-option> Ms </ion-select-option>
+            <ion-select-option *ngFor="let salutation of salutations" [value]="salutation.id"> 
+                {{ salutation.title }}     
+            </ion-select-option>
         </ion-select>
 </ion-item>
 

@@ -12,12 +12,10 @@ import { Ethnicity } from 'src/app/models/ethnicity';
 import { AddressVerifiedBy } from '../../models/address-verified-by';
 import { IDShown } from 'src/app/models/id-shown';
 import { OffenceLocationSuffix } from 'src/app/models/offence-location-suffix';
-import { OffenceHow } from 'src/app/models/offence-how';
-import { Weather } from 'src/app/models/weather';
-import { Visibility } from 'src/app/models/visibility';
-import { POIPrefix } from 'src/app/models/poi-prefix';
-import { EnviroPost } from 'src/app/models/enviro';
+import { OffenceHow } from 'src/app/models/offence-how'
+import { EnviroPost } from '../../models/enviro';
 import { FPNPage } from '../fpn.page';
+import { Salutation } from '../../models/Salutation';
 
 @Component({
     selector: 'app-step1',
@@ -38,6 +36,7 @@ export class Step1Component implements OnInit {
     offenceGroups: OffenceGroup[] = [];
     filteredOffences: Offence[] = [];
     id_shown: IDShown[] = [];
+    salutations: Salutation[] = [];
     selectedOffence!: Offence;
     selected_offence_group_id!: number;
 
@@ -78,6 +77,7 @@ export class Step1Component implements OnInit {
         this.offences = this.data.getOffence();
         this.offenceGroups = this.data.getOffenceGroup();
         let enviro_post =  this.data.getEnviroPost();
+        this.salutations = this.data.getSalutations();
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }

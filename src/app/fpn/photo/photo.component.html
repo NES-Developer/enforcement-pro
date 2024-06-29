@@ -14,12 +14,19 @@
 </ion-item>
 
 <ion-item>
-    <div class="snap-container">
-        <button class="btn btn-primary" *ngIf="!isCaptured" (click)="capture()">Snap Photo</button>
-        <button class="btn btn-danger" *ngIf="isCaptured" (click)="removeCurrent()">Take Another</button>
-        <!-- <button class="btn btn-danger" *ngIf="isCaptured" (click)="removeCurrent()">Take Another</button> -->
+    <div class="row">
+        <button class="btn btn-light w-100" *ngIf="!isCaptured" (click)="capture()">
+            <ion-icon name="camera"></ion-icon>
+        </button>
+        <button class="btn btn-warning" *ngIf="isCaptured" (click)="removeCurrent()">
+            x
+        </button>
+        
+    </div>
+</ion-item>
 
-    
+<ion-item>
+    <div class="snap-container">
         <div *ngIf="error" class="text-danger mt-4">
             {{ error }}. Please click refresh on stackblitz
             <div class="mt-5">
@@ -29,8 +36,12 @@
         </div>
     
         <ul class="list-unstyled">
-            <li *ngFor="let src of captures; let idx = index" (click)="setPhoto(idx)">
+            <li *ngFor="let src of enviro_post.offence_images; let idx = index" (click)="setPhoto(idx)">
                 <img [src]="src" height="50" />
-      </li>
+                
+                <button class="btn btn-danger rounded-circle" (click)="removePhoto(idx)">
+                    <ion-icon name="trash"></ion-icon>
+                </button>
+            </li>
         </ul>
 </ion-item>

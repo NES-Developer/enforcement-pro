@@ -35,7 +35,6 @@ export class FPNPage implements OnInit {
         
 
         if (!this.data.checkFPNData()){
-            alert(0);
             this.getFPNData();
         }
     }
@@ -45,11 +44,15 @@ export class FPNPage implements OnInit {
     }
 
     getFPNData(): void {
-        alert(1);
         let site: any = this.data.getSelectedSite();
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
+                alert(1);
+                console.log(data);
+
+                let salutations = data.data.salutations;
+                this.data.setSalutations(salutations);
 
                 let offence_how = data.data.offence_how;
                 this.data.setOffenceHow(offence_how);

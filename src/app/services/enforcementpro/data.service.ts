@@ -13,6 +13,7 @@ import { Weather } from '../../models/weather';
 import { Visibility } from '../../models/visibility';
 import { POIPrefix } from '../../models/poi-prefix';
 import { EnviroPost } from 'src/app/models/enviro';
+import { Salutation } from 'src/app/models/Salutation';
 
 @Injectable({
   providedIn: 'root'
@@ -41,7 +42,7 @@ export class DataService {
     private weather: Weather[] = [];
     private visibility: Visibility[] = [];
     private poi_prefix: POIPrefix[] = [];
-    
+    private salutations: Salutation[] = [];
 
     private dynamic_feilds: any[] = [];
     private ethnicities: any[] = [];
@@ -63,6 +64,7 @@ export class DataService {
         this.visibility = this.loadArrayFromLocalStorage('visibility');
         this.poi_prefix = this.loadArrayFromLocalStorage('poi_prefix');
 
+        this.salutations = this.loadArrayFromLocalStorage('salutations');
         this.dynamic_feilds = this.loadArrayFromLocalStorage('dynamic_feilds');
         this.site_offences = this.loadArrayFromLocalStorage('site_offences');
         this.offence_how = this.loadArrayFromLocalStorage('offence_how');
@@ -140,7 +142,6 @@ export class DataService {
     }
 
     setSRData(data: any): void {
-        // alert('from db');
         console.log(data);
 
         this.dynamic_feilds = data.dynamic_fields || [];
@@ -160,6 +161,11 @@ export class DataService {
 
         // this.sites = data.sites;
         // this.saveArrayToLocalStorage('sites', this.sites);
+    }
+
+    setSalutations(salutations: Salutation[]): void {
+        this.salutations = salutations;
+        this.saveArrayToLocalStorage('salutations', this.salutations);
     }
 
     setSiteOffences(site_offences: SiteOffence[]): void {
@@ -256,6 +262,10 @@ export class DataService {
 
     getUrl(): string {
         return this.dev_url;
+    }
+
+    getSalutations(): Salutation[] {
+        return this.salutations;
     }
 
     getDynamicFeildData(): any {
