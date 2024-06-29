@@ -2,6 +2,8 @@ import { Component, AfterViewInit, ViewChild, ElementRef, OnInit } from '@angula
 // import Signature from "@lemonadejs/signature";
 import SignaturePad from 'signature_pad';
 import { EnviroPost } from 'src/app/models/enviro';
+import { Site } from '../../models/site';
+import { Zone } from '../../models/zone';
 import { DataService } from 'src/app/services/enforcementpro/data.service';
 
 
@@ -17,13 +19,18 @@ export class Step5Component implements OnInit, AfterViewInit {
 
     enviro_post: EnviroPost = new EnviroPost();
 
+    siteName: string = "";
+    zoneName: string = "";
+    offenceTypeName: string = "";
+    offenceName: string = "";
+
 
     constructor(
         private data: DataService,
     ) { }
 
     ngOnInit() {
-
+        this.loadData();
     }
 
     ngAfterViewInit() {
@@ -48,10 +55,30 @@ export class Step5Component implements OnInit, AfterViewInit {
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
+
+        let site: Site = this.data.getSelectedSite();
+        this.siteName = site.name;
     }
 
     saveEnviroData() {
         this.data.setEnviroPost(this.enviro_post);
+    }
+
+    getNameById(id: number, from: string): string {
+        let name: string = "";
+        switch (from) {
+            case "site":
+                let site: Site = this.data.getSelectedSite();
+                name = site.name;
+                break;
+            case "zone":
+                const zone: Zone | undefined = this.data.findZoneById(id);
+                if (zone) {
+                    name = zone.name;
+                }
+                break;
+        }
+        return name;
     }
 
 }

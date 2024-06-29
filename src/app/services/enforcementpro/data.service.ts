@@ -12,8 +12,11 @@ import { OffenceHow } from '../../models/offence-how';
 import { Weather } from '../../models/weather';
 import { Visibility } from '../../models/visibility';
 import { POIPrefix } from '../../models/poi-prefix';
-import { EnviroPost } from 'src/app/models/enviro';
-import { Salutation } from 'src/app/models/Salutation';
+import { EnviroPost } from '../../models/enviro';
+import { Salutation } from '../../models/salutation';
+import { Zone } from '../../models/zone';
+import { Site } from '../../models/site';
+
 
 @Injectable({
   providedIn: 'root'
@@ -42,6 +45,7 @@ export class DataService {
     private weather: Weather[] = [];
     private visibility: Visibility[] = [];
     private poi_prefix: POIPrefix[] = [];
+    private zones: Zone[] = [];
     private salutations: Salutation[] = [];
 
     private dynamic_feilds: any[] = [];
@@ -63,7 +67,7 @@ export class DataService {
         this.weather = this.loadArrayFromLocalStorage('weather');
         this.visibility = this.loadArrayFromLocalStorage('visibility');
         this.poi_prefix = this.loadArrayFromLocalStorage('poi_prefix');
-
+        this.zones = this.loadArrayFromLocalStorage('zones');
         this.salutations = this.loadArrayFromLocalStorage('salutations');
         this.dynamic_feilds = this.loadArrayFromLocalStorage('dynamic_feilds');
         this.site_offences = this.loadArrayFromLocalStorage('site_offences');
@@ -216,6 +220,11 @@ export class DataService {
         this.saveArrayToLocalStorage('poi_prefix', this.poi_prefix);
     }
 
+    setZones(zone: Zone[]): void {
+        this.zones = zone;
+        this.saveArrayToLocalStorage('zones', this.zones);
+    }
+
     setOffenceLocationSuffix(offence_location_suffix: OffenceLocationSuffix[]): void {
         this.offence_location_suffix = offence_location_suffix || [];
         this.saveArrayToLocalStorage('offence_location_suffix', this.offence_location_suffix);
@@ -276,7 +285,7 @@ export class DataService {
         return this.enviro_post;
     }
 
-    getSelectedSite(): any {
+    getSelectedSite(): Site {
         return this.selected_site;
     }
 
@@ -336,6 +345,10 @@ export class DataService {
         return this.poi_prefix;
     }
 
+    getZones(): Zone[] {
+        return this.zones;
+    }
+
     getOfficers(): any[] {
         return this.officers;
     }
@@ -354,6 +367,10 @@ export class DataService {
 
     getOffenceTypes(): any[] {
         return this.offence_types;
+    }
+
+    findZoneById(id: number): Zone | undefined {
+        return this.zones.find(z => z.id === id);
     }
 
     removeAllData(): void {

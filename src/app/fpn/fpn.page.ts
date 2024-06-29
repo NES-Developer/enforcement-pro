@@ -32,8 +32,6 @@ export class FPNPage implements OnInit {
     ) {
         this.auth.checkLoggedIn();
 
-        
-
         if (!this.data.checkFPNData()){
             this.getFPNData();
         }
@@ -48,11 +46,14 @@ export class FPNPage implements OnInit {
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
-                alert(1);
+                // alert(1);
                 console.log(data);
 
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
+
+                let zones = data.data.zones;
+                this.data.setZones(zones);
 
                 let offence_how = data.data.offence_how;
                 this.data.setOffenceHow(offence_how);

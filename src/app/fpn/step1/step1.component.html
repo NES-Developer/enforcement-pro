@@ -1,5 +1,17 @@
-  <!-- Offence Group Select -->
-  <ion-item>
+<!-- Zone Select -->
+<ion-item>
+    <ion-label>Zones</ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.zone_id">
+        <ion-select-option *ngFor="let zone of zones" [value]="zone.id"> 
+            {{ zone.name }}     
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- Offence Group Select -->
+<ion-item>
     <ion-label>
         Offence Group
     </ion-label>
@@ -29,11 +41,11 @@
     <ion-label>Title</ion-label>
 </ion-item>
 <ion-item>
-        <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
-            <ion-select-option *ngFor="let salutation of salutations" [value]="salutation.id"> 
-                {{ salutation.title }}     
-            </ion-select-option>
-        </ion-select>
+    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
+        <ion-select-option *ngFor="let salutation of salutations" [value]="salutation.id"> 
+            {{ salutation.title }}     
+        </ion-select-option>
+    </ion-select>
 </ion-item>
 
 <!-- Full Name Text -->
