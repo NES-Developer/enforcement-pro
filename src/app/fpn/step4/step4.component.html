@@ -1,177 +1,68 @@
-<!-- Offence Location Text -->
+<!-- Location Select -->
 <ion-item>
     <ion-label>
-        Offence Location
+        Location
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_location"></ion-input>
+    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.location_id">
+        <ion-select-option *ngFor="let group of offence_location_suffix" [value]="group.id">
+            {{ group.textOnMachine }}
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- Action Select -->
+<ion-item>
+    <ion-label>
+        Action
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.action_id">
+        <ion-select-option *ngFor="let group of offence_how" [value]="group.id">
+            {{ group.textOnMachine }}
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- Caution 1 and 2 Time -->
+<ion-item>
+    <ion-label>
+        Caution 1
+    </ion-label>
+    <ion-label>
+        Caution 2
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="time" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.caution"></ion-input>
+    <ion-input type="time" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.second_caution"></ion-input>
 </ion-item>
 
 <!-- Offender Reply Select -->
 <ion-item>
     <ion-label>
-        Type of Land
+        Offender Reply
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.land_type_id">
+    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offender_reply">
         <ion-select-option>
-            Public
+            Yes
         </ion-select-option>
         <ion-select-option>
-            Private
+            No
         </ion-select-option>
     </ion-select>
 </ion-item>
 
-<!-- Town/Ward Select -->
+<!-- Description Select -->
 <ion-item>
     <ion-label>
-        Town/Ward
+        Description
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town_area">
-        <ion-select-option>
-            AreaX
-        </ion-select-option>
-    </ion-select>
-</ion-item>
-
-  <!-- Poi Prefix Select -->
-  <ion-item>
-    <ion-label>
-        POI Prefix
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi_prefix_id">
-        <ion-select-option *ngFor="let group of poi_prefix" [value]="group.id">
-            {{ group.textOnMachine }}
-        </ion-select-option>
-    </ion-select>
-</ion-item>
-
-<!-- POI Text -->
-<ion-item>
-    <ion-label>
-        POI
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi"></ion-input>
-</ion-item>
-
- <!-- Visibility Select -->
- <ion-item>
-    <ion-label>
-        Visibility
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.visibility_id">
-        <ion-select-option *ngFor="let group of visibility" [value]="group.id">
-            {{ group.visibility }}
-        </ion-select-option>
-    </ion-select>
-</ion-item>
-
- <!-- Weather Select -->
- <ion-item>
-    <ion-label>
-        Weather
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.weather_id">
-        <ion-select-option *ngFor="let group of weather" [value]="group.id">
-            {{ group.textOnMachine }}
-        </ion-select-option>
-    </ion-select>
-</ion-item>
-
-<!-- Offence Date & Time Text -->
-<ion-item>
-    <ion-label>
-        Offence Date & Time
-    </ion-label>
-  </ion-item>
-  <ion-item>
-    <ion-datetime presentation="date-time" [preferWheel]="true" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_datetime"></ion-datetime>
-</ion-item>
-
-<!-- FPN issued on the spot -->
-<ion-item>
-    <ion-label>FPN issued on the spot</ion-label>  
-  </ion-item>
-  <ion-item>
-      <ion-select interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.enviro_issued_onspot">
-          <ion-select-option >Yes</ion-select-option>
-          <ion-select-option>No</ion-select-option>
-      </ion-select>
-  </ion-item>
-
-
-<!-- Is witness available -->
-<ion-item>
-    <ion-label>Is witness available?</ion-label>  
-  </ion-item>
-  <ion-item>
-      <ion-select interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.is_witness_available">
-          <ion-select-option>Yes</ion-select-option>
-          <ion-select-option>No</ion-select-option>
-      </ion-select>
-  </ion-item>
-
-
-<!-- Witness Detail 1 Text -->
-<ion-item>
-    <ion-label>
-        Witness Name
-    </ion-label>
-    <ion-label>
-        Witness Phone
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-input type="text"  (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.witness_name"></ion-input>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.witness_phone"></ion-input>
-</ion-item>
-
-<!-- Witness Detail 2 Text -->
-<ion-item>
-    <ion-label>
-        Witness Address
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.witness_address"></ion-input>
-</ion-item>
-
-<!-- Witness Statement Select -->
-<ion-item>
-    <ion-label>
-        Witness Statement
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-textarea  (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.witness_statement"></ion-textarea>
-</ion-item>
-
-<!-- Officer Statement Select -->
-<ion-item>
-    <ion-label>
-        Officer Statement
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-textarea  (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.officer_statement"></ion-textarea>
-</ion-item>
-
-<ion-item>
-</ion-item>
-<ion-item>
-</ion-item>
-<ion-item>
+    <ion-textarea  (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.description"></ion-textarea>
 </ion-item>

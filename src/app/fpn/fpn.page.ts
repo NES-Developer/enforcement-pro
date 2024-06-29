@@ -22,8 +22,7 @@ export class FPNPage implements OnInit {
 
     map: any;
 
-
-
+    enviro_post: EnviroPost = new EnviroPost();
 
     constructor(
         private auth: AuthService,
@@ -35,6 +34,8 @@ export class FPNPage implements OnInit {
         if (!this.data.checkFPNData()){
             this.getFPNData();
         }
+
+        this.enviro_post = this.data.getEnviroPost();
     }
 
     ngOnInit() {

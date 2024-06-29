@@ -1,0 +1,63 @@
+<ion-item>
+    <ion-label>
+        Confirmation Screen
+    </ion-label>
+</ion-item>
+
+<ion-accordion-group>
+
+    <ion-accordion value="first">
+        <ion-item slot="header" color="dark">
+            <ion-label>Offence Detail</ion-label>
+        </ion-item>
+        <div class="bg-light text-dark" slot="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-4">Site:</div>
+                    <div class="col-8">{{ getNameById(0,'site') }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Zone:</div>
+                    <div class="col-8">{{ getNameById(enviro_post.zone_id, 'zone') }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Offence Type:</div>
+                    <div class="col-8">{{ getNameById(enviro_post.offence_type_id, 'offence_type') }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Offence:</div>
+                    <div class="col-8">{{ offenceName }}</div>
+                </div>
+            </div>
+        </div>
+    </ion-accordion>
+    
+    <ion-accordion value="second">
+      <ion-item slot="header" color="light">
+        <ion-label>Second Accordion</ion-label>
+      </ion-item>
+      <div class="ion-padding" slot="content">Second Content</div>
+    </ion-accordion>
+    <ion-accordion value="third">
+      <ion-item slot="header" color="light">
+        <ion-label>Third Accordion</ion-label>
+      </ion-item>
+      <div class="ion-padding" slot="content">Third Content</div>
+    </ion-accordion>
+</ion-accordion-group>
+
+
+<ion-item>
+    <div>
+        <canvas #canvas width="500" height="300" style="border:1px solid #000;"></canvas>
+      </div>
+      
+</ion-item>
+
+<ion-item>
+    <div>
+        <button ion-button (click)="clear()">Clear</button>
+        <button ion-button (click)="save()">Save</button>
+      </div>
+</ion-item>
+xx

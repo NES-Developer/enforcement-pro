@@ -1,3 +1,15 @@
+<!-- Site Select -->
+<ion-item>
+    <ion-label>Site</ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false" disabled="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.site_id" [disabled]="true">
+        <ion-select-option *ngFor="let site of sites" [value]="site.id"> 
+            {{ site.name }}     
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
 <!-- Zone Select -->
 <ion-item>
     <ion-label>Zones</ion-label>
@@ -35,101 +47,3 @@
         </ion-select-option>
     </ion-select>
 </ion-item>
-
-<!-- Title Select -->
-<ion-item>
-    <ion-label>Title</ion-label>
-</ion-item>
-<ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
-        <ion-select-option *ngFor="let salutation of salutations" [value]="salutation.id"> 
-            {{ salutation.title }}     
-        </ion-select-option>
-    </ion-select>
-</ion-item>
-
-<!-- Full Name Text -->
-<ion-item>
-    <ion-label>
-        Forename
-    </ion-label>
-    <ion-label>
-        Surname
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.first_name"></ion-input>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.last_name"></ion-input>
-</ion-item>
-
-<!-- House Number Text -->
-<ion-item>
-    <ion-label>
-        House No/Flat
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-input type="text" (ionChange)="saveEnviroData()"></ion-input>
-</ion-item>
-
-<!-- Town Text -->
-<ion-item>
-    <ion-label>
-        Town
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town"></ion-input>
-</ion-item>
-
-<!-- Country and Postal Code Text -->
-<ion-item>
-    <ion-label>
-        Country
-    </ion-label>
-    <ion-label>
-        Postal Code
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.county"></ion-input>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.post_code"></ion-input>
-</ion-item>
-
-<!-- Date of birth date -->
-<ion-item>
-    <ion-label>
-        Date of Birth
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-input type="date" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.date_of_birth"></ion-input>
-</ion-item>
-
-<!-- Gender Select -->
-<ion-item>
-    <ion-label>
-        Gender
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-select interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="enviro_post.gender">
-        <ion-select-option>Male</ion-select-option>
-        <ion-select-option>Female</ion-select-option>
-        <ion-select-option>Other</ion-select-option>
-    </ion-select>
-</ion-item>
-
-<!-- BWC Text -->
-<ion-item>
-    <ion-label>
-        Did you activate BWC
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-select interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="enviro_post.is_bwc_active">
-        <ion-select-option>Yes</ion-select-option>
-        <ion-select-option>No</ion-select-option>
-    </ion-select>
-</ion-item>
-

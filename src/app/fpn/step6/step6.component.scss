@@ -1,4 +1,13 @@
-:host {
+canvas {
+    // align-items: center;
+    // align-content: center;
+    width: 100%;
+    height: auto;
+    border: 1px solid #000;
+  }
+  
+
+  :host {
     display: block;
     height: 100vh; /* Full viewport height */
   }
@@ -7,10 +16,8 @@
     height: 100px; /* Full height of the parent */
     width: 100%;  /* Full width of the parent */
   }
-  
-  
-  
-  ion-content {
+
+  ion-accordion-group {
     --background: WHITE; /* Set content background to white */
   }
   
@@ -90,11 +97,6 @@
     --border-radius: 20px;
     width: 100%; /* set width to 80% */
     max-width: 100%; /* set max-width to 80% */
-    text-align: center; /* align text to the center */
-  }
-
-  ion-select-option {
-    text-align: center; /* align text to the center */
   }
   
   ion-list {

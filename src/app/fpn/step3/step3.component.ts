@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { AddressVerifiedBy } from '../../models/address-verified-by';
+import { Ethnicity } from '../../models/ethnicity';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
-import { OffenceLocationSuffix } from '../../models/offence-location-suffix';
-import { OffenceHow } from '../../models/offence-how';
-import { EnviroPost } from 'src/app/models/enviro';
+import { IDShown } from '../../models/id-shown';
+import { EnviroPost } from '../../models/enviro';
 
 @Component({
   selector: 'app-step3',
@@ -12,26 +13,27 @@ import { EnviroPost } from 'src/app/models/enviro';
 })
 export class Step3Component  implements OnInit {
 
-    ethnicities: Location[] = [];
-    offence_location_suffix: OffenceLocationSuffix[] = [];
-    offence_how: OffenceHow[] = [];
+    ethnicities: Ethnicity[] = [];
+    address_verified_by: AddressVerifiedBy[] = [];
+    id_shown: IDShown[] = [];
+
     enviro_post: EnviroPost = new EnviroPost();
-    // address_verified_by: AddressVerifiedBy[] = [];
 
     constructor(
         private api: ApiService,
-        private data: DataService
+        private data:DataService
     ) {}
 
     ngOnInit() {
         this.loadData();
     }
 
+    
+
     loadData() {
-        // this.ethnicities = this.data.getEthnicities();
-        // this.address_verified_by = this.data.getAddressVerifiedBy();
-        this.offence_location_suffix = this.data.getOffenceLocationSuffix();
-        this.offence_how = this.data.getOffenceHow();
+        this.address_verified_by = this.data.getAddressVerifiedBy();
+        this.ethnicities = this.data.getEthnicities();
+        this.id_shown = this.data.getIDShown();
         let enviro_post =  this.data.getEnviroPost();
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
