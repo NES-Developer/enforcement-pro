@@ -1,4 +1,8 @@
-
+<ion-item>
+    <h4>
+        Offender Detail
+    </h4>
+</ion-item>
 
 <!-- Title Select -->
 <ion-item>
@@ -6,7 +10,7 @@
 </ion-item>
 <ion-item>
     <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
-        <ion-select-option *ngFor="let salutation of salutations" [value]="salutation.id"> 
+        <ion-select-option *ngFor="let salutation of salutations"> 
             {{ salutation.title }}     
         </ion-select-option>
     </ion-select>

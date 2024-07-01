@@ -1,9 +1,15 @@
+<ion-item>
+    <h4>
+        Site Offence Detail
+    </h4>
+</ion-item>
+
 <!-- Site Select -->
 <ion-item>
     <ion-label>Site</ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false" disabled="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.site_id" [disabled]="true">
+    <ion-select multiple="false" disabled="false" [(ngModel)]="enviro_post.site_id" [disabled]="true">
         <ion-select-option *ngFor="let site of sites" [value]="site.id"> 
             {{ site.name }}     
         </ion-select-option>
@@ -41,9 +47,40 @@
     <ion-label>Offence</ion-label>
 </ion-item>
 <ion-item *ngIf="filteredOffences.length > 0">
-    <ion-select (ionChange)="saveEnviroData()" multiple="false">
-        <ion-select-option *ngFor="let offence of filteredOffences" [value]="offence.id" [(ngModel)]="enviro_post.offence_id">
+    <ion-select (ionChange)="getOffenceById(enviro_post.offence_id)" multiple="false" [(ngModel)]="enviro_post.offence_id">
+        <ion-select-option *ngFor="let offence of filteredOffences" [value]="offence.id">
             {{ offence.name }}
         </ion-select-option>
     </ion-select>
+</ion-item>
+
+<ion-item>
+</ion-item>
+
+<ion-item *ngIf="enviro_post.offence_id > 0">
+    <h4>
+        Legislation Detail
+    </h4>
+</ion-item>
+
+<ion-item *ngIf="enviro_post.offence_id > 0">
+    <ion-card color="medium" class="w-100">
+        <ion-card-header>
+            <ion-card-subtitle>{{ offence.engLegislation.title }} (English) Legislation</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content> 
+            {{ offence.engLegislation.legislation }}
+        </ion-card-content>
+    </ion-card>
+</ion-item>
+
+<ion-item *ngIf="enviro_post.offence_id > 0">
+    <ion-card color="medium" class="w-100">
+        <ion-card-header>
+            <ion-card-subtitle>{{ offence.welLegislation.title }} Legislation </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content> 
+            {{ offence.welLegislation.legislation }}
+        </ion-card-content>
+    </ion-card>
 </ion-item>

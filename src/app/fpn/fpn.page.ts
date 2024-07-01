@@ -53,6 +53,12 @@ export class FPNPage implements OnInit {
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
 
+                let builds = data.data.builds;
+                this.data.setBuilds(builds);
+
+                let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
+                this.data.setHairColors(hair_colours);
+
                 let zones = data.data.zones;
                 this.data.setZones(zones);
 
@@ -113,7 +119,7 @@ export class FPNPage implements OnInit {
     currentStep: number = 1;
 
     nextStep() {
-        if (this.currentStep < 6) {
+        if (this.currentStep < 7) {
             this.currentStep++;
         }
     } 
@@ -127,6 +133,11 @@ export class FPNPage implements OnInit {
     submitForm() {
         console.log('Form submitted!');
         // Add form submission logic here
+    }
+
+    saveFPN() {
+        this.data.pushEnviroQue();
+        window.location.reload();
     }
 
 }

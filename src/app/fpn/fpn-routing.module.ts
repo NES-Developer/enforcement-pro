@@ -8,10 +8,10 @@ const routes: Routes = [
     path: '',
     component: FPNPage,
   },
-  {
-    path: 'fpn/photo',
-    component: PhotoComponent,
-  },
+  // {
+  //   path: 'fpn/photo',
+  //   component: PhotoComponent,
+  // },
 ];
 
 @NgModule({

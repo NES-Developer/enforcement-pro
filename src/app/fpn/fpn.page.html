@@ -3,11 +3,8 @@
         
         <ion-row>
             <ion-col>
-                <ion-button class="btn btn-dark" href="/fpn/photo">
-                    <ion-icon name="camera"></ion-icon>
-                    <ion-badge>
-                        {{ enviro_post.offence_images.length }}
-                    </ion-badge>
+                <ion-button href="/fpn/queue">
+                    <ion-icon name="time"></ion-icon>
                 </ion-button>
             </ion-col>
             <ion-col>
@@ -15,7 +12,14 @@
                     FPN
                 </ion-title>
             </ion-col>
-            <ion-col>3</ion-col>
+            <ion-col>
+                <ion-button href="/fpn/photo">
+                    <ion-icon name="camera"></ion-icon>
+                    <ion-badge color="white">
+                        {{ enviro_post.offence_images.length }}
+                    </ion-badge>
+                </ion-button>
+            </ion-col>
         </ion-row>
     </ion-toolbar>
 </ion-header>
@@ -34,7 +38,7 @@
         <app-step2 (previous)="previousStep()" (next)="nextStep()"></app-step2>
     </div>
     <div *ngIf="currentStep === 3">
-        <app-step3 (previous)="previousStep()" (next)="submitForm()"></app-step3>
+        <app-step3 (previous)="previousStep()" (next)="nextStep()"></app-step3>
     </div> 
     <div *ngIf="currentStep === 4">
         <app-step4 (previous)="previousStep()" (next)="nextStep()"></app-step4>
@@ -43,7 +47,10 @@
         <app-step5 (previous)="previousStep()" (next)="nextStep()"></app-step5>
     </div> 
     <div *ngIf="currentStep === 6">
-        <app-photo (previous)="previousStep()" (next)="nextStep()"></app-photo>
+        <app-step6 (previous)="previousStep()" (next)="submitForm()"></app-step6>
+    </div> 
+    <div *ngIf="currentStep === 7">
+        <app-step7 (previous)="previousStep()" (next)="submitForm()"></app-step7>
     </div> 
 
 </ion-content>
@@ -54,15 +61,23 @@
         <ion-row>
             <ion-col size="6" *ngIf="currentStep === 1">
             </ion-col>
-            <ion-col size="6" *ngIf="currentStep > 1">
-                <ion-button expand="block" shape="full" (click)="previousStep()">Previous</ion-button>
+            <ion-col size="6" *ngIf="currentStep > 1 && currentStep < 6">
+                <ion-button expand="block" shape="full" (click)="previousStep()">Back</ion-button>
             </ion-col>
             <ion-col size="6" *ngIf="currentStep < 6">
-                <ion-button expand="block" shape="full" (click)="nextStep()">Next</ion-button>
+                <ion-button expand="block" shape="full" (click)="nextStep()">Continue</ion-button>
+            </ion-col>
+
+            <ion-col size="6" *ngIf="currentStep === 6">
+                <ion-button expand="block" shape="full" (click)="saveFPN()">Save</ion-button>
             </ion-col>
             <ion-col size="6" *ngIf="currentStep === 6">
-                <ion-button expand="block" shape="full" (click)="nextStep()">Submit</ion-button>
+                <ion-button color="primary" expand="block" shape="full" (click)="nextStep()">Notebook Entry</ion-button>
             </ion-col>
+            <ion-col size="12" *ngIf="currentStep === 6">
+                <ion-button color="success" expand="block" shape="full" (click)="nextStep()">Submit</ion-button>
+            </ion-col>
+
         </ion-row>
     </ion-toolbar>
 </ion-footer>

@@ -17,8 +17,10 @@ import { Step3Component } from './step3/step3.component';
 import { Step4Component } from './step4/step4.component';
 import { Step5Component } from './step5/step5.component';
 import { Step6Component } from './step6/step6.component';
-
+import { Step7Component } from './step7/step7.component';
 import { PhotoComponent } from './photo/photo.component';
+import { QueueComponent } from './queue/queue.component';
+
 
 @NgModule({
     imports: [
@@ -37,7 +39,9 @@ import { PhotoComponent } from './photo/photo.component';
             Step4Component,
             Step5Component,
             Step6Component,
-            PhotoComponent
+            Step7Component,
+            PhotoComponent,
+            QueueComponent
         ]
     })
 export class FPNPageModule {}

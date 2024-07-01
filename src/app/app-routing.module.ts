@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { PhotoComponent } from './fpn/photo/photo.component';
+import { QueueComponent } from './fpn/queue/queue.component';
 
 const routes: Routes = [
   {
@@ -18,6 +19,10 @@ const routes: Routes = [
   {
     path: 'fpn/photo',
     component: PhotoComponent,
+  },
+  {
+    path: 'fpn/queue',
+    component: QueueComponent,
   },
 ];
 @NgModule({

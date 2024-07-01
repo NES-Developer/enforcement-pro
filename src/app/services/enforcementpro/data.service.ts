@@ -16,6 +16,8 @@ import { EnviroPost } from '../../models/enviro';
 import { Salutation } from '../../models/salutation';
 import { Zone } from '../../models/zone';
 import { Site } from '../../models/site';
+import { Build } from 'src/app/models/build';
+import { HairColour } from 'src/app/models/hair_colour';
 
 
 @Injectable({
@@ -34,6 +36,7 @@ export class DataService {
     private service_request: ServiceRequest;
     private selected_site: any;
 
+    private enviro_que: EnviroPost[] = [];
     private site_offences: SiteOffence[] = [];
     private offence_how: OffenceHow[] = [];
     private offences: Offence[] = [];
@@ -47,6 +50,8 @@ export class DataService {
     private poi_prefix: POIPrefix[] = [];
     private zones: Zone[] = [];
     private salutations: Salutation[] = [];
+    private builds: Build[] = [];
+    private hair_colours: HairColour[] = [];
 
     private dynamic_feilds: any[] = [];
     private ethnicities: any[] = [];
@@ -69,7 +74,10 @@ export class DataService {
         this.poi_prefix = this.loadArrayFromLocalStorage('poi_prefix');
         this.zones = this.loadArrayFromLocalStorage('zones');
         this.salutations = this.loadArrayFromLocalStorage('salutations');
+        this.builds = this.loadArrayFromLocalStorage('builds');
+        this.hair_colours = this.loadArrayFromLocalStorage('hair_colours');        
         this.dynamic_feilds = this.loadArrayFromLocalStorage('dynamic_feilds');
+        this.enviro_que = this.loadArrayFromLocalStorage('enviro_que');
         this.site_offences = this.loadArrayFromLocalStorage('site_offences');
         this.offence_how = this.loadArrayFromLocalStorage('offence_how');
         this.offences = this.loadArrayFromLocalStorage('offences');
@@ -172,9 +180,24 @@ export class DataService {
         this.saveArrayToLocalStorage('salutations', this.salutations);
     }
 
+    setBuilds(builds: Build[]): void {
+        this.builds = builds;
+        this.saveArrayToLocalStorage('builds', this.builds);
+    }
+
+    setHairColors(hair_colours: HairColour[]): void {
+        this.hair_colours = hair_colours;
+        this.saveArrayToLocalStorage('hair_colours', this.hair_colours);
+    }
+
     setSiteOffences(site_offences: SiteOffence[]): void {
         this.site_offences = site_offences || [];
         this.saveArrayToLocalStorage('site_offences', this.site_offences);
+    }
+
+    setEnviroQue(enviro_que: EnviroPost[]): void {
+        this.enviro_que = enviro_que || [];
+        this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
 
     setOffenceHow(offence_how: OffenceHow[]): void {
@@ -245,6 +268,25 @@ export class DataService {
         this.saveArrayToLocalStorage('offence_types', this.offence_types);
     }
 
+    pushEnviroQue(): void {
+        this.enviro_que.push(this.enviro_post);
+        this.enviro_post = new EnviroPost();
+
+        this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
+        this.saveObjectToLocalStorage('enviro_post', this.enviro_post);
+
+    }
+
+    spliceEnviroQue(enviro_post: EnviroPost): void {
+        const index = this.enviro_que.indexOf(enviro_post);
+        if (index > -1) {
+          this.enviro_que.splice(index, 1);
+        }
+        this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
+    }
+      
+
+
     checkSelectedSite(): boolean {
         return this.selected_site !== null;
     }
@@ -275,6 +317,14 @@ export class DataService {
 
     getSalutations(): Salutation[] {
         return this.salutations;
+    }
+
+    getBuilds(): Build[] {
+        return this.builds;
+    }
+
+    getHairColours(): HairColour[] {
+        return this.hair_colours;
     }
 
     getDynamicFeildData(): any {
@@ -315,6 +365,10 @@ export class DataService {
 
     getSiteOffence(): SiteOffence[] {
         return this.site_offences;
+    }
+
+    getEnviroQue(): EnviroPost[] {
+        return this.enviro_que;
     }
 
     getOffence(): Offence[] {
@@ -373,6 +427,10 @@ export class DataService {
         return this.zones.find(z => z.id === id);
     }
 
+    findOffenceById(id: number): Offence | undefined {
+        return this.offences.find(z => z.id === id);
+    }
+
     removeAllData(): void {
         // Clear all private arrays
         this.selected_site = null,
@@ -384,6 +442,8 @@ export class DataService {
         this.sr_via = [];
         this.sites = [];
         this.service_request = new ServiceRequest();
+        this.enviro_post = new EnviroPost();
+        this.enviro_que = [];
         this.address_verifed_by = [];
         this.offences = [];
         this.offence_groups = [];
@@ -391,6 +451,9 @@ export class DataService {
         this.offence_location_suffix = [];
         this.offence_how = [];
         this.offence_types = [];
+        this.salutations = [];
+        this.builds = [];
+        this.hair_colours = [];
 
         // Clear localStorage
         localStorage.removeItem('selected_site')
@@ -408,6 +471,11 @@ export class DataService {
         localStorage.removeItem('offence_location_suffix');
         localStorage.removeItem('offence_how');
         localStorage.removeItem('offence_types');
+        localStorage.removeItem('salutations');
+        localStorage.removeItem('builds');
+        localStorage.removeItem('hair_colours');
+        localStorage.removeItem('enviro_post');
+        localStorage.removeItem('enviro_que');
 
         
     }

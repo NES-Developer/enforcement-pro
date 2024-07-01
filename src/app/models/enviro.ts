@@ -1,3 +1,5 @@
+import { NotebookEntry } from "./notebook-entry";
+
 export class EnviroPost {
 
    salutation: string = '';
@@ -53,4 +55,5 @@ export class EnviroPost {
    officer_statement: string = '';
    signature: any;
    offence_images: string[] = [];
+   notebook_entries!: NotebookEntry;
 }
