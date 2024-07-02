@@ -7,6 +7,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router'; // Import Router
 import { AuthService } from './auth.service';
 import { DataService } from './data.service';
+import { EnviroPost } from '../../models/enviro';
 
 @Injectable({
   providedIn: 'root'
@@ -30,6 +31,11 @@ export class ApiService {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
         });
+    }
+
+    postFPN(data: EnviroPost): Observable<any> {
+        const url = `${this.baseUrl}/enviro1`;
+        return this.http.post(url, data, { headers: this.getHeaders() });
     }
 
     getSRData(): Observable<any> {

@@ -15,7 +15,7 @@
                 <ion-button href="/fpn/photo">
                     <ion-icon name="camera"></ion-icon>
                     <ion-badge color="white">
-                        {{ enviro_post.offence_images.length }}
+                        {{enviro_post.offence_images.length !== null ? enviro_post.offence_images.length : 0}}
                     </ion-badge>
                 </ion-button>
             </ion-col>

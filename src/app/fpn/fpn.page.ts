@@ -22,7 +22,7 @@ export class FPNPage implements OnInit {
 
     map: any;
 
-    enviro_post: EnviroPost = new EnviroPost();
+    enviro_post: EnviroPost;
 
     constructor(
         private auth: AuthService,
@@ -35,11 +35,22 @@ export class FPNPage implements OnInit {
             this.getFPNData();
         }
 
-        this.enviro_post = this.data.getEnviroPost();
+        let enviro_post = this.data.getEnviroPost();
+        if (enviro_post) {
+            this.enviro_post = enviro_post;
+        } else {
+            this.enviro_post = new EnviroPost();
+        }
     }
 
     ngOnInit() {
-        
+        this.loadData();
+    }
+
+    loadData() {
+        // this.enviro_post = this.data.getEnviroPost();
+
+        console.log(this.enviro_post);
     }
 
     getFPNData(): void {
@@ -116,7 +127,7 @@ export class FPNPage implements OnInit {
     }
     
 
-    currentStep: number = 1;
+    currentStep: number = 5;
 
     nextStep() {
         if (this.currentStep < 7) {
@@ -132,6 +143,16 @@ export class FPNPage implements OnInit {
 
     submitForm() {
         console.log('Form submitted!');
+        this.api.postFPN(this.enviro_post).subscribe({
+            next: (response) => {
+                console.log('Response:', response);
+                // Handle the response here
+            },
+            error: (error) => {
+                console.error('Error:', error);
+                // Handle the error here
+            }
+        });
         // Add form submission logic here
     }
 
@@ -140,6 +161,8 @@ export class FPNPage implements OnInit {
         window.
         location.reload();
     }
+
+    
 
 
 

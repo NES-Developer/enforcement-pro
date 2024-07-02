@@ -1,3 +1,4 @@
+import { IonDatetime } from "@ionic/angular";
 import { NotebookEntry } from "./notebook-entry";
 
 export class EnviroPost {
@@ -7,11 +8,11 @@ export class EnviroPost {
    last_name: string = '';
    address: string = '';
    town: string = '';
-   county: string = '';
+   county: string = 'United Kingdom';
    post_code: string = '';
    phone: string = '';
    date_of_birth: string = '';
-   ethnicity: string = '';
+   ethnicity_id: string = '';
    gender: string = '';
    is_bwc_active: string = '';
    proof_of_address: string = '';

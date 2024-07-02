@@ -30,9 +30,10 @@
     <ion-list [inset]="true">
 
         <ion-item [button]="true" *ngFor="let enviro_post of enviro_que">
-            <ion-icon color="tertiary" slot="start" name="refresh-circle" size="large"></ion-icon>
+            <ion-icon color="tertiary" slot="start" name="refresh-circle" size="large" (click)="submitFPN(enviro_post)"></ion-icon>
             <ion-label>Offender Name: {{ enviro_post.first_name }} {{ enviro_post.last_name }}</ion-label>
             <ion-label>Witness Name: {{ enviro_post.witness_name }}</ion-label>
+            <ion-icon color="tertiary" slot="start" name="create" size="large" (click)="editFPN(enviro_post)"></ion-icon>
             <ion-note slot="end">
                 <img [src]="enviro_post.offence_images[1]" style="height: 80px; border-radius: 5px;"/>
                 

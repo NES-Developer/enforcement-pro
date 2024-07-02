@@ -77,6 +77,7 @@ export class Step1Component  implements OnInit {
         let offence = this.data.findOffenceById(id);
         if (offence) {
             this.offence = offence;
+            console.log(this.offence);
         }
         this.saveEnviroData();
     }

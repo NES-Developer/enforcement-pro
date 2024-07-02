@@ -66,6 +66,17 @@
 <ion-item *ngIf="enviro_post.offence_id > 0">
     <ion-card color="medium" class="w-100">
         <ion-card-header>
+            <ion-card-subtitle>Offence Description</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content> 
+            {{ offence.description }}
+        </ion-card-content>
+    </ion-card>
+</ion-item>
+
+<ion-item *ngIf="enviro_post.offence_id > 0">
+    <ion-card color="medium" class="w-100">
+        <ion-card-header>
             <ion-card-subtitle>{{ offence.engLegislation.title }} (English) Legislation</ion-card-subtitle>
         </ion-card-header>
         <ion-card-content> 

@@ -32,7 +32,7 @@ export class DataService {
     private google_key: string = 'AIzaSyAfk02RCKQgVc4__wbyFgnpraBOhMeK6K4';
 
     private dynamic_feilds_data: any = {};
-    private enviro_post: EnviroPost = new EnviroPost();
+    private enviro_post: EnviroPost;
     private service_request: ServiceRequest;
     private selected_site: any;
 
@@ -63,6 +63,7 @@ export class DataService {
     
     constructor() {
         this.service_request = new ServiceRequest();
+        this.enviro_post = new EnviroPost();
 
         this.loadFromLocalStorage();
     }

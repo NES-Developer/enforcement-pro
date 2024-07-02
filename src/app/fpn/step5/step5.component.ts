@@ -6,6 +6,7 @@ import { Visibility } from '../../models/visibility';
 import { POIPrefix } from '../../models/poi-prefix';
 import { EnviroPost } from 'src/app/models/enviro';
 import { Observable, Subscriber } from 'rxjs';
+import * as moment from 'moment';  // Import moment.js for date formatting
 
 
 @Component({
@@ -63,6 +64,13 @@ export class Step5Component  implements OnInit {
     }
 
     saveEnviroData() {
+        if (this.enviro_post.offence_datetime) {
+            // Format the datetime using moment.js
+            const formattedDate = moment(this.enviro_post.offence_datetime).format('YYYY-MM-DD HH:mm');
+            this.enviro_post.offence_datetime = formattedDate.toString();
+            console.log(this.enviro_post.offence_datetime);
+
+        }
         this.data.setEnviroPost(this.enviro_post);
     }
 
