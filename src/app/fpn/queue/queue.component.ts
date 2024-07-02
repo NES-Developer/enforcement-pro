@@ -25,8 +25,7 @@ export class QueueComponent  implements OnInit {
     }
 
     loadData() {
-        let enviro_que =  this.data.getEnviroQue();
+        this.enviro_que =  this.data.getEnviroQue();
         console.log(this.enviro_que);
-        
     }
 }

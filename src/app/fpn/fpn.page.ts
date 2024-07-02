@@ -116,7 +116,7 @@ export class FPNPage implements OnInit {
     }
     
 
-    currentStep: number = 1;
+    currentStep: number = 6;
 
     nextStep() {
         if (this.currentStep < 7) {
@@ -137,7 +137,10 @@ export class FPNPage implements OnInit {
 
     saveFPN() {
         this.data.pushEnviroQue();
-        window.location.reload();
+        window.
+        location.reload();
     }
+
+
 
 }

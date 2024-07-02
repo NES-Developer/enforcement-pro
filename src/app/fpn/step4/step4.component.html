@@ -46,6 +46,18 @@
     <ion-input type="time" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.second_caution"></ion-input>
 </ion-item>
 
+<!-- Language Text -->
+<ion-item>
+    <ion-label>
+        Language
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.language">
+        <ion-select-option> English </ion-select-option>
+        <ion-select-option> Welsh </ion-select-option>
+    </ion-select></ion-item>
+
 <!-- Offender Reply Select -->
 <ion-item>
     <ion-label>

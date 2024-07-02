@@ -427,8 +427,16 @@ export class DataService {
         return this.zones.find(z => z.id === id);
     }
 
+    findOffenceGroupId(id: number): OffenceGroup | undefined {
+        return this.offence_groups.find(z => z.id === id);
+    }
+
     findOffenceById(id: number): Offence | undefined {
         return this.offences.find(z => z.id === id);
+    }
+
+    findSiteOffence(offence_id: number): SiteOffence | undefined {
+        return this.site_offences.find(z => z.offence_id === offence_id);
     }
 
     removeAllData(): void {
@@ -454,7 +462,6 @@ export class DataService {
         this.salutations = [];
         this.builds = [];
         this.hair_colours = [];
-
         // Clear localStorage
         localStorage.removeItem('selected_site')
         localStorage.removeItem('dynamic_feilds');

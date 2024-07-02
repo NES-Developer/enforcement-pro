@@ -6,7 +6,7 @@
 
 <!-- Site Select -->
 <ion-item>
-    <ion-label>Site</ion-label>
+    <ion-label>Site *</ion-label>
 </ion-item>
 <ion-item>
     <ion-select multiple="false" disabled="false" [(ngModel)]="enviro_post.site_id" [disabled]="true">
@@ -18,7 +18,7 @@
 
 <!-- Zone Select -->
 <ion-item>
-    <ion-label>Zones</ion-label>
+    <ion-label>Zones *</ion-label>
 </ion-item>
 <ion-item>
     <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.zone_id">
@@ -31,7 +31,7 @@
 <!-- Offence Group Select -->
 <ion-item>
     <ion-label>
-        Offence Group
+        Offence Group *
     </ion-label>
 </ion-item>
 <ion-item>
@@ -44,7 +44,7 @@
 
 <!-- Offence Select -->
 <ion-item *ngIf="filteredOffences.length > 0">
-    <ion-label>Offence</ion-label>
+    <ion-label>Offence *</ion-label>
 </ion-item>
 <ion-item *ngIf="filteredOffences.length > 0">
     <ion-select (ionChange)="getOffenceById(enviro_post.offence_id)" multiple="false" [(ngModel)]="enviro_post.offence_id">

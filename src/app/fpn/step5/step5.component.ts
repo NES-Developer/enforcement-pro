@@ -5,6 +5,7 @@ import { Weather } from '../../models/weather';
 import { Visibility } from '../../models/visibility';
 import { POIPrefix } from '../../models/poi-prefix';
 import { EnviroPost } from 'src/app/models/enviro';
+import { Observable, Subscriber } from 'rxjs';
 
 
 @Component({
@@ -29,6 +30,22 @@ export class Step5Component  implements OnInit {
         this.loadData();
     }
 
+    private getCurrentPosition(): any {
+        return new Observable((observer: Subscriber<any>) => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position: any) => {
+              observer.next({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              });
+              observer.complete();
+            });
+          } else {
+            observer.error();
+          }
+        });
+    }
+
     loadData() {
         this.weather = this.data.getWeather();
         this.visibility = this.data.getVisibility();
@@ -37,6 +54,12 @@ export class Step5Component  implements OnInit {
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
+
+        this.getCurrentPosition()
+        .subscribe((position: any) => {
+            this.enviro_post.lat = position.latitude;
+            this.enviro_post.lng = position.longitude;
+        });
     }
 
     saveEnviroData() {
