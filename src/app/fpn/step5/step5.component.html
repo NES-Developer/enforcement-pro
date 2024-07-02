@@ -17,7 +17,7 @@
 <!-- Offender Reply Select -->
 <ion-item>
     <ion-label>
-        Type of Land
+        Type of Land *
     </ion-label>
 </ion-item>
 <ion-item>
@@ -72,7 +72,7 @@
  <!-- Visibility Select -->
  <ion-item>
     <ion-label>
-        Visibility
+        Visibility *
     </ion-label>
 </ion-item>
 <ion-item>
@@ -86,7 +86,7 @@
  <!-- Weather Select -->
  <ion-item>
     <ion-label>
-        Weather
+        Weather *
     </ion-label>
 </ion-item>
 <ion-item>
@@ -100,11 +100,21 @@
 <!-- Offence Date & Time Text -->
 <ion-item>
     <ion-label>
-        Offence Date & Time
+        Offence Date & Time *
     </ion-label>
   </ion-item>
   <ion-item>
     <ion-datetime presentation="date-time" [preferWheel]="true" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_datetime"></ion-datetime>
+</ion-item>
+
+<!-- Issue Date & Time Text -->
+<ion-item>
+    <ion-label>
+        Issue Date & Time *
+    </ion-label>
+  </ion-item>
+  <ion-item>
+    <ion-datetime presentation="date-time" [preferWheel]="true" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.issue_datetime"></ion-datetime>
 </ion-item>
 
 <!-- FPN issued on the spot -->

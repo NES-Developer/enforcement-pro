@@ -116,7 +116,7 @@ export class FPNPage implements OnInit {
     }
     
 
-    currentStep: number = 6;
+    currentStep: number = 1;
 
     nextStep() {
         if (this.currentStep < 7) {
