@@ -228,7 +228,7 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 6:
-                if (this.enviro_post.signature != null) {
+                if (this.enviro_post.signature == '') {
                     this.presentAlert('Wait!', 'Please provide Signature.');
                     return false;
                 }
@@ -259,19 +259,33 @@ export class FPNPage implements OnInit {
 
     submitForm() {
 
-        this.validator();
+        let checker = this.validator();
 
-        this.api.postFPN(this.enviro_post).subscribe({
-            next: (response) => {
-                console.log('Response:', response);
-                // Handle the response here
-            },
-            error: (error) => {
-                console.error('Error:', error);
-                // Handle the error here
-            }
-        });
-        // Add form submission logic here
+        if (checker) {
+            this.api.postFPN(this.enviro_post).subscribe({
+                next: (response) => {
+                    console.log('Response:', response);
+                    // Handle the response here
+                    if(response.success === false) 
+                    {
+                        let message = response.message + " (Please Edit)";
+                        this.presentAlert('Error', message);
+                    } else {
+                        let fpn_number = response.data.fpn_number;
+                        this.presentAlert('Success', fpn_number);
+                        this.enviro_post = new EnviroPost();
+                        this.data.setEnviroPost(this.enviro_post);
+                        window.location.reload();
+                    }
+                },
+                error: (error) => {
+                    // console.error('Error:', error);
+                    this.presentAlert('Error', error);
+    
+                    // Handle the error here
+                }
+            });
+        }
     }
 
     submitFPN() {
@@ -311,9 +325,13 @@ export class FPNPage implements OnInit {
     }
 
     saveFPN() {
-        this.data.pushEnviroQue();
-        window.
-        location.reload();
+        let checker = this.validator();
+
+        if (checker) {
+            this.data.pushEnviroQue();
+            window.location.reload();
+        }
+        
     }
 
     

@@ -38,6 +38,8 @@ export class Step6Component implements OnInit, AfterViewInit {
 
     clear() {
         this.signaturePad.clear();
+        this.enviro_post.signature = '';
+        this.saveEnviroData();
     }
 
     save() {
@@ -45,6 +47,9 @@ export class Step6Component implements OnInit, AfterViewInit {
             console.log('Please provide a signature first.');
         } else {
             const dataURL = this.signaturePad.toDataURL();
+            this.enviro_post.signature = dataURL;
+            this.saveEnviroData();
+
             console.log(dataURL);  // Here you can send the dataURL to your server or save it
         }
     }

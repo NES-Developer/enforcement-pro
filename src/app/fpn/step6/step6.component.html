@@ -123,20 +123,32 @@
 
 </ion-accordion-group>
 
-<ion-item>
+<ion-item *ngIf="enviro_post.signature">
     <h5>
         Add Your Digital Signature
     </h5>
 </ion-item>
 
-<ion-item>
+<ion-item *ngIf="!enviro_post.signature">
+    <h5>
+        Your Stored Digital Picture
+    </h5>
+</ion-item>
+
+<ion-item *ngIf="enviro_post.signature">
     <div>
-        <canvas #canvas width="500" height="300" style="border:1px solid transparent;border-radius:5px; background: #A9A9A9	;"></canvas>
+        <img width="500" height="300" style="border:1px solid transparent;border-radius:5px; background: #A9A9A9;" />
+    </div>
+</ion-item>
+
+<ion-item *ngIf="!enviro_post.signature">
+    <div>
+        <canvas #canvas width="500" height="300" style="border:1px solid transparent;border-radius:5px; background: #A9A9A9;"></canvas>
     </div>
 </ion-item>
 
 <ion-item>
-    <div class="row">
+    <div class="row" *ngIf="!enviro_post.signature">
         <div class="col-4">
             <button class="btn btn-dark" (click)="clear()">Clear</button>
         </div>
@@ -146,8 +158,15 @@
         <div class="col-4">
             <button class="btn btn-dark m-2" (click)="save()">Save</button>
         </div>
-        
-        
-      </div>
+    </div>
+    <div class="row" *ngIf="enviro_post.signature">
+        <div class="col-4">
+            <button class="btn btn-dark" (click)="clear()">Clear</button>
+        </div>
+        <div class="col-4">
+            {{today | date:'medium'}}
+        </div>
+    </div>
 </ion-item>
+
 
