@@ -62,10 +62,6 @@ export class PhotoComponent  implements OnInit, AfterViewInit {
         this.saveEnviroData();
     }
     
-    // removeCurrent() {
-    //     this.isCaptured = false;
-    // }
-    
     setPhoto(idx: number) {
         this.isCaptured = true;
         var image = new Image();

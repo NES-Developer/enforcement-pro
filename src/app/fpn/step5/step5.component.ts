@@ -33,17 +33,17 @@ export class Step5Component  implements OnInit {
 
     private getCurrentPosition(): any {
         return new Observable((observer: Subscriber<any>) => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position: any) => {
-              observer.next({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-              });
-              observer.complete();
-            });
-          } else {
-            observer.error();
-          }
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position: any) => {
+                observer.next({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                });
+                observer.complete();
+                });
+            } else {
+                observer.error();
+            }
         });
     }
 
@@ -67,7 +67,10 @@ export class Step5Component  implements OnInit {
         if (this.enviro_post.offence_datetime) {
             // Format the datetime using moment.js
             const formattedDate = moment(this.enviro_post.offence_datetime).format('YYYY-MM-DD HH:mm');
+            const formattedIssueDate = moment(this.enviro_post.issue_datetime).format('YYYY-MM-DD HH:mm');
             this.enviro_post.offence_datetime = formattedDate.toString();
+            this.enviro_post.issue_datetime = formattedIssueDate.toString();
+            
             console.log(this.enviro_post.offence_datetime);
 
         }
