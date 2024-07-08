@@ -12,7 +12,7 @@ export class EnviroPost {
    post_code: string = '';
    phone: string = '';
    date_of_birth: string = '';
-   ethnicity_id: string = '';
+   ethnicity_id: number = 1;
    gender: string = '';
    is_bwc_active: string = '';
    proof_of_address: string = '';
@@ -55,6 +55,6 @@ export class EnviroPost {
    witness_statement: string = '';
    officer_statement: string = '';
    signature: any;
-   offence_images: string[] = [];
+   offence_images: any[] = [];
    notebook_entries!: NotebookEntry;
 }

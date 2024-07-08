@@ -13,6 +13,7 @@ import { Visibility } from '../models/visibility';
 import { POIPrefix } from '../models/poi-prefix';
 import { EnviroPost } from '../models/enviro';
 import { AlertController } from '@ionic/angular';
+import { isEmpty } from 'rxjs';
 
 @Component({
   selector: 'app-fpn',
@@ -128,12 +129,125 @@ export class FPNPage implements OnInit {
           .map(id => groups.find(group => group.id === id) as OffenceGroup);
     }
     
-
     currentStep: number = 1;
 
+    validator(): boolean {
+        switch (this.currentStep) {
+            case 1:
+                if (this.enviro_post.zone_id <= 1) {
+                    this.presentAlert('Wait!', 'Please provide your Zone.');
+                    return false;
+                }
+                if (this.enviro_post.offence_type_id <= 1) {
+                    this.presentAlert('Wait!', 'Please provide the Offence Group.');
+                    return false;
+                }
+                if (this.enviro_post.offence_id <= 1) {
+                    this.presentAlert('Wait!', 'Please provide the Offence.');
+                    return false;
+                }
+                break;
+            case 2:
+                if (this.enviro_post.salutation == '') {
+                    this.presentAlert('Wait!', 'Please provide offender Salutation.');
+                    return false;
+                }
+                if (this.enviro_post.first_name == '') {
+                    this.presentAlert('Wait!', 'Please provide offender First Name.');
+                    return false;
+                }
+                if (this.enviro_post.last_name == '') {
+                    this.presentAlert('Wait!', 'Please provide offender Last Name.');
+                    return false;
+                }
+                if (this.enviro_post.address == '') {
+                    this.presentAlert('Wait!', 'Please provide offender Address.');
+                    return false;
+                }
+                if (this.enviro_post.town == '') {
+                    this.presentAlert('Wait!', 'Please provide offender Town.');
+                    return false;
+                }
+                if (this.enviro_post.county == '') {
+                    this.presentAlert('Wait!', 'Please provide offender Country.');
+                    return false;
+                }
+                if (this.enviro_post.post_code == '') {
+                    this.presentAlert('Wait!', 'Please provide offender Postal Code.');
+                    return false;
+                }
+                if (this.enviro_post.gender == '') {
+                    this.presentAlert('Wait!', 'Please provide offender Gender.');
+                    return false;
+                }
+                if (this.enviro_post.town == '') {
+                    this.presentAlert('Wait!', 'Please provide offender Town.');
+                    return false;
+                }
+                break;
+            case 3:
+                if (this.enviro_post.ethnicity_id <= 1) {
+                    this.presentAlert('Wait!', 'Please provide offender Ethnicity.');
+                    return false;
+                }
+                break;
+            case 4:
+                if (this.enviro_post.location_id <= 1) {
+                    this.presentAlert('Wait!', 'Please provide Location.');
+                    return false;
+                }
+                if (this.enviro_post.action_id <= 1) {
+                    this.presentAlert('Wait!', 'Please provide Action.');
+                    return false;
+                }
+                if (this.enviro_post.language == '') {
+                    this.presentAlert('Wait!', 'Please provide Language.');
+                    return false;
+                }
+                break;
+            case 5:
+                if (this.enviro_post.land_type_id <= 1) {
+                    this.presentAlert('Wait!', 'Please provide Land Type.');
+                    return false;
+                }
+                if (this.enviro_post.visibility_id <= 1) {
+                    this.presentAlert('Wait!', 'Please provide Visibility.');
+                    return false;
+                }
+                if (this.enviro_post.weather_id <= 1) {
+                    this.presentAlert('Wait!', 'Please provide Weather.');
+                    return false;
+                }
+                if (!this.enviro_post.offence_datetime) {
+                    this.presentAlert('Wait!', 'Please provide Offence timestamp.');
+                    return false;
+                }
+                if (!this.enviro_post.issue_datetime) {
+                    this.presentAlert('Wait!', 'Please provide Issue timestamp.');
+                    return false;
+                }
+                break;
+            case 6:
+                if (this.enviro_post.signature != null) {
+                    this.presentAlert('Wait!', 'Please provide Signature.');
+                    return false;
+                }
+                if (this.enviro_post.offence_images.length == 0) {
+                    this.presentAlert('Wait!', 'Please provide Offence Images.');
+                    return false;
+                }
+                break;
+
+        }
+        return true;
+    }
+
     nextStep() {
-        if (this.currentStep < 7) {
-            this.currentStep++;
+        let checker = this.validator();
+        if (checker) {
+            if (this.currentStep < 7) {
+                this.currentStep++;
+            }
         }
     } 
 
@@ -144,7 +258,9 @@ export class FPNPage implements OnInit {
     }
 
     submitForm() {
-        console.log('Form submitted!');
+
+        this.validator();
+
         this.api.postFPN(this.enviro_post).subscribe({
             next: (response) => {
                 console.log('Response:', response);
