@@ -1,8 +1,22 @@
 <ion-header [translucent]="true">
     <ion-toolbar>
-        <ion-title>
-            Home
-        </ion-title>
+        <ion-row>
+            <ion-col>
+                <ion-button (click)="init()">
+                    <ion-icon name="refresh"></ion-icon>
+                </ion-button>
+            </ion-col>
+            <ion-col>
+                <ion-title>
+                    Home
+                </ion-title>
+            </ion-col>
+            <ion-col>
+                <ion-button (click)="logout()">
+                    <ion-icon name="log-out"></ion-icon>
+                </ion-button>
+            </ion-col>
+        </ion-row>
     </ion-toolbar>
 </ion-header>
 
@@ -13,13 +27,6 @@
             <ion-title size="large">Home</ion-title>
         </ion-toolbar>
     </ion-header>
-
-    <ion-item>
-        <button type="button" (click)="init()" class="mt-4 btn btn-light">
-            <ion-icon name="refresh"></ion-icon> Refresh
-        </button>
-    </ion-item>
-    
 
     <ion-item>
         <h2>
@@ -54,9 +61,8 @@
             <ion-icon name="pencil"></ion-icon> Change
         </button> 
     </ion-item>
-    
-    <button type="button" (click)="logout()" class="mt-4 btn btn-danger">Logut</button> 
-
 
 </ion-content>
+
+
 

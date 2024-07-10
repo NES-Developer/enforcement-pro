@@ -48,6 +48,8 @@ export class FPNPage implements OnInit {
 
     ngOnInit() {
         this.loadData();
+        let user = this.auth.getUser();
+        this.enviro_post.officer_id = user.id;
     }
 
     loadData() {
