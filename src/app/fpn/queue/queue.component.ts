@@ -55,6 +55,7 @@ export class QueueComponent  implements OnInit {
             error: (error) => {
                 // console.error('Error:', error);
                 this.presentAlert('Error', error);
+                console.log(error);
 
                 // Handle the error here
             }

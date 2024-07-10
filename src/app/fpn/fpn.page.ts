@@ -134,15 +134,15 @@ export class FPNPage implements OnInit {
     validator(): boolean {
         switch (this.currentStep) {
             case 1:
-                if (this.enviro_post.zone_id <= 1) {
+                if (this.enviro_post.zone_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide your Zone.');
                     return false;
                 }
-                if (this.enviro_post.offence_type_id <= 1) {
+                if (this.enviro_post.offence_type_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide the Offence Group.');
                     return false;
                 }
-                if (this.enviro_post.offence_id <= 1) {
+                if (this.enviro_post.offence_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide the Offence.');
                     return false;
                 }
@@ -186,17 +186,17 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 3:
-                if (this.enviro_post.ethnicity_id <= 1) {
+                if (this.enviro_post.ethnicity_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide offender Ethnicity.');
                     return false;
                 }
                 break;
             case 4:
-                if (this.enviro_post.location_id <= 1) {
+                if (this.enviro_post.location_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide Location.');
                     return false;
                 }
-                if (this.enviro_post.action_id <= 1) {
+                if (this.enviro_post.action_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide Action.');
                     return false;
                 }
@@ -206,15 +206,15 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 5:
-                if (this.enviro_post.land_type_id <= 1) {
+                if (this.enviro_post.land_type_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide Land Type.');
                     return false;
                 }
-                if (this.enviro_post.visibility_id <= 1) {
+                if (this.enviro_post.visibility_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide Visibility.');
                     return false;
                 }
-                if (this.enviro_post.weather_id <= 1) {
+                if (this.enviro_post.weather_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide Weather.');
                     return false;
                 }
@@ -275,11 +275,10 @@ export class FPNPage implements OnInit {
                         this.presentAlert('Success', fpn_number);
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
-                        window.location.reload();
                     }
                 },
                 error: (error) => {
-                    // console.error('Error:', error);
+                    console.error('Error:', error);
                     this.presentAlert('Error', error);
     
                     // Handle the error here
@@ -301,8 +300,10 @@ export class FPNPage implements OnInit {
                 } else {
                     let fpn_number = response.data.fpn_number;
                     this.presentAlert('Success', fpn_number);
-                    // this.data.spliceEnviroQue(this.enviro_post);
-                    // this.enviro_que = this.data.getEnviroQue();
+                    //Set a timer for half a 10 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
                 }
             },
             error: (error) => {
@@ -315,14 +316,32 @@ export class FPNPage implements OnInit {
         // Add form submission logic here
     }
 
+    refresh() {
+        window.location.reload();
+    }
+
     async presentAlert(header: string, message: string) {
+        let button_title: string = 'Ok';
+        if (header == "Success") {
+            button_title = "Finish"
+        }
         const alert = await this.alertController.create({
-          header: header,
-          message: message,
-          buttons: ['Okay'],
+            header: header,
+            message: message,
+            buttons: [
+                {
+                    text: button_title,
+                    handler: () => {
+                        if (header == "Success") {
+                            window.location.reload();
+                        }
+                    }
+                }
+            ],
         });
         await alert.present();
     }
+
 
     saveFPN() {
         let checker = this.validator();

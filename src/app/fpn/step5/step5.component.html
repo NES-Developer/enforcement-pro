@@ -107,7 +107,14 @@
     <div class="row">
         <div class="col-4"></div>
         <div class="col-6">
-            <ion-datetime presentation="date-time" class="bg-light" [preferWheel]="true" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_datetime"></ion-datetime>
+            <ion-datetime 
+                [max]="issueDateTimeISO" 
+                presentation="date-time" 
+                class="bg-light" 
+                [preferWheel]="true" 
+                (ionChange)="saveEnviroData()" 
+                [(ngModel)]="enviro_post.offence_datetime">
+            </ion-datetime>
         </div>
         <div class="col-2"></div>
     </div>
@@ -123,10 +130,19 @@
     <div class="row">
         <div class="col-4"></div>
         <div class="col-6">
-            <ion-datetime presentation="date-time" class="bg-light" [preferWheel]="true" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.issue_datetime"></ion-datetime>
+            <ion-datetime 
+                [min]="offenceDateTimeISO" 
+                presentation="date-time" 
+                class="bg-light" 
+                [preferWheel]="true" 
+                (ionChange)="saveEnviroData()" 
+                [(ngModel)]="enviro_post.issue_datetime">
+            </ion-datetime>
         </div>
         <div class="col-2"></div>
-    </div></ion-item>
+    </div>
+</ion-item>
+
 
 <!-- FPN issued on the spot -->
 <ion-item>

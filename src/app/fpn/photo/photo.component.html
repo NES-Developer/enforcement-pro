@@ -1,9 +1,11 @@
 <ion-header [translucent]="true">
     <ion-toolbar>
-        
         <ion-row>
             <ion-col>
-                <ion-button class="btn btn-dark" href="/tabs/fpn">
+                <ion-button href="/tabs/home">
+                    <ion-icon name="home"></ion-icon>
+                </ion-button>
+                <ion-button href="/tabs/fpn">
                     <ion-icon name="leaf"></ion-icon>
                 </ion-button>
             </ion-col>
@@ -11,6 +13,14 @@
                 <ion-title>
                     FPN
                 </ion-title>
+            </ion-col>
+            <ion-col>
+                <ion-button>
+                    <ion-icon name="camera"></ion-icon>
+                    <ion-badge color="white">
+                        {{enviro_post.offence_images.length !== null ? enviro_post.offence_images.length : 0}}
+                    </ion-badge>
+                </ion-button>
             </ion-col>
         </ion-row>
     </ion-toolbar>
@@ -34,7 +44,7 @@
 
     <ion-item>
         <div class="row" style="display: block; margin-left: auto; margin-right: auto">
-            <button class="btn btn-light w-100" *ngIf="!isCaptured" (click)="capture()">
+            <button class="btn btn-dark w-100" *ngIf="!isCaptured" (click)="capture()">
                 <ion-icon name="camera"></ion-icon>
             </button>
             <button class="btn btn-warning" *ngIf="isCaptured" (click)="removeCurrent()">

@@ -53,7 +53,7 @@ export class EnviroPost {
    witness_address: string = '';
    witness_statement: string = '';
    officer_statement: string = '';
-   signature: any;
-   offence_images: any[] = [];
+   signature: string = '';
+   offence_images: string[] = [];
    notebook_entries!: NotebookEntry;
 }

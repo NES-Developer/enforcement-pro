@@ -25,10 +25,23 @@ export class Step5Component  implements OnInit {
     constructor(
         private api: ApiService,
         private data: DataService
-    ) {}
+    ) {
+        const defaultDate = moment().format('YYYY-MM-DD HH:mm');
+        this.enviro_post.offence_datetime = defaultDate;
+        this.enviro_post.issue_datetime = defaultDate;
+        console.log(this.enviro_post.offence_datetime, this.enviro_post.issue_datetime);
+    }
     
     ngOnInit() {
         this.loadData();
+    }
+
+    get offenceDateTimeISO(): string {
+        return this.enviro_post.offence_datetime ? moment(this.enviro_post.offence_datetime).format('YYYY-MM-DDTHH:mm:ss') : '';
+    }
+
+    get issueDateTimeISO(): string {
+        return this.enviro_post.issue_datetime ? moment(this.enviro_post.issue_datetime).format('YYYY-MM-DDTHH:mm:ss') : '';
     }
 
     private getCurrentPosition(): any {
