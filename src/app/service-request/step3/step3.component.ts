@@ -27,7 +27,7 @@ export class Step3Component  implements AfterViewInit {
 
     constructor(
         private data: DataService,
-        private geocodingService: GeocodingService
+        private geocodingService: GeocodingService,
         // private step1: Step1Component,
         // private step2: Step2Component
     ) { }
@@ -45,6 +45,7 @@ export class Step3Component  implements AfterViewInit {
     //   attribution: '&copy; OpenStreetMap contributors',
     // }).addTo(this.map);
   }
+
 
   onSearch() {
     this.geocodingService.geocode(this.address).subscribe((result) => {

@@ -46,6 +46,11 @@ export class FPNPage implements OnInit {
         }
     }
 
+
+    route() {
+        this.currentStep = 7;
+    }
+
     ngOnInit() {
         this.loadData();
         let user = this.auth.getUser();
@@ -335,6 +340,7 @@ export class FPNPage implements OnInit {
                     text: button_title,
                     handler: () => {
                         if (header == "Success") {
+                            
                             window.location.reload();
                         }
                     }

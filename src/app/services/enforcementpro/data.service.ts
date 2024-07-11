@@ -18,6 +18,7 @@ import { Zone } from '../../models/zone';
 import { Site } from '../../models/site';
 import { Build } from 'src/app/models/build';
 import { HairColour } from 'src/app/models/hair_colour';
+import { NotebookEntry } from 'src/app/models/notebook-entry';
 
 
 @Injectable({
@@ -52,6 +53,7 @@ export class DataService {
     private salutations: Salutation[] = [];
     private builds: Build[] = [];
     private hair_colours: HairColour[] = [];
+    // private notebook: NotebookEntry[] = [];
 
     private dynamic_feilds: any[] = [];
     private ethnicities: any[] = [];
