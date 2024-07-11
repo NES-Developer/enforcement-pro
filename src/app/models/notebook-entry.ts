@@ -2,8 +2,8 @@
 
 export class NotebookEntry {
    enviro_id: number = 0;
-   is_fpn_advised: number = 1;
-   is_fpn_handed: number = 1;
+   is_fpn_advised: number = 0;
+   is_fpn_handed: number = 0;
    height_in_feet: string = '';
    height_in_inch: string = '';
    build: string = '';
