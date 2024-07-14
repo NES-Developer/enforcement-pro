@@ -1,13 +1,4 @@
-:host {
-    display: block;
-    height: 100vh; /* Full viewport height */
-  }
-  
-  #mapContainer {
-    height: 100px; /* Full height of the parent */
-    width: 100%;  /* Full width of the parent */
-  }
-  
+
   
   
   ion-content {
@@ -19,12 +10,6 @@
     --color: white;
   }
   
-  ION-TOOLBAR {
-    --background: WHITE;
-    text-transform: uppercase;
-    --color: #FFA07A; /* A more marketable and appealing orange color */
-    text-align: center; /* Center the text */
-  }
   
   ion-button {
     --background: #FFA07A;
@@ -32,9 +17,7 @@
   
   }
   
-  ion-card {
-    margin: 20px;
-  }
+
   
   ion-select {
     --background: WHITE; /* Set content background to white */
@@ -46,19 +29,7 @@
     --border-color:white;
   }
   
-  ion-item-divider {
-    --background: transparent;
-    --color: #FFA07A; /* A more marketable and appealing orange color */
-    //--inner-border-width: 1px; /* Adjusts the thickness of the divider line */
-    margin-top: -25px;
-  }
-  
-  ion-checkbox {
-    --border-radius: 50%;
-    --background: white;
-    --color: white;
-    --border-color: transparent;
-  }
+
   
   ion-label {
     text-align: left; /* align text to the center */
@@ -90,12 +61,6 @@
     --border-radius: 20px;
     width: 100%; /* set width to 80% */
     max-width: 100%; /* set max-width to 80% */
-  }
-  
-  ion-list {
-    --background: transparent; /* light grey color */
-    --color: transparent;
-    --border-color: transparent;
   }
   
   .medium-label {

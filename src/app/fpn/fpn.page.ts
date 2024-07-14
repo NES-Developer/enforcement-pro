@@ -47,7 +47,7 @@ export class FPNPage implements OnInit {
     }
 
 
-    route() {
+    route():void {
         this.currentStep = 7;
     }
 

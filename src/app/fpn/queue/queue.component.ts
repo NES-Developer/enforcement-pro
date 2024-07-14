@@ -4,6 +4,8 @@ import { DataService } from '../../services/enforcementpro/data.service';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { FPNPage } from '../fpn.page';
+
 
 @Component({
   selector: 'app-queue',
@@ -20,7 +22,9 @@ export class QueueComponent  implements OnInit {
         private api: ApiService,
         private data:DataService,
         private alertController: AlertController,
-        private router: Router
+        private router: Router,
+
+        // private fpnPage: FPNPage
 
         // private fpnPage: FPNPage
     ) {
@@ -74,6 +78,7 @@ export class QueueComponent  implements OnInit {
 
     editFPN(enviro_post: EnviroPost) {
         this.data.setEnviroPost(enviro_post);
+        // this.fpnPage.route();
         this.router.navigate(['/tabs/fpn']);
 
     }
