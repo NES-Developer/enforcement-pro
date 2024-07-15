@@ -1,6 +1,6 @@
 import { ElementRef, AfterViewInit, ViewChild } from '@angular/core';
 import * as L from 'leaflet';
-import { GoogleMap } from '@capacitor/google-maps';
+// import { GoogleMap } from '@capacitor/google-maps';
 import { Step1Component } from '../step1/step1.component';
 
 

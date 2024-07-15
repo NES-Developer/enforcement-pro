@@ -1,0 +1,12 @@
+{
+  "appId": "com.enforcemnetpro.app",
+  "appName": "EnforcementPro",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}

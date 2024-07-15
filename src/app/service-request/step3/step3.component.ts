@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, AfterViewInit, ViewChild } from '@angular/core';
-import { GoogleMap } from '@capacitor/google-maps';
+// import { GoogleMap } from '@capacitor/google-maps';
 // import { GoogleMaps, GoogleMap, GoogleMapsEvent, GoogleMapOptions } from '@ionic-native/google-maps/ngx';
 
 import { DataService } from 'src/app/services/enforcementpro/data.service';
@@ -19,7 +19,7 @@ export class Step3Component  implements AfterViewInit {
     // @ViewChild('map') mapRef!: ElementRef<HTMLElement>;
     @ViewChild('mapContainer', { static: false }) mapRef!: ElementRef<HTMLElement>;
 
-    newMap!: GoogleMap;
+    // newMap!: GoogleMap;
 
     apiKey: string = '';
 

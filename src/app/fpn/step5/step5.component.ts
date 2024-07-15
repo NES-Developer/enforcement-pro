@@ -8,7 +8,7 @@ import { EnviroPost } from '../../models/enviro';
 import { Observable, Subscriber } from 'rxjs';
 import * as moment from 'moment';  // Import moment.js for date formatting
 import { GeocodingService } from '../../services/geocoding.service';
-import { GoogleMap } from '@capacitor/google-maps';
+// import { GoogleMap } from '@capacitor/google-maps';
 import * as L from 'leaflet';
 
 
@@ -21,7 +21,7 @@ import * as L from 'leaflet';
 export class Step5Component  implements OnInit, AfterViewInit {
     @ViewChild('mapContainer', { static: false }) mapRef!: ElementRef<HTMLElement>;
 
-    newMap!: GoogleMap;
+    // newMap!: GoogleMap;
 
     apiKey: string = '';
 

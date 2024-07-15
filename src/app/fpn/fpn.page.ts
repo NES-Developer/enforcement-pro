@@ -294,35 +294,6 @@ export class FPNPage implements OnInit {
         }
     }
 
-    submitFPN() {
-        console.log('Form submitted!');
-        this.api.postFPN(this.enviro_post).subscribe({
-            next: (response) => {
-                console.log('Response:', response);
-                // Handle the response here
-                if(response.success === false) 
-                {
-                    let message = response.message + " (Please Edit)";
-                    this.presentAlert('Error', message);
-                } else {
-                    let fpn_number = response.data.fpn_number;
-                    this.presentAlert('Success', fpn_number);
-                    //Set a timer for half a 10 seconds
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 5000);
-                }
-            },
-            error: (error) => {
-                // console.error('Error:', error);
-                this.presentAlert('Error', error);
-
-                // Handle the error here
-            }
-        });
-        // Add form submission logic here
-    }
-
     refresh() {
         window.location.reload();
     }
