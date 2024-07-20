@@ -34,7 +34,7 @@
     </ion-header>
 
     <ion-item>
-        <div class="video-container" *ngIf="!error" style="display: block; margin-left: auto; margin-right: auto">
+        <div class="video-container" *ngIf="!error" style="display: block;">
             <video [class.show]="!isCaptured" [class.hide]="isCaptured" #video id="video" [width]="WIDTH" [height]="HEIGHT"
                 autoplay></video>
             <canvas [class.show]="isCaptured" [class.hide]="!isCaptured" #canvas id="canvas" [width]="WIDTH"
@@ -60,7 +60,6 @@
             <div *ngIf="error" class="text-danger mt-4">
                 {{ error }}.
                 <div class="mt-5">
-                    <img src="https://trungk18.com/7e0976255739e721501803ee074f1f94/camera.gif" />
                 </div>
                 </div>
             </div>

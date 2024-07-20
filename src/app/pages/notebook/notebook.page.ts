@@ -70,9 +70,11 @@ export class NotebookPage implements OnInit {
                         this.presentAlert('Error', message);
                     } else {
                         let fpn_number = response.data.fpn_number;
-                        this.presentAlert('Success', fpn_number);
+                        this.data.spliceEnviroQue(this.enviro_post);
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
+                        this.presentAlert('Success', fpn_number);
+
                     }
                 },
                 error: (error) => {
@@ -100,7 +102,7 @@ export class NotebookPage implements OnInit {
                     handler: () => {
                         if (header == "Success") {
                             
-                            window.location.reload();
+                            this.router.navigate(['/tabs/fpn']);
                         }
                     }
                 }

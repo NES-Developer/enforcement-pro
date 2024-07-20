@@ -79,7 +79,7 @@ export class QueueComponent  implements OnInit {
     editFPN(enviro_post: EnviroPost) {
         this.data.setEnviroPost(enviro_post);
         // this.fpnPage.route();
-        this.router.navigate(['/tabs/fpn']);
+        this.router.navigate(['/notebook']);
 
     }
 }

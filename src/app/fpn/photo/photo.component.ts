@@ -8,29 +8,29 @@ import { DataService } from '../../services/enforcementpro/data.service';
   styleUrls: ['./photo.component.scss'],
 })
 export class PhotoComponent implements OnInit, AfterViewInit {
-    WIDTH = 640;
-    HEIGHT = 480;
+  WIDTH = 640;
+  HEIGHT = 480;
 
-    @ViewChild('video')
-    public video!: ElementRef;
+  @ViewChild('video')
+  public video!: ElementRef;
 
-    @ViewChild('canvas')
-    public canvas!: ElementRef;
+  @ViewChild('canvas')
+  public canvas!: ElementRef;
 
-    enviro_post: EnviroPost = new EnviroPost();
-    captures: string[] = [];
-    error: any;
-    isCaptured!: boolean;
+  enviro_post: EnviroPost = new EnviroPost();
+  captures: string[] = [];
+  error: any;
+  isCaptured!: boolean;
 
-    constructor(private data: DataService) {}
+  constructor(private data: DataService) {}
 
-    ngOnInit() {
-        this.loadData();
-    }
+  ngOnInit() {
+    this.loadData();
+  }
 
-    async ngAfterViewInit() {
-        await this.setupDevices();
-    }
+  async ngAfterViewInit() {
+    await this.setupDevices();
+  }
 
     async setupDevices() {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
