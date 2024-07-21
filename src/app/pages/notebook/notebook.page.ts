@@ -52,7 +52,6 @@ export class NotebookPage implements OnInit {
         this.enviro_post = new EnviroPost();
         this.data.setEnviroPost(this.enviro_post);
         this.router.navigate(['/tabs/fpn']);
-
     }
 
     submitForm() {

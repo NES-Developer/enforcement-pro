@@ -14,6 +14,8 @@ import { POIPrefix } from '../models/poi-prefix';
 import { EnviroPost } from '../models/enviro';
 import { AlertController } from '@ionic/angular';
 import { isEmpty } from 'rxjs';
+import { ThermalPrinterService } from '../services/thermal-printer.service';
+
 
 @Component({
   selector: 'app-fpn',
@@ -25,12 +27,15 @@ export class FPNPage implements OnInit {
     map: any;
 
     enviro_post: EnviroPost;
+    fpn: any;
 
     constructor(
         private auth: AuthService,
         private data: DataService,
         private api: ApiService,
-        private alertController: AlertController
+        private alertController: AlertController,
+        private thermalPrinterService: ThermalPrinterService,
+
     ) {
         this.auth.checkLoggedIn();
 
@@ -265,9 +270,7 @@ export class FPNPage implements OnInit {
     }
 
     submitForm() {
-
         let checker = this.validator();
-
         if (checker) {
             this.api.postFPN(this.enviro_post).subscribe({
                 next: (response) => {
@@ -278,17 +281,18 @@ export class FPNPage implements OnInit {
                         let message = response.message + " (Please Edit)";
                         this.presentAlert('Error', message);
                     } else {
-                        let fpn_number = response.data.fpn_number;
-                        this.presentAlert('Success', fpn_number);
+                        this.fpn = response.data;
+
+                        this.presentAlert('Success', this.fpn.fpn_number);
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
+                        this.printReceipt(this.fpn.ticket);
+
                     }
                 },
                 error: (error) => {
                     console.error('Error:', error);
                     this.presentAlert('Error', error);
-    
-                    // Handle the error here
                 }
             });
         }
@@ -320,6 +324,37 @@ export class FPNPage implements OnInit {
         });
         await alert.present();
     }
+
+    async printReceipt(ticketUrl: string) {
+        const alert = await this.alertController.create({
+          header: 'Print Receipt',
+          message: 'Was the printing successful?',
+          buttons: [
+            {
+              text: 'No',
+              handler: () => {
+                this.printReceipt(ticketUrl); // Retry printing
+              }
+            },
+            {
+              text: 'Yes',
+              role: 'cancel',
+              handler: () => {
+                console.log('Printing confirmed');
+              }
+            }
+          ]
+        });
+    
+        try {
+          await this.thermalPrinterService.printImage(ticketUrl);
+          await alert.present();
+        } catch (error) {
+          console.error('Error printing', error);
+          this.presentAlert('Error', 'Failed to print. Please try again.');
+          this.printReceipt(ticketUrl); // Retry printing in case of error
+        }
+      }
 
 
     saveFPN() {

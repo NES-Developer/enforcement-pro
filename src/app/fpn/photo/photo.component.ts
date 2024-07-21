@@ -8,29 +8,29 @@ import { DataService } from '../../services/enforcementpro/data.service';
   styleUrls: ['./photo.component.scss'],
 })
 export class PhotoComponent implements OnInit, AfterViewInit {
-  WIDTH = 640;
-  HEIGHT = 480;
+    WIDTH = 640;
+    HEIGHT = 480;
 
-  @ViewChild('video')
-  public video!: ElementRef;
+    @ViewChild('video')
+    public video!: ElementRef;
 
-  @ViewChild('canvas')
-  public canvas!: ElementRef;
+    @ViewChild('canvas')
+    public canvas!: ElementRef;
 
-  enviro_post: EnviroPost = new EnviroPost();
-  captures: string[] = [];
-  error: any;
-  isCaptured!: boolean;
+    enviro_post: EnviroPost = new EnviroPost();
+    captures: string[] = [];
+    error: any;
+    isCaptured!: boolean;
 
-  constructor(private data: DataService) {}
+    constructor(private data: DataService) {}
 
-  ngOnInit() {
-    this.loadData();
-  }
+    ngOnInit() {
+        this.loadData();
+    }
 
-  async ngAfterViewInit() {
-    await this.setupDevices();
-  }
+    async ngAfterViewInit() {
+        await this.setupDevices();
+    }
 
     async setupDevices() {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -62,39 +62,39 @@ export class PhotoComponent implements OnInit, AfterViewInit {
     this.saveEnviroData();
   }
 
-  setPhoto(idx: number) {
-    this.isCaptured = true;
-    const image = new Image();
-    image.src = this.captures[idx];
-    image.onload = () => {
-      this.drawImageToCanvas(image);
-    };
-  }
-
-  drawImageToCanvas(image: any) {
-    const context = this.canvas.nativeElement.getContext('2d');
-    context.clearRect(0, 0, this.WIDTH, this.HEIGHT);
-    context.drawImage(image, 0, 0, this.WIDTH, this.HEIGHT);
-  }
-
-  removeCurrent() {
-    this.isCaptured = false;
-  }
-
-  loadData() {
-    const enviro_post = this.data.getEnviroPost();
-    if (enviro_post !== null) {
-      this.enviro_post = enviro_post;
+    setPhoto(idx: number) {
+        this.isCaptured = true;
+        const image = new Image();
+        image.src = this.captures[idx];
+        image.onload = () => {
+        this.drawImageToCanvas(image);
+        };
     }
-  }
 
-  removePhoto(idx: number) {
-    this.captures.splice(idx, 1);
-    this.enviro_post.offence_images.splice(idx, 1);
-    this.saveEnviroData();
-  }
+    drawImageToCanvas(image: any) {
+        const context = this.canvas.nativeElement.getContext('2d');
+        context.clearRect(0, 0, this.WIDTH, this.HEIGHT);
+        context.drawImage(image, 0, 0, this.WIDTH, this.HEIGHT);
+    }
 
-  saveEnviroData() {
-    this.data.setEnviroPost(this.enviro_post);
-  }
+    removeCurrent() {
+        this.isCaptured = false;
+    }
+
+    loadData() {
+        const enviro_post = this.data.getEnviroPost();
+        if (enviro_post !== null) {
+        this.enviro_post = enviro_post;
+        }
+    }
+
+    removePhoto(idx: number) {
+        this.captures.splice(idx, 1);
+        this.enviro_post.offence_images.splice(idx, 1);
+        this.saveEnviroData();
+    }
+
+    saveEnviroData() {
+        this.data.setEnviroPost(this.enviro_post);
+    }
 }

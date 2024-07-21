@@ -34,13 +34,13 @@
     </ion-header>
 
     <ion-item>
-        <div class="video-container" *ngIf="!error" style="display: block;">
+        <div class="video-container" *ngIf="!error" style="display: block; width: 100%;">
             <video [class.show]="!isCaptured" [class.hide]="isCaptured" #video id="video" [width]="WIDTH" [height]="HEIGHT"
                 autoplay></video>
             <canvas [class.show]="isCaptured" [class.hide]="!isCaptured" #canvas id="canvas" [width]="WIDTH"
                 [height]="HEIGHT"></canvas>
         </div>
-    </ion-item>
+    </ion-item> 
 
     <ion-item>
         <div class="row" style="display: block; margin-left: auto; margin-right: auto">
