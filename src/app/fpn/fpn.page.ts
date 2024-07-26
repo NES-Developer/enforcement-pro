@@ -282,12 +282,9 @@ export class FPNPage implements OnInit {
                         this.presentAlert('Error', message);
                     } else {
                         this.fpn = response.data;
-
-                        this.presentAlert('Success', this.fpn.fpn_number);
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
-                        this.printReceipt(this.fpn.ticket);
-
+                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number);
                     }
                 },
                 error: (error) => {
@@ -303,20 +300,29 @@ export class FPNPage implements OnInit {
     }
 
     async presentAlert(header: string, message: string) {
-        let button_title: string = 'Ok';
+        let primary_button_title: string = 'Ok';
+        let secondary_button_title: string = 'Cancel';
         if (header == "Success") {
-            button_title = "Finish"
+            primary_button_title = "Finish"
+            secondary_button_title = "Print"
         }
         const alert = await this.alertController.create({
             header: header,
             message: message,
             buttons: [
                 {
-                    text: button_title,
+                    text: primary_button_title,
                     handler: () => {
                         if (header == "Success") {
-                            
                             window.location.reload();
+                        }
+                    }
+                },
+                {
+                    text: secondary_button_title,
+                    handler: () => {
+                        if (header == "Success") {
+                            this.printReceipt(this.fpn.ticket);
                         }
                     }
                 }
@@ -351,8 +357,9 @@ export class FPNPage implements OnInit {
           await alert.present();
         } catch (error) {
           console.error('Error printing', error);
-          this.presentAlert('Error', 'Failed to print. Please try again.');
-          this.printReceipt(ticketUrl); // Retry printing in case of error
+          window.location.reload();
+
+          this.presentAlert('Successful Submit', 'Successfully posted FPN. Failed to print. Printer might not be connected. FPN Number: ' + this.fpn.fpn_number);
         }
       }
 

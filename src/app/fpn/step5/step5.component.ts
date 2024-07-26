@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, AfterViewInit, ViewChild, HostListener } from '@angular/core';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { Weather } from '../../models/weather';
@@ -20,27 +20,24 @@ import * as L from 'leaflet';
 })
 export class Step5Component  implements OnInit, AfterViewInit {
     @ViewChild('mapContainer', { static: false }) mapRef!: ElementRef<HTMLElement>;
-
-    // newMap!: GoogleMap;
-
     apiKey: string = '';
-
     address: string = '';
     map!: L.Map;
     marker!: L.Marker;
-
     weather: Weather[] = [];
     visibility: Visibility[] = [];
     poi_prefix: POIPrefix[] = [];
-
     enviro_post: EnviroPost = new EnviroPost();
+    private accessToken = 'pryBQPsykVwwDlHKRCzuceqEyJjYgmcNXjLk11h0hzFzWdVRDygST2uJMGmWO5Av';
 
     constructor(
         private api: ApiService,
         private data: DataService,
-        private geocodingService: GeocodingService
+        private geocodingService: GeocodingService,
+        private elementRef: ElementRef
+
     ) {
-        const defaultDate = moment().format('YYYY-MM-DD HH:mm');
+        const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
         this.enviro_post.offence_datetime = defaultDate;
         this.enviro_post.issue_datetime = defaultDate;
         console.log(this.enviro_post.offence_datetime, this.enviro_post.issue_datetime);
@@ -91,6 +88,7 @@ export class Step5Component  implements OnInit, AfterViewInit {
     onSearch() {
         this.geocodingService.geocode(this.address).subscribe((result) => {
         if (result.length > 0) {
+            this.enviro_post.offence_location = this.address;
             const lat = result[0].lat;
             const lon = result[0].lon;
 
@@ -123,30 +121,48 @@ export class Step5Component  implements OnInit, AfterViewInit {
     }
 
     private loadMap(): void {
-        this.map = L.map('map').setView([0, 0], 1);
-        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-          // attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-          maxZoom: 18,
-          id: 'mapbox/streets-v11',
-          tileSize: 512,
-          zoomOffset: -1,
-          accessToken: 'pk.eyJ1IjoiZmluZGluZy1uZW1vIiwiYSI6ImNseHdkMHJyZDBzYXcybHF6cnY0d3RkNXkifQ.9PE145Fu7ndjWSnj3fyHLw',
-          //pk.eyJ1IjoiZmluZGluZy1uZW1vIiwiYSI6ImNseHdkMHJyZDBzYXcybHF6cnY0d3RkNXkifQ.9PE145Fu7ndjWSnj3fyHLw
-        }).addTo(this.map);
-    
+        this.map = L.map(this.elementRef.nativeElement.querySelector('#map')).setView([51.5074, -0.1278], 12);
+
+        L.tileLayer(
+        `https://tile.jawg.io/jawg-terrain/{z}/{x}/{y}.png?access-token=${this.accessToken}`, {
+            attribution: '<a href="http://jawg.io" title="Tiles Courtesy of Jawg Maps" target="_blank" class="jawg-attrib">&copy; <b>Jawg</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>',
+            maxZoom: 22
+        }
+        ).addTo(this.map);
+
+
         this.getCurrentPosition()
         .subscribe((position: any) => {
-          this.map.flyTo([position.latitude, position.longitude], 15);
-    
-          const icon = L.icon({
-            iconUrl: 'https://static.vecteezy.com/system/resources/previews/023/554/762/original/red-map-pointer-icon-on-a-transparent-background-free-png.png',
-            shadowUrl: 'assets/marker-shadow.png',
-            popupAnchor: [13, 0],
-          });
-    
-          const marker = L.marker([position.latitude, position.longitude], {  }).bindPopup('Angular Leaflet');
-          marker.addTo(this.map);
+            this.map.flyTo([position.latitude, position.longitude], 15);
+        
+            const icon = L.icon({
+                iconUrl: 'https://static.vecteezy.com/system/resources/previews/023/554/762/original/red-map-pointer-icon-on-a-transparent-background-free-png.png',
+                shadowUrl: 'assets/marker-shadow.png',
+                popupAnchor: [13, 0],
+            });
+        
+            const marker = L.marker([position.latitude, position.longitude], {  }).bindPopup('Angular Leaflet');
+            marker.addTo(this.map);
         });
+
+        this.map.whenReady(() => {
+            this.map!.invalidateSize();
+        });
+    }
+
+    private invalidateMapSize(): void {
+        if (this.map) {
+        setTimeout(() => {
+            this.map!.invalidateSize();
+        }, 0);
+        }
+    }
+
+    @HostListener('window:resize', ['$event'])
+    onResize(event: Event): void {
+        if (this.map) {
+        this.map.invalidateSize();
+        }
     }
 
 }

@@ -42,14 +42,14 @@ export class LoginPage implements OnInit {
     
         this.auth.login(id, pin).subscribe(
             (response) => {
-                if (response.access_token !== '' || response.user) {
-                    this.auth.handleLoginResponse(response);
-                }
+                
                 
                 if(response.error_code) {
                     let message: string = response.message;
                     this.presentAlert("Login Attempt Failed", message)
-                } 
+                } else if (response.access_token !== '' || response.user) {
+                    this.auth.handleLoginResponse(response);
+                }
             },
             (error) => {
                 this.presentAlert("Login Attempt Failed", error)

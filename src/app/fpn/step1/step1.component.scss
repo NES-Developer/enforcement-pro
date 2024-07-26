@@ -22,12 +22,12 @@
   ION-TOOLBAR {
     --background: WHITE;
     text-transform: uppercase;
-    --color: #FFA07A; /* A more marketable and appealing orange color */
+    --color: #d5a431; /* A more marketable and appealing orange color */
     text-align: center; /* Center the text */
   }
   
   ion-button {
-    --background: #FFA07A;
+    --background: #d5a431;
     --color: WHITE;
   
   }
@@ -48,7 +48,7 @@
   
   ion-item-divider {
     --background: transparent;
-    --color: #FFA07A; /* A more marketable and appealing orange color */
+    --color: #d5a431; /* A more marketable and appealing orange color */
     //--inner-border-width: 1px; /* Adjusts the thickness of the divider line */
     margin-top: -25px;
   }
@@ -69,7 +69,7 @@
   
   ion-input {
     --background: #F7F7F7; /* light grey color */
-    --border-radius: 20px;
+    --border-radius: 5px;
     --border-color: black;
     text-align: center; /* align text to the center */
     width: 100%; /* set width to 80% */
@@ -78,7 +78,7 @@
   
   ion-textarea {
     --background: #F7F7F7; /* light grey color */
-    --border-radius: 20px;
+    --border-radius: 5px;
     --border-color: black;
     text-align: center; /* align text to the center */
     width: 100%; /* set width to 80% */
@@ -87,7 +87,7 @@
   
   ion-select {
     --background: #F7F7F7; /* light grey color */
-    --border-radius: 20px;
+    --border-radius: 5px;
     width: 100%; /* set width to 80% */
     max-width: 100%; /* set max-width to 80% */
     text-align: center; /* align text to the center */

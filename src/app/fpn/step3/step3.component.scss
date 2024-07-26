@@ -12,7 +12,7 @@
   
   
   ion-button {
-    --background: #FFA07A;
+    --background: #d5a431;
     --color: WHITE;
   
   }
@@ -40,7 +40,7 @@
   
   ion-input {
     --background: #F7F7F7; /* light grey color */
-    --border-radius: 20px;
+    --border-radius: 5px;
     --border-color: black;
     text-align: center; /* align text to the center */
     width: 100%; /* set width to 80% */
@@ -49,7 +49,7 @@
   
   ion-textarea {
     --background: #F7F7F7; /* light grey color */
-    --border-radius: 20px;
+    --border-radius: 5px;
     --border-color: black;
     text-align: center; /* align text to the center */
     width: 100%; /* set width to 80% */
@@ -58,7 +58,7 @@
   
   ion-select {
     --background: #F7F7F7; /* light grey color */
-    --border-radius: 20px;
+    --border-radius: 5px;
     width: 100%; /* set width to 80% */
     max-width: 100%; /* set max-width to 80% */
   }

@@ -1,5 +1,6 @@
 import { IonDatetime } from "@ionic/angular";
 import { NotebookEntry } from "./notebook-entry";
+import * as moment from 'moment';  // Import moment.js for date formatting
 
 export class EnviroPost {
    salutation: string = '';
@@ -40,8 +41,8 @@ export class EnviroPost {
    poi: string = '';
    visibility_id: number = 0;
    weather_id: number = 0;
-   offence_datetime: string = '';
-   issue_datetime: string = '';
+   offence_datetime: string = moment().format('YYYY-MM-DDTHH:mm:ss');
+   issue_datetime: string = moment().format('YYYY-MM-DDTHH:mm:ss');
    enviro_issued_onspot: string = '';
    is_id_verified: string = '';
    is_address_verified: string = '';

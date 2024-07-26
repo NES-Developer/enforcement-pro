@@ -33,37 +33,9 @@ export class Step2Component  implements OnInit {
     }
 
     ngOnInit(): void {
-        // this.createMap();
-        this.init();
-    }
-
-    init() {
-        this.auth.checkLoggedIn();
-
-        if (this.data.checkSelectedSite() == false) {
-            this.navigate('site');
-        }
-        this.selected_site = this.data.getSelectedSite();
-        
-        if(this.data.checkSRData() == false) {
-            this.getSRData();
-        }
-        
         this.loadData();
     }
 
-    getSRData(): void {
-        this.api.getSRData().subscribe({
-          next: (data) => {
-            this.data.setSRData(data);
-            this.loadData();
-          },
-          error: (error) => {
-            console.error('Error fetching SR Data:', error);
-            // Handle error as needed
-          }
-        });
-    }
 
     navigate(route: string){
         this.router.navigate([route]);
@@ -81,7 +53,9 @@ export class Step2Component  implements OnInit {
         if (sr_data) {
             this.service_request = sr_data;
             this.service_request.site_id = this.selected_site.id;
-        }    
+        } else {
+            
+        }  
     }
 
 
