@@ -15,7 +15,7 @@ export class AuthService {
     private token: string = '';
     private user: any = null;
 
-    private baseUrl: string = 'https://app.enforcementpro.co.uk/api/app';
+    private baseUrl: string = 'https://uat.enforcementpro.co.uk/api/app';
 
     constructor(
         private http: HttpClient,

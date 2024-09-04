@@ -3,6 +3,7 @@ import { AuthService } from '../../services/enforcementpro/auth.service';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { Router } from '@angular/router';
+import { AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-site',
@@ -24,12 +25,17 @@ export class SitePage implements OnInit {
         private auth: AuthService,
         private api: ApiService,
         private data: DataService,
-        private router: Router
+        private router: Router,
+        private alertController: AlertController
     ) {
         
     }
     ngOnInit(): void {
         this.init();      
+    }
+
+    logout(): void {
+        this.auth.logout();
     }
 
     init() {
@@ -51,6 +57,7 @@ export class SitePage implements OnInit {
             },
             error: (error) => {
                 console.error('Error fetching sites Data:', error);
+                this.presentAlert("Error", error.error.message)
                 // Handle error as needed
             }
         });
@@ -85,6 +92,24 @@ export class SitePage implements OnInit {
         this.filteredSites = this.sites.filter(site => {
             return site.name.toLowerCase().includes(this.searchQuery.toLowerCase());
         });
-      }
+    }
+
+    async presentAlert(header: string, message: string) {
+        let button_title: string = 'Ok';
+        let message_display: string = 'Please Click Okay.';
+        if (header == "Error") {
+            message_display = message + ". Please attempt to logout and log back in.";
+        }
+        const alert = await this.alertController.create({
+            header: header,
+            message: message_display,
+            buttons: [
+                {
+                    text: button_title
+                }
+            ],
+        });
+        await alert.present();
+    }
 
 }

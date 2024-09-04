@@ -29,7 +29,7 @@ export class DataService {
     private selected_offence_type: number = 0;
 
     private live_url: string = 'https://app.enforcementpro.co.uk';
-    private dev_url: string = 'https://app.enforcementpro.co.uk';
+    private dev_url: string = 'https://uat.enforcementpro.co.uk';
     private google_key: string = 'AIzaSyAfk02RCKQgVc4__wbyFgnpraBOhMeK6K4';
 
     private dynamic_feilds_data: any = {};

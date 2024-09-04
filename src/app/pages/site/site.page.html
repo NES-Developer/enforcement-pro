@@ -16,18 +16,23 @@
 
     <!-- Refresh and Home Button -->
     <ion-item>
-        <div class="row">
-            <div class="col-6">
-                <button type="button" (click)="init()" class="mt-4 btn btn-light">
+        <ion-row>
+            <ion-col>
+                <ion-button (click)="init()">
                     <ion-icon name="refresh"></ion-icon> Refresh
-                </button>
-            </div>
-            <div class="col-6">
-                <button type="button" (click)="navigate('')" class="mt-4 btn btn-info">
+                </ion-button>
+            </ion-col>
+            <ion-col>
+                <ion-button (click)="navigate('')">
                     <ion-icon name="home"></ion-icon> Home
-                </button>
-            </div>
-        </div>
+                </ion-button>
+            </ion-col>
+            <ion-col>
+                <ion-button (click)="logout()">
+                    <ion-icon name="log-out"></ion-icon>
+                </ion-button>
+            </ion-col>
+        </ion-row>
 
         
 
