@@ -76,12 +76,42 @@
 
 <!-- Date of birth date -->
 <ion-item>
-    <ion-label>
-        Date of Birth
-    </ion-label>
+    <ion-label>Year of Birth *</ion-label>
+
+    <ion-label>Month of Birth *</ion-label>
+
+    <ion-label>Day of Birth *</ion-label>
+    
 </ion-item>
+
 <ion-item>
-    <ion-input type="date" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.date_of_birth"></ion-input>
+    <ion-input
+        type="number"
+        min="1900"
+        max="2099"
+        [(ngModel)]="birthYear"
+        (ionChange)="updateDateOfBirth()"
+        placeholder="YYYY"
+        ></ion-input>
+
+    <ion-input
+        type="number"
+        min="1"
+        max="12"
+        [(ngModel)]="birthMonth"
+        (ionChange)="updateDateOfBirth()"
+        placeholder="MM"
+        ></ion-input>
+
+    <ion-input
+        type="number"
+        min="1"
+        max="31"
+        [(ngModel)]="birthDay"
+        (ionChange)="updateDateOfBirth()"
+        placeholder="DD"
+        ></ion-input>
+
 </ion-item>
 
 <!-- Gender Select -->

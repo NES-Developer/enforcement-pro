@@ -1,20 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { ServiceRequest } from '../models/service-request';
 import { ApiService } from '../services/enforcementpro/api.service';
 import { AuthService } from '../services/enforcementpro/auth.service';
 import { DataService } from '../services/enforcementpro/data.service';
 import { OffenceGroup } from '../models/offence-group';
 import { Offence } from '../models/offence';
-import { FormGroup } from '@angular/forms';
 import { SiteOffence } from '../models/site-offence';
 import { Weather } from '../models/weather';
 import { Visibility } from '../models/visibility';
 import { POIPrefix } from '../models/poi-prefix';
 import { EnviroPost } from '../models/enviro';
 import { AlertController } from '@ionic/angular';
-import { isEmpty } from 'rxjs';
 import { ThermalPrinterService } from '../services/thermal-printer.service';
+
+import { Filesystem, Directory } from '@capacitor/filesystem';
+
 
 
 @Component({
@@ -28,6 +27,8 @@ export class FPNPage implements OnInit {
 
     enviro_post: EnviroPost;
     fpn: any;
+
+    baseUrl: string = 'https://uat.enforcementpro.co.uk/';
 
     constructor(
         private auth: AuthService,
@@ -244,10 +245,10 @@ export class FPNPage implements OnInit {
                     this.presentAlert('Wait!', 'Please provide Signature.');
                     return false;
                 }
-                if (this.enviro_post.offence_images.length == 0) {
-                    this.presentAlert('Wait!', 'Please provide Offence Images.');
-                    return false;
-                }
+                // if (this.enviro_post.offence_images.length == 0) {
+                //     this.presentAlert('Wait!', 'Please provide Offence Images.');
+                //     return false;
+                // }
                 break;
 
         }
@@ -289,7 +290,7 @@ export class FPNPage implements OnInit {
                 },
                 error: (error) => {
                     console.error('Error:', error);
-                    this.presentAlert('Error', error);
+                    this.presentAlert('Error', error.message);
                 }
             });
         }
@@ -304,7 +305,7 @@ export class FPNPage implements OnInit {
         let secondary_button_title: string = 'Cancel';
         if (header == "Success") {
             primary_button_title = "Finish"
-            secondary_button_title = "Print"
+            secondary_button_title = "Download"
         }
         const alert = await this.alertController.create({
             header: header,
@@ -322,7 +323,9 @@ export class FPNPage implements OnInit {
                     text: secondary_button_title,
                     handler: () => {
                         if (header == "Success") {
-                            this.printReceipt(this.fpn.ticket);
+                            let ticketUrl: string = this.baseUrl + this.fpn.ticket;
+                            console.log(1, this.fpn.ticket);
+                            this.downloadImage(ticketUrl);
                         }
                     }
                 }
@@ -331,37 +334,63 @@ export class FPNPage implements OnInit {
         await alert.present();
     }
 
-    async printReceipt(ticketUrl: string) {
+    async downloadImage(ticketUrl: string) {
+        try {
+            // Fetch the image from the URL using fetch API
+            const response = await fetch(ticketUrl);
+            const blob = await response.blob();
+    
+            // Convert the Blob to Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = async () => {
+                const base64data = reader.result as string;
+    
+                // Save the image into 'enforcement-pro tickets' folder in the gallery
+                const fileName = `ticket_${new Date().getTime()}.jpg`;
+    
+                await Filesystem.writeFile({
+                    path: `enforcement-pro tickets/${fileName}`,
+                    data: base64data.split(',')[1], // Remove the base64 header
+                    directory: Directory.External,
+                    recursive: true // Ensures the directory is created if it doesn't exist
+                });
+    
+                this.confirmDownloadSuccess(fileName); // Handle success here
+            };
+    
+        } catch (error) {
+            console.error('Error downloading image', error);
+            this.presentAlert('Error', 'Failed to download the image.');
+        }
+    }
+    
+    async confirmDownloadSuccess(ticketUrl: string) {
         const alert = await this.alertController.create({
-          header: 'Print Receipt',
-          message: 'Was the printing successful?',
-          buttons: [
-            {
-              text: 'No',
-              handler: () => {
-                this.printReceipt(ticketUrl); // Retry printing
-              }
-            },
-            {
-              text: 'Yes',
-              role: 'cancel',
-              handler: () => {
-                console.log('Printing confirmed');
-              }
-            }
-          ]
+            header: 'Download Ticket',
+            message: 'Was the download successful?',
+            buttons: [
+                {
+                    text: 'Retry',
+                    handler: () => {
+                        this.downloadImage(ticketUrl); // Retry printing
+                    }
+                },
+                {
+                    text: 'Close',
+                    role: 'cancel',
+                    handler: () => {
+                        console.log('Printing confirmed');
+                        window.location.reload();
+
+                    }
+                }
+            ]
         });
     
-        try {
-          await this.thermalPrinterService.printImage(ticketUrl);
-          await alert.present();
-        } catch (error) {
-          console.error('Error printing', error);
-          window.location.reload();
-
-          this.presentAlert('Successful Submit', 'Successfully posted FPN. Failed to print. Printer might not be connected. FPN Number: ' + this.fpn.fpn_number);
-        }
-      }
+        await alert.present();
+    }
+    
 
 
     saveFPN() {

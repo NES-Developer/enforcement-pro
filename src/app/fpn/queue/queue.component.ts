@@ -6,6 +6,8 @@ import { AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { FPNPage } from '../fpn.page';
 
+import { Filesystem, Directory } from '@capacitor/filesystem';
+
 
 @Component({
   selector: 'app-queue',
@@ -16,6 +18,7 @@ export class QueueComponent  implements OnInit {
 
     // enviro_post: EnviroPost = new EnviroPost();
     enviro_que: EnviroPost[] = [];
+    baseUrl: string = 'https://uat.enforcementpro.co.uk/';
 
 
     constructor(
@@ -52,6 +55,12 @@ export class QueueComponent  implements OnInit {
                 } else {
                     let fpn_number = response.data.fpn_number;
                     this.presentAlert('Success', fpn_number);
+
+                    let fpn = response.data;
+
+                    let ticketUrl: string = this.baseUrl + fpn.ticket;
+                    this.downloadImage(ticketUrl);
+
                     this.data.spliceEnviroQue(enviro_post);
                     this.enviro_que = this.data.getEnviroQue();
                 }
@@ -65,6 +74,63 @@ export class QueueComponent  implements OnInit {
             }
         });
         // Add form submission logic here
+    }
+
+    async downloadImage(ticketUrl: string) {
+        try {
+            // Fetch the image from the URL using fetch API
+            const response = await fetch(ticketUrl);
+            const blob = await response.blob();
+    
+            // Convert the Blob to Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = async () => {
+                const base64data = reader.result as string;
+    
+                // Save the image into 'enforcement-pro tickets' folder in the gallery
+                const fileName = `ticket_${new Date().getTime()}.jpg`;
+    
+                await Filesystem.writeFile({
+                    path: `enforcement-pro tickets/${fileName}`,
+                    data: base64data.split(',')[1], // Remove the base64 header
+                    directory: Directory.External,
+                    recursive: true // Ensures the directory is created if it doesn't exist
+                });
+    
+                this.confirmDownloadSuccess(fileName); // Handle success here
+            };
+    
+        } catch (error) {
+            console.error('Error downloading image', error);
+            this.presentAlert('Error', 'Failed to download the image.');
+        }
+    }
+    
+    async confirmDownloadSuccess(ticketUrl: string) {
+        const alert = await this.alertController.create({
+            header: 'Download Ticket',
+            message: 'Was the download successful?',
+            buttons: [
+                {
+                    text: 'Retry',
+                    handler: () => {
+                        this.downloadImage(ticketUrl); // Retry printing
+                    }
+                },
+                {
+                    text: 'Close',
+                    role: 'cancel',
+                    handler: () => {
+                        console.log('Printing confirmed');
+                        window.location.reload();
+
+                    }
+                }
+            ]
+        });
+    
+        await alert.present();
     }
 
     async presentAlert(header: string, message: string) {

@@ -48,7 +48,7 @@ export class PhotoComponent implements OnInit, AfterViewInit {
             this.error = "You have no output video device";
             }
         } catch (e) {
-            this.error = e;
+            // this.error = e;
         }
         }
     }
@@ -67,7 +67,7 @@ export class PhotoComponent implements OnInit, AfterViewInit {
         const image = new Image();
         image.src = this.captures[idx];
         image.onload = () => {
-        this.drawImageToCanvas(image);
+            this.drawImageToCanvas(image);
         };
     }
 

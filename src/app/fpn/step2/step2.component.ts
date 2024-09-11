@@ -27,6 +27,9 @@ import { Zone } from '../../models/zone';
 export class Step2Component implements OnInit {
 
     form!: FormGroup;
+    birthYear: number = 1900;
+    birthMonth: number = 1;
+    birthDay: number = 1;
 
     ethnicities: Ethnicity[] = [];
     offence_how: OffenceHow[] = [];
@@ -62,6 +65,21 @@ export class Step2Component implements OnInit {
     filterOffences() {
         this.filteredOffences = this.offences.filter(offence => offence.group === this.enviro_post.offence_type_id);
         // this.form.get('offence')?.setValue(null); // Reset the offence selection
+    }
+
+    updateDateOfBirth() {
+        // Validate the inputs before combining
+        if (this.birthYear && this.birthMonth && this.birthDay) {
+          if (this.birthMonth > 12 || this.birthDay > 31) {
+            console.error('Invalid date: Day cannot be greater than 31 and month cannot be greater than 12.');
+            return;
+          }
+    
+          // Format as yyyy/mm/dd and assign to date_of_birth
+          const formattedDate = `${this.birthYear.toString().padStart(4, '0')}/${this.birthMonth.toString().padStart(2, '0')}/${this.birthDay.toString().padStart(2, '0')}`;
+          this.enviro_post.date_of_birth = formattedDate;
+          this.data.setEnviroPost(this.enviro_post);
+        }
     }
 
     loadData() {

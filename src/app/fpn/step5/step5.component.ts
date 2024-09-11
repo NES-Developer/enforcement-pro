@@ -79,8 +79,7 @@ export class Step5Component  implements OnInit, AfterViewInit {
         const formattedDate = moment(this.enviro_post.offence_datetime).format('YYYY-MM-DD HH:mm');
         const formattedIssueDate = moment(this.enviro_post.issue_datetime).format('YYYY-MM-DD HH:mm');
         this.enviro_post.offence_datetime = formattedDate.toString();
-        this.enviro_post.issue_datetime = formattedIssueDate.toString();
-            
+        this.enviro_post.issue_datetime = formattedIssueDate.toString();            
         this.data.setEnviroPost(this.enviro_post);
     }
 
