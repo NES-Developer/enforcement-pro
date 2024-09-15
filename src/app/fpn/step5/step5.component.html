@@ -8,7 +8,7 @@
     <ion-label><strong><u>Location Information</u></strong></ion-label>
   </ion-item>
   
-  <ion-item>
+  <!-- <ion-item>
     <div class="">
       <div id="map"></div>
     </div>
@@ -22,7 +22,7 @@
   </ion-item>
   <ion-item>
     <ion-button expand="full" (click)="onSearch()">Search</ion-button>
-  </ion-item>
+  </ion-item> -->
 
 <!-- Offence Location Text -->
 <ion-item>
@@ -129,7 +129,6 @@
         presentation="date-time" 
         class="bg-light" 
         [preferWheel]="true" 
-        display-format="YYYY-MM-DD HH:mm"
         (ionChange)="saveEnviroData()" 
         [(ngModel)]="enviro_post.offence_datetime">
     </ion-datetime>
@@ -147,7 +146,6 @@
         presentation="date-time" 
         class="bg-light" 
         [preferWheel]="true" 
-        display-format="YYYY-MM-DD HH:mm"
         (ionChange)="saveEnviroData()" 
         [(ngModel)]="enviro_post.issue_datetime">
     </ion-datetime>

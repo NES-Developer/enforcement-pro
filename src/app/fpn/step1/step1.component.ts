@@ -17,8 +17,9 @@ export class Step1Component  implements OnInit {
 
     offences: Offence[] = [];
     filteredOffences: Offence[] = [];
-    zones: Zone[] = [];
     offenceGroups: OffenceGroup[] = [];
+
+    zones: Zone[] = [];
     sites: Site[] = [];
 
     offence!: Offence;

@@ -6,7 +6,11 @@ import { AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { FPNPage } from '../fpn.page';
 
-import { Filesystem, Directory } from '@capacitor/filesystem';
+// import { Filesystem, Directory } from '@capacitor/filesystem';
+import { AppLog } from '../../models/app-log';
+
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+// import { Http } from '@capacitor-community/http';
 
 
 @Component({
@@ -20,6 +24,8 @@ export class QueueComponent  implements OnInit {
     enviro_que: EnviroPost[] = [];
     baseUrl: string = 'https://uat.enforcementpro.co.uk/';
 
+    app_log: AppLog;
+
 
     constructor(
         private api: ApiService,
@@ -31,7 +37,7 @@ export class QueueComponent  implements OnInit {
 
         // private fpnPage: FPNPage
     ) {
-        
+        this.app_log = new AppLog();
     }
     ngOnInit(): void {
         this.loadData();
@@ -76,35 +82,69 @@ export class QueueComponent  implements OnInit {
         // Add form submission logic here
     }
 
+    downloadFileWeb(base64Data: string, fileName: string) {
+        const link = document.createElement('a');
+        link.href = `${base64Data}`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Helper function to convert blob to base64
+    convertBlobToBase64(blob: Blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = reject;
+          reader.onload = () => {
+            resolve(reader.result);
+          };
+          reader.readAsDataURL(blob);
+        });
+    }
+
     async downloadImage(ticketUrl: string) {
         try {
-            // Fetch the image from the URL using fetch API
+            // Fetch the image from the URL
             const response = await fetch(ticketUrl);
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+      
+            // Get the image as a Blob
             const blob = await response.blob();
-    
-            // Convert the Blob to Base64
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = async () => {
-                const base64data = reader.result as string;
-    
-                // Save the image into 'enforcement-pro tickets' folder in the gallery
-                const fileName = `ticket_${new Date().getTime()}.jpg`;
-    
-                await Filesystem.writeFile({
-                    path: `enforcement-pro tickets/${fileName}`,
-                    data: base64data.split(',')[1], // Remove the base64 header
-                    directory: Directory.External,
-                    recursive: true // Ensures the directory is created if it doesn't exist
-                });
-    
-                this.confirmDownloadSuccess(fileName); // Handle success here
-            };
-    
-        } catch (error) {
-            console.error('Error downloading image', error);
-            this.presentAlert('Error', 'Failed to download the image.');
-        }
+            
+            // Convert the Blob to base64 string
+            const base64Data = await this.convertBlobToBase64(blob) as string;
+            console.log(base64Data);
+
+            const fileName = `ticket_${new Date().getTime()}.png`;
+      
+            // Save the base64 image to the filesystem
+            const savedFile = await Filesystem.writeFile({
+              path: `${fileName}.png`,
+              data: base64Data,
+              directory: Directory.Data,  // You can also use Directory.Documents
+            });
+            this.downloadFileWeb(base64Data, `${fileName}.png`);
+  
+      
+            console.log('Image saved successfully:', savedFile);
+          } catch (error) {
+            console.error('Error saving the image:', error);
+          }
+    }
+
+    ping() {
+        this.api.postTrack(this.app_log).subscribe({
+            next: (response) => {
+                console.log('Response:', response);
+                
+            },
+            error: (error) => {
+                console.error('Error:', error);
+            }
+        });
     }
     
     async confirmDownloadSuccess(ticketUrl: string) {
@@ -122,7 +162,6 @@ export class QueueComponent  implements OnInit {
                     text: 'Close',
                     role: 'cancel',
                     handler: () => {
-                        console.log('Printing confirmed');
                         window.location.reload();
 
                     }

@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
     <ion-toolbar>
         <ion-title>
-            Service Request
+            Settings
         </ion-title>
     </ion-toolbar>
 </ion-header>
@@ -9,11 +9,70 @@
 <ion-content class="ion-padding" [fullscreen]="true">
     <ion-header collapse="condense">
         <ion-toolbar>
-            <ion-title size="large">Service Request</ion-title>
+            <ion-title size="large">Settings</ion-title>
         </ion-toolbar>
     </ion-header>
 
-    {{ this.currentStep }}
+    <ion-item>
+        <ion-label>
+            Device ID
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="device_id" (ionChange)="storeAppLog()"></ion-input>
+    </ion-item>
+
+    <!-- Site Select -->
+    <ion-item>
+        <ion-label>Site</ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-select multiple="false" [(ngModel)]="site_id" [disabled]="true" (ionChange)="storeAppLog()">
+            <ion-select-option *ngFor="let site of sites" [value]="site.id"> 
+                {{ site.name }}     
+            </ion-select-option>
+        </ion-select>
+    </ion-item>
+
+    <!-- Zone Select -->
+    <ion-item>
+        <ion-label>Zones</ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-select multiple="false" [(ngModel)]="zone_id" (ionChange)="storeAppLog()">
+            <ion-select-option *ngFor="let zone of zones" [value]="zone.id"> 
+                {{ zone.name }}     
+            </ion-select-option>
+        </ion-select>
+    </ion-item>
+
+    <ion-item>
+        <ion-label>
+            Longitude
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input [disabled]="true" type="text" [(ngModel)]="position_lng" (ionChange)="storeAppLog()"></ion-input>
+    </ion-item>
+
+    <ion-item>
+        <ion-label>
+            Latitude
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input [disabled]="true" type="text" [(ngModel)]="position_lat" (ionChange)="storeAppLog()"></ion-input>
+    </ion-item>
+
+    <ion-item>
+        <ion-button expand="block" shape="full" (click)="ping()">Ping</ion-button>
+    </ion-item>
+
+    <ion-item>
+        <ion-button expand="block" shape="full" (click)="autoLogin()">Auto Login</ion-button>
+    </ion-item>
+
+    <!-- {{ this.currentStep }}
 
     <div *ngIf="currentStep === 1">
         <app-step1 (next)="nextStep()"></app-step1>
@@ -23,12 +82,12 @@
     </div>
     <div *ngIf="currentStep === 3">
         <app-step3 (previous)="previousStep()" (next)="submitForm()"></app-step3>
-    </div>
+    </div> -->
 
 </ion-content>
 
 
-<ion-footer :translucent="true">
+<!-- <ion-footer :translucent="true">
     <ion-toolbar>
         <ion-row>
             <ion-col size="6" *ngIf="currentStep === 1">
@@ -44,5 +103,5 @@
             </ion-col>
         </ion-row>
     </ion-toolbar>
-</ion-footer>
+</ion-footer> -->
 

@@ -34,15 +34,15 @@
     </ion-header>
 
     <ion-item>
-        <div *ngIf="!error">
-            <video [class.show]="!isCaptured" [class.hide]="isCaptured" #video id="video" [width]="WIDTH" [height]="HEIGHT"
+        <div style="width: 100%" *ngIf="!error">
+            <video [class.show]="!isCaptured" [class.hide]="isCaptured" #video id="video"  [height]="HEIGHT"
                 autoplay></video>
         </div>
     </ion-item> 
 
     <ion-item>
-        <div *ngIf="!error">
-            <canvas [class.show]="isCaptured" [class.hide]="!isCaptured" #canvas id="canvas" [width]="WIDTH"
+        <div style="width: 100%" *ngIf="!error">
+            <canvas [class.show]="isCaptured" [class.hide]="!isCaptured" #canvas id="canvas" 
                 [height]="HEIGHT"></canvas>
         </div>
     </ion-item> 

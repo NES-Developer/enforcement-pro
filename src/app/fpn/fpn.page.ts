@@ -13,7 +13,9 @@ import { AlertController } from '@ionic/angular';
 import { ThermalPrinterService } from '../services/thermal-printer.service';
 
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { AppLog } from '../models/app-log';
 
+import { CapacitorSQLite, SQLiteDBConnection } from '@capacitor-community/sqlite';
 
 
 @Component({
@@ -22,6 +24,8 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
   styleUrls: ['fpn.page.scss']
 })
 export class FPNPage implements OnInit {
+
+    app_log: AppLog;
 
     map: any;
 
@@ -35,7 +39,6 @@ export class FPNPage implements OnInit {
         private data: DataService,
         private api: ApiService,
         private alertController: AlertController,
-        private thermalPrinterService: ThermalPrinterService,
 
     ) {
         this.auth.checkLoggedIn();
@@ -50,6 +53,8 @@ export class FPNPage implements OnInit {
         } else {
             this.enviro_post = new EnviroPost();
         }
+
+        this.app_log = new AppLog();
     }
 
 
@@ -64,6 +69,14 @@ export class FPNPage implements OnInit {
     }
 
     loadData() {
+        this.app_log = this.data.getAppLog();
+        // Trigger a method every 30 minutes (1800000 milliseconds)
+        if(this.data.checkAppLog()) {
+            setInterval(() => {
+                this.ping();
+            }, 1800000);
+        }
+
         // this.enviro_post = this.data.getEnviroPost();
 
         console.log(this.enviro_post);
@@ -245,10 +258,10 @@ export class FPNPage implements OnInit {
                     this.presentAlert('Wait!', 'Please provide Signature.');
                     return false;
                 }
-                // if (this.enviro_post.offence_images.length == 0) {
-                //     this.presentAlert('Wait!', 'Please provide Offence Images.');
-                //     return false;
-                // }
+                if (this.enviro_post.offence_images.length == 0) {
+                    this.presentAlert('Wait!', 'Please provide Offence Images.');
+                    return false;
+                }
                 break;
 
         }
@@ -323,8 +336,8 @@ export class FPNPage implements OnInit {
                     text: secondary_button_title,
                     handler: () => {
                         if (header == "Success") {
-                            let ticketUrl: string = this.baseUrl + this.fpn.ticket;
-                            console.log(1, this.fpn.ticket);
+                            let ticketUrl: string = this.baseUrl + '/' + this.fpn.ticket;
+                            console.log(1, this.fpn.ticket, ticketUrl);
                             this.downloadImage(ticketUrl);
                         }
                     }
@@ -334,34 +347,142 @@ export class FPNPage implements OnInit {
         await alert.present();
     }
 
+    downloadFileWeb(base64Data: string, fileName: string) {
+        const link = document.createElement('a');
+        link.href = `${base64Data}`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Helper function to convert blob to base64
+    convertBlobToBase64(blob: Blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = reject;
+          reader.onload = () => {
+            resolve(reader.result);
+          };
+          reader.readAsDataURL(blob);
+        });
+    }
+
+    async insertTicket(name: string) {
+        try {
+            if (this.db) {
+
+                // Ensure the database is initialized 
+                if (!this.db) {
+                    await this.initializeDatabase();
+                }
+
+                if (this.db) {
+                    // Insert the ticket into the 'tickets' table
+                    const insertQuery = `INSERT INTO tickets (name) VALUES (?)`;
+                    const values = [name];
+                    const result = await this.db.run(insertQuery, values);
+            
+                    if (result.changes && result.changes.changes > 0) {
+                        console.log(result.changes);
+                    console.log('Ticket inserted successfully!');
+                    } else {
+                    console.log('Failed to insert ticket.');
+                    }
+                }
+            }
+        } catch (error) {
+          console.error('Error inserting Tickets:', error);
+        }
+    }
+
+
     async downloadImage(ticketUrl: string) {
         try {
-            // Fetch the image from the URL using fetch API
+            // Fetch the image from the URL
             const response = await fetch(ticketUrl);
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+      
+            // Get the image as a Blob
             const blob = await response.blob();
-    
-            // Convert the Blob to Base64
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = async () => {
-                const base64data = reader.result as string;
-    
-                // Save the image into 'enforcement-pro tickets' folder in the gallery
-                const fileName = `ticket_${new Date().getTime()}.jpg`;
-    
-                await Filesystem.writeFile({
-                    path: `enforcement-pro tickets/${fileName}`,
-                    data: base64data.split(',')[1], // Remove the base64 header
-                    directory: Directory.External,
-                    recursive: true // Ensures the directory is created if it doesn't exist
-                });
-    
-                this.confirmDownloadSuccess(fileName); // Handle success here
-            };
-    
+            
+            // Convert the Blob to base64 string
+            const base64Data = await this.convertBlobToBase64(blob) as string;
+            console.log(base64Data);
+
+            this.insertTicket(base64Data);
+          
+            const fileName = `ticket_${new Date().getTime()}.png`;
+      
+            // Save the base64 image to the filesystem
+            // const savedFile = await Filesystem.writeFile({
+            //   path: `${fileName}.png`,
+            //   data: base64Data,
+            //   directory: Directory.ExternalStorage
+            // });
+
+            // const savedFile1 = await Filesystem.writeFile({
+            //     path: `${fileName}.png`,
+            //     data: base64Data,
+            //     directory: Directory.External
+            // });
+
+            // const path = savedFile.uri;
+
+            this.downloadFileWeb(base64Data, `${fileName}.png`);
+  
+      
+            console.log('Image saved successfully:', 2);
+          } catch (error) {
+            console.error('Error saving the image:', error);
+          }
+    }
+
+     db: SQLiteDBConnection | any;
+
+    // Create and open the SQLite database
+    async initializeDatabase() {
+        try {
+            // Create the SQLite database connection
+            this.db = await CapacitorSQLite.createConnection({
+                database: 'enforcement_pro',
+                version: 1,
+                encrypted: false,
+                mode: 'no-encryption',
+                // location: 'default'
+            });
+
+            // Open the database
+            await this.db.open();
+
+            // Create the table
+            const createTableQuery = `
+                CREATE TABLE IF NOT EXISTS tickets (
+                id INTEGER PRIMARY KEY NOT NULL,
+                name TEXT NOT NULL
+                );
+            `;
+            await this.db.execute(createTableQuery);
+
+            console.log('Database initialized and table created!');
         } catch (error) {
-            console.error('Error downloading image', error);
-            this.presentAlert('Error', 'Failed to download the image.');
+        console.error('Error initializing database:', error);
+        }
+    }
+
+    ping() {
+        if (this.data.checkAppLog()) {
+            this.api.postTrack(this.app_log).subscribe({
+                next: (response) => {
+                    console.log('Response:', response);
+                    
+                },
+                error: (error) => {
+                    console.error('Error:', error);
+                }
+            });
         }
     }
     
@@ -380,7 +501,6 @@ export class FPNPage implements OnInit {
                     text: 'Close',
                     role: 'cancel',
                     handler: () => {
-                        console.log('Printing confirmed');
                         window.location.reload();
 
                     }

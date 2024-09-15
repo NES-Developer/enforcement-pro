@@ -46,8 +46,8 @@ export class EnviroPost {
    enviro_issued_onspot: string = '';
    is_id_verified: string = '';
    is_address_verified: string = '';
-   lat: string = '';
-   lng: string = '';
+   lat: string = '0';
+   lng: string = '0';
    is_witness_available: string = '';
    witness_name: string = '';
    witness_phone: string = '';

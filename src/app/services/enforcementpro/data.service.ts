@@ -16,9 +16,11 @@ import { EnviroPost } from '../../models/enviro';
 import { Salutation } from '../../models/salutation';
 import { Zone } from '../../models/zone';
 import { Site } from '../../models/site';
-import { Build } from 'src/app/models/build';
-import { HairColour } from 'src/app/models/hair_colour';
-import { NotebookEntry } from 'src/app/models/notebook-entry';
+import { Build } from '../../models/build';
+import { HairColour } from '../../models/hair_colour';
+import { NotebookEntry } from '../../models/notebook-entry';
+import { AppLog } from '../../models/app-log';
+import { Login } from '../../models/login';
 
 
 @Injectable({
@@ -28,13 +30,17 @@ export class DataService {
 
     private selected_offence_type: number = 0;
 
-    private live_url: string = 'https://app.enforcementpro.co.uk';
+    private live_url: string = 'https://uat.enforcementpro.co.uk';
     private dev_url: string = 'https://uat.enforcementpro.co.uk';
     private google_key: string = 'AIzaSyAfk02RCKQgVc4__wbyFgnpraBOhMeK6K4';
+
+
 
     private dynamic_feilds_data: any = {};
     private enviro_post: EnviroPost;
     private service_request: ServiceRequest;
+    private app_log: AppLog;
+    private login: Login;
     private selected_site: any;
 
     private enviro_que: EnviroPost[] = [];
@@ -66,6 +72,8 @@ export class DataService {
     constructor() {
         this.service_request = new ServiceRequest();
         this.enviro_post = new EnviroPost();
+        this.app_log = new AppLog();
+        this.login = new Login();
 
         this.loadFromLocalStorage();
     }
@@ -96,9 +104,11 @@ export class DataService {
         this.offence_types = this.loadArrayFromLocalStorage('offence_types')
 
         this.selected_site = this.loadObjectFromLocalStorage('selected_site');
+        this.login = this.loadObjectFromLocalStorage('login');
         this.service_request = this.loadObjectFromLocalStorage('service_request');
         this.dynamic_feilds_data = this.loadObjectFromLocalStorage('dynamic_feilds_data')
         this.enviro_post = this.loadObjectFromLocalStorage('enviro_post');
+        this.app_log = this.loadObjectFromLocalStorage('app_log');//app_log
 
         // this.selected_site = parseInt(this.loadStringFromLocalStorage('selected_site'));
     }
@@ -141,9 +151,19 @@ export class DataService {
         this.saveObjectToLocalStorage('enviro_post', this.enviro_post);
     }
 
+    setAppLog(app_log: AppLog): void {
+        this.app_log = app_log;
+        this.saveObjectToLocalStorage('app_log', this.app_log);
+    }
+
     setSelectedSite(selected_site: any): void {
         this.selected_site = selected_site;
         this.saveObjectToLocalStorage('selected_site', this.selected_site);
+    }
+
+    setLogin(login: any): void {
+        this.login = login;
+        this.saveObjectToLocalStorage('login', this.login);
     }
 
     setSites(sites: any): void {
@@ -288,10 +308,12 @@ export class DataService {
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
       
-
-
     checkSelectedSite(): boolean {
         return this.selected_site !== null;
+    }
+
+    checkLogin(): boolean {
+        return this.login !== null;
     }
 
     checkSRData(): boolean {
@@ -308,6 +330,10 @@ export class DataService {
 
     checkFPNData(): boolean {
         return this.ethnicities.length > 0 && this.site_offences.length > 0 && this.address_verifed_by.length > 0 && this.id_shown.length > 0;
+    }
+
+    checkAppLog(): boolean {
+        return this.app_log !== null && this.app_log.device_id !== null && this.app_log.lat !== null && this.app_log.lng !== null;
     }
 
     getGoogleKey(): string {
@@ -338,8 +364,16 @@ export class DataService {
         return this.enviro_post;
     }
 
+    getAppLog(): AppLog {
+        return this.app_log;
+    }
+
     getSelectedSite(): Site {
         return this.selected_site;
+    }
+
+    getLogin(): Login {
+        return this.login;
     }
 
     getServiceRequest(): ServiceRequest {
@@ -454,6 +488,9 @@ export class DataService {
         this.sites = [];
         this.service_request = new ServiceRequest();
         this.enviro_post = new EnviroPost();
+        this.app_log = new AppLog();
+        this.login = new Login();
+
         this.enviro_que = [];
         this.address_verifed_by = [];
         this.offences = [];
@@ -467,6 +504,7 @@ export class DataService {
         this.hair_colours = [];
         // Clear localStorage
         localStorage.removeItem('selected_site')
+        localStorage.removeItem('login')
         localStorage.removeItem('dynamic_feilds');
         localStorage.removeItem('ethnicities');
         localStorage.removeItem('officers');
@@ -485,6 +523,7 @@ export class DataService {
         localStorage.removeItem('builds');
         localStorage.removeItem('hair_colours');
         localStorage.removeItem('enviro_post');
+        localStorage.removeItem('app_log');
         localStorage.removeItem('enviro_que');
 
         
