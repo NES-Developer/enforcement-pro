@@ -10,6 +10,8 @@ import { Clipboard } from '@capacitor/clipboard';
 import { AlertController } from '@ionic/angular';
 import { isEmpty } from 'rxjs';
 
+import { AppLauncher } from '@capacitor/app-launcher';
+
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -154,6 +156,26 @@ export class HomePage implements OnInit {
             string: url
         });
         this.presentAlert('Successful', 'Copied FPN Url to Clipboard')
+    }
+
+    async openOtherApp() {
+        try {
+          const canOpen = await AppLauncher.canOpenUrl({
+            url: 'com.example.enforcementproprinter'
+          });
+    
+          if (canOpen.value) {
+            await AppLauncher.openUrl({
+              url: 'com.example.enforcementproprinter'
+            });
+          } else {
+            console.log('Cannot open app');
+            this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+          }
+        } catch (error) {
+          console.error('Error launching app:', error);
+          this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+        }
     }
 
     async presentAlert(header: string, message: string) {

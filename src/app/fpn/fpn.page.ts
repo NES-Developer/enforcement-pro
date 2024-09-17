@@ -13,7 +13,7 @@ import { AlertController } from '@ionic/angular';
 import { Clipboard } from '@capacitor/clipboard';
 
 import { AppLog } from '../models/app-log';
-
+import { AppLauncher } from '@capacitor/app-launcher';
 
 
 @Component({
@@ -354,7 +354,7 @@ export class FPNPage implements OnInit {
                     text: secondary_button_title,
                     handler: () => {
                         if (header == "Success") {
-                            //Please navigate to a new app here NEMO              
+                            this.openOtherApp();
                         }
                     }
                 }
@@ -374,6 +374,26 @@ export class FPNPage implements OnInit {
                     console.error('Error:', error);
                 }
             });
+        }
+    }
+
+    async openOtherApp() {
+        try {
+            const canOpen = await AppLauncher.canOpenUrl({
+                url: 'com.example.enforcementproprinter'
+            });
+        
+            if (canOpen.value) {
+                await AppLauncher.openUrl({
+                url: 'com.example.enforcementproprinter'
+                });
+            } else {
+                this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+                console.log('Cannot open app');
+            }
+        } catch (error) {
+            this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+            console.error('Error launching app:', error);
         }
     }
 
