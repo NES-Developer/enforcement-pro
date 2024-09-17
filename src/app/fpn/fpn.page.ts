@@ -11,8 +11,6 @@ import { POIPrefix } from '../models/poi-prefix';
 import { EnviroPost } from '../models/enviro';
 import { AlertController } from '@ionic/angular';
 import { Clipboard } from '@capacitor/clipboard';
-import { InAppBrowser } from '@awesome-cordova-plugins/in-app-browser/ngx';
-import { AppAvailability } from '@awesome-cordova-plugins/app-availability/ngx';
 
 import { AppLog } from '../models/app-log';
 
@@ -39,8 +37,6 @@ export class FPNPage implements OnInit {
         private data: DataService,
         private api: ApiService,
         private alertController: AlertController,
-        private appAvailability: AppAvailability,
-        private iab: InAppBrowser
 
     ) {
         this.auth.checkLoggedIn();
@@ -358,9 +354,7 @@ export class FPNPage implements OnInit {
                     text: secondary_button_title,
                     handler: () => {
                         if (header == "Success") {
-                            //navigate to print app
-                            this.openProPrinter()
-                                      
+                            //Please navigate to a new app here NEMO              
                         }
                     }
                 }
@@ -368,22 +362,6 @@ export class FPNPage implements OnInit {
         });
         await alert.present();
     }
-
-    openProPrinter() {
-        const packageName = "com.example.enforcementproprinter"; 
-      
-        this.appAvailability.check(packageName)
-          .then(() => {
-            // App is available, open it using the intent scheme
-            this.iab.create('intent://' + packageName + '#Intent;scheme=android-app;end', '_system');
-          })
-          .catch(() => { 
-            // App is not installed, handle this case (e.g., show a message or redirect to Play Store)
-            this.presentAlert('Printer Pro', 'Printer pro app is not detected on device');     
-
-          });
-      }
-      
 
     ping() {
         if (this.data.checkAppLog()) {
