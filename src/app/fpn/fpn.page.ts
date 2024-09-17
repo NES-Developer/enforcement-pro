@@ -317,7 +317,6 @@ export class FPNPage implements OnInit {
                             string: this.fpn.ticket
                         });
                         this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + '. URL has been copied to your clipboard.');     
-                        //Please navigate to a new app here NEMO              
                     }
                 },
                 error: (error) => {
@@ -337,7 +336,7 @@ export class FPNPage implements OnInit {
         let secondary_button_title: string = 'Cancel';
         if (header == "Success") {
             primary_button_title = "Finish"
-            secondary_button_title = ""
+            secondary_button_title = "Print"
         }
         const alert = await this.alertController.create({
             header: header,
@@ -353,6 +352,11 @@ export class FPNPage implements OnInit {
                 },
                 {
                     text: secondary_button_title,
+                    handler: () => {
+                        if (header == "Success") {
+                            //Please navigate to a new app here NEMO              
+                        }
+                    }
                 }
             ],
         });
