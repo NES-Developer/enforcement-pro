@@ -15,7 +15,7 @@ import { AppLog } from 'src/app/models/app-log';
 })
 export class ApiService {
 
-    private baseUrl: string = 'https://uat.enforcementpro.co.uk/api/app';
+    private baseUrl: string = 'https://app.enforcementpro.co.uk/api/app';
 
     holder: any;
 
@@ -46,6 +46,11 @@ export class ApiService {
 
     getSRData(): Observable<any> {
         const url = `${this.baseUrl}/sr/data`;
+        return this.http.get(url, { headers: this.getHeaders() });
+    }
+
+    getRecentFPNs(user_id: number): Observable<any> {
+        const url = `${this.baseUrl}/get-recent-fpn/${user_id}`;
         return this.http.get(url, { headers: this.getHeaders() });
     }
 

@@ -5,6 +5,8 @@ import { ApiService } from '../../services/enforcementpro/api.service';
 import { AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { FPNPage } from '../fpn.page';
+import { Clipboard } from '@capacitor/clipboard';
+
 
 // import { Filesystem, Directory } from '@capacitor/filesystem';
 import { AppLog } from '../../models/app-log';
@@ -22,7 +24,7 @@ export class QueueComponent  implements OnInit {
 
     // enviro_post: EnviroPost = new EnviroPost();
     enviro_que: EnviroPost[] = [];
-    baseUrl: string = 'https://uat.enforcementpro.co.uk/';
+    baseUrl: string = 'https://app.enforcementpro.co.uk/';
 
     app_log: AppLog;
 
@@ -64,9 +66,11 @@ export class QueueComponent  implements OnInit {
 
                     let fpn = response.data;
 
-                    let ticketUrl: string = this.baseUrl + fpn.ticket;
-                    this.downloadImage(ticketUrl);
 
+                    Clipboard.write({
+                        string: fpn.ticket
+                    });
+                    this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
                     this.data.spliceEnviroQue(enviro_post);
                     this.enviro_que = this.data.getEnviroQue();
                 }
@@ -145,31 +149,6 @@ export class QueueComponent  implements OnInit {
                 console.error('Error:', error);
             }
         });
-    }
-    
-    async confirmDownloadSuccess(ticketUrl: string) {
-        const alert = await this.alertController.create({
-            header: 'Download Ticket',
-            message: 'Was the download successful?',
-            buttons: [
-                {
-                    text: 'Retry',
-                    handler: () => {
-                        this.downloadImage(ticketUrl); // Retry printing
-                    }
-                },
-                {
-                    text: 'Close',
-                    role: 'cancel',
-                    handler: () => {
-                        window.location.reload();
-
-                    }
-                }
-            ]
-        });
-    
-        await alert.present();
     }
 
     async presentAlert(header: string, message: string) {

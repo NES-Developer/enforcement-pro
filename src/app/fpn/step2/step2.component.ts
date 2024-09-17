@@ -82,6 +82,19 @@ export class Step2Component implements OnInit {
         }
     }
 
+    // Method to populate the inputs with the existing date_of_birth when the page loads
+    populateDateOfBirth() {
+        if (this.enviro_post.date_of_birth) {
+        // Split the date_of_birth (assuming it's in yyyy/mm/dd format)
+        const [year, month, day] = this.enviro_post.date_of_birth.split('/');
+
+        // Assign the split values to the respective inputs
+        this.birthYear = +year;
+        this.birthMonth = +month;
+        this.birthDay = +day;
+        }
+    }
+
     loadData() {
         this.offence_how = this.data.getOffenceHow();
         this.offence_location_suffix = this.data.getOffenceLocationSuffix();
@@ -94,6 +107,7 @@ export class Step2Component implements OnInit {
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
+        this.populateDateOfBirth();
     }
 
     saveEnviroData() {

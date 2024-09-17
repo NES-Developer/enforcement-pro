@@ -41,10 +41,26 @@ export class NotebookPage implements OnInit {
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
+        this.enviro_post.notebook_entries.did = 0;
     }
 
     validator(): boolean {
-
+        if (!this.enviro_post.notebook_entries.is_fpn_advised) {
+            this.presentAlert('Wait!', 'Please provide if FPN is adviced.');
+            return false;
+        }
+        if (!this.enviro_post.notebook_entries.is_fpn_handed) {
+            this.presentAlert('Wait!', 'Please provide if FPN is handed.');
+            return false;
+        }
+        if (!this.enviro_post.notebook_entries.hair) {
+            this.presentAlert('Wait!', 'Please provide hair details.');
+            return false;
+        }
+        if (!this.enviro_post.notebook_entries.were) {
+            this.presentAlert('Wait!', 'Please provide hair details.');
+            return false;
+        }
         return true;
     }
 
