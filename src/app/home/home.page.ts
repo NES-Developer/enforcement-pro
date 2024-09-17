@@ -8,6 +8,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { Clipboard } from '@capacitor/clipboard';
 import { AlertController } from '@ionic/angular';
+import { isEmpty } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -139,7 +140,12 @@ export class HomePage implements OnInit {
     }
 
     logout(): void {
-        this.auth.logout();
+        let queue = this.data.getEnviroQue();
+        if (queue.length == 0) {
+            this.auth.logout();
+        } else {
+            this.presentAlert('Error', 'Found FPNs on Queue,  please submit before logging out.')
+        }
     }
 
     copyUrlFPN (fpn_number: string) {

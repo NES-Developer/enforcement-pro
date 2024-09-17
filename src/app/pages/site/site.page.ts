@@ -35,7 +35,12 @@ export class SitePage implements OnInit {
     }
 
     logout(): void {
-        this.auth.logout();
+        let queue = this.data.getEnviroQue();
+        if (queue.length == 0) {
+            this.auth.logout();
+        } else {
+            this.presentAlert('Error', 'Found FPNs on Queue,  please submit before logging out.')
+        }
     }
 
     init() {

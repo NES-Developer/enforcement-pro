@@ -381,8 +381,13 @@ export class FPNPage implements OnInit {
         let checker = this.validator();
 
         if (checker) {
-            this.data.pushEnviroQue();
-            window.location.reload();
+            let queue = this.data.getEnviroQue();
+            if (queue.length < 6) {
+                this.data.pushEnviroQue();
+                window.location.reload();
+            } else {
+                this.presentAlert('Error', 'Queue has exceeded 5, please submit. Submit some FPNs on queue to increase space.')
+            }
         }
         
     }
