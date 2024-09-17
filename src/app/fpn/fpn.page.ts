@@ -316,7 +316,8 @@ export class FPNPage implements OnInit {
                         Clipboard.write({
                             string: this.fpn.ticket
                         });
-                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + '. URL has been copied to your clipboard.');                   
+                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + '. URL has been copied to your clipboard.');     
+                        //Please navigate to a new app here NEMO              
                     }
                 },
                 error: (error) => {
