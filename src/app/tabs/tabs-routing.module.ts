@@ -20,6 +20,10 @@ const routes: Routes = [
             loadChildren: () => import('../fpn/fpn.module').then(m => m.FPNPageModule)
         },
         {
+          path: 'notifications',
+          loadChildren: () => import('../notifications/notifications.module').then(m => m.NotificationsModule)
+        },
+        { 
             path: '',
             redirectTo: '/tabs/home',
             pathMatch: 'full'
