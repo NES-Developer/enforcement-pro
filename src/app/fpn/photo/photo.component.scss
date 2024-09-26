@@ -18,10 +18,11 @@ ion-header {
   --color: white;
 }
 
-ION-TOOLBAR {
-  text-transform: uppercase;
-  --color: #d5a431; /* A more marketable and appealing orange color */
-  text-align: center; /* Center the text */
+ION-TOOLBAR { 
+  --background: WHITE !important;
+  text-transform: uppercase !important;
+  --color: #d5a431 !important; /* A more marketable and appealing orange color */
+  text-align: center !important; /* Center the text */
 }
 
 ion-button {

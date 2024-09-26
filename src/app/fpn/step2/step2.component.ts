@@ -109,11 +109,17 @@ export class Step2Component implements OnInit {
         }
         this.populateDateOfBirth();
     }
-
+ 
     saveEnviroData() {
+        this.enviro_post.first_name = this.capitalizeWords(this.enviro_post.first_name);
+        this.enviro_post.last_name = this.capitalizeWords(this.enviro_post.last_name);
         this.data.setEnviroPost(this.enviro_post);
-    }
+    } 
 
+    capitalizeWords(name: string): string {
+        if (!name) return '';
+        return name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      }
 }
 
 
