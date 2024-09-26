@@ -52,6 +52,13 @@ export class QueueComponent  implements OnInit {
 
     submitFPN(enviro_post: EnviroPost) {
         console.log('Form submitted!');
+
+        let offence = enviro_post.offence_id;
+        let offence_group = enviro_post.offence_type_id;
+
+        enviro_post.offence_id = offence_group;
+        enviro_post.offence_type_id = offence;
+
         this.api.postFPN(enviro_post).subscribe({
             next: (response) => {
                 console.log('Response:', response);
@@ -86,15 +93,6 @@ export class QueueComponent  implements OnInit {
         // Add form submission logic here
     }
 
-    downloadFileWeb(base64Data: string, fileName: string) {
-        const link = document.createElement('a');
-        link.href = `${base64Data}`;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
     // Helper function to convert blob to base64
     convertBlobToBase64(blob: Blob) {
         return new Promise((resolve, reject) => {
@@ -105,38 +103,6 @@ export class QueueComponent  implements OnInit {
           };
           reader.readAsDataURL(blob);
         });
-    }
-
-    async downloadImage(ticketUrl: string) {
-        try {
-            // Fetch the image from the URL
-            const response = await fetch(ticketUrl);
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-      
-            // Get the image as a Blob
-            const blob = await response.blob();
-            
-            // Convert the Blob to base64 string
-            const base64Data = await this.convertBlobToBase64(blob) as string;
-            console.log(base64Data);
-
-            const fileName = `ticket_${new Date().getTime()}.png`;
-      
-            // Save the base64 image to the filesystem
-            const savedFile = await Filesystem.writeFile({
-              path: `${fileName}.png`,
-              data: base64Data,
-              directory: Directory.Data,  // You can also use Directory.Documents
-            });
-            this.downloadFileWeb(base64Data, `${fileName}.png`);
-  
-      
-            console.log('Image saved successfully:', savedFile);
-          } catch (error) {
-            console.error('Error saving the image:', error);
-          }
     }
 
     ping() {

@@ -172,6 +172,7 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 2:
+                console.log(this.enviro_post);
                 if (this.enviro_post.salutation == '') {
                     this.presentAlert('Wait!', 'Please provide offender Salutation.');
                     return false;
@@ -301,6 +302,13 @@ export class FPNPage implements OnInit {
     submitForm() {
         let checker = this.validator();
         if (checker) {
+
+            let offence = this.enviro_post.offence_id;
+            let offence_group = this.enviro_post.offence_type_id;
+
+            this.enviro_post.offence_id = offence_group;
+            this.enviro_post.offence_type_id = offence;
+
             this.api.postFPN(this.enviro_post).subscribe({
                 next: (response) => {
                     console.log('Response:', response);
