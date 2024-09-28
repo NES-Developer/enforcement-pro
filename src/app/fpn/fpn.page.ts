@@ -68,16 +68,15 @@ export class FPNPage implements OnInit {
 
     loadData() {
         this.app_log = this.data.getAppLog();
-        // Trigger a method every 30 minutes (1800000 milliseconds)
         if(this.data.checkAppLog()) {
             setInterval(() => {
                 this.ping();
-            }, 1800000);
+            }, 120000); // 2 minutes in milliseconds
         }
 
         // this.enviro_post = this.data.getEnviroPost();
 
-        console.log(this.enviro_post);
+        // console.log(this.enviro_post);
     }
 
     getFPNData(): void {

@@ -250,14 +250,14 @@ export class ServiceRequestPage implements OnInit {
                 if(response.success === false) 
                 {
                     let message = response.message + " (Please Edit)";
-                    this.presentAlert('Error', message);
+                    this.presentAlert('Error', 'Try ensurng Device details are provided. If still unsuccessful attempt Auto-Login.');
                 } else {
-                    this.presentAlert('Success', 'Ping Successful');
+                    this.presentAlert('Success', 'Pinged');
                 }
             },
             error: (error) => {
                 console.error('Error:', error);
-                this.presentAlert('Error', error.message);
+                this.presentAlert('Error', 'Try Auto-Login.');
             }
         });
     }

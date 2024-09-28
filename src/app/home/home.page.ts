@@ -65,12 +65,12 @@ export class HomePage implements OnInit {
     loadData() {
 
         this.app_log = this.data.getAppLog();
-        // Trigger a method every 30 minutes (1800000 milliseconds)
         if(this.data.checkAppLog()) {
             setInterval(() => {
                 this.ping();
-            }, 1800000);
+            }, 120000); // 2 minutes in milliseconds
         }
+
 
         this.getRecentFPN();
 
