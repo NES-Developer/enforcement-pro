@@ -53,6 +53,8 @@ export class QueueComponent  implements OnInit {
     submitFPN(enviro_post: EnviroPost) {
         console.log('Form submitted!');
 
+        this.offenceSwitcherForserver(enviro_post);
+
         let offence = enviro_post.offence_id;
         let offence_group = enviro_post.offence_type_id;
 
@@ -66,6 +68,7 @@ export class QueueComponent  implements OnInit {
                 if(response.success === false) 
                 {
                     let message = response.message + " (Please Edit)";
+                    this.offenceSwitcherForserver(enviro_post);
                     this.presentAlert('Error', message);
                 } else {
                     let fpn_number = response.data.fpn_number;
@@ -83,6 +86,8 @@ export class QueueComponent  implements OnInit {
                 }
             },
             error: (error) => {
+                this.offenceSwitcherForserver(enviro_post);
+
                 if (error == "Http failure response for https??app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                 {
                     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
@@ -92,6 +97,14 @@ export class QueueComponent  implements OnInit {
             }
         });
         // Add form submission logic here
+    }
+
+    offenceSwitcherForserver(enviro_post: EnviroPost) {
+        let offence = enviro_post.offence_id;
+        let offence_group = enviro_post.offence_type_id;
+
+        enviro_post.offence_id = offence_group;
+        enviro_post.offence_type_id = offence;
     }
 
     // Helper function to convert blob to base64

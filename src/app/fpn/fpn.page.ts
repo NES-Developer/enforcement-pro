@@ -303,11 +303,7 @@ export class FPNPage implements OnInit {
         let checker = this.validator();
         if (checker) {
 
-            let offence = this.enviro_post.offence_id;
-            let offence_group = this.enviro_post.offence_type_id;
-
-            this.enviro_post.offence_id = offence_group;
-            this.enviro_post.offence_type_id = offence;
+            this.offenceSwitcherForserver()
 
             this.api.postFPN(this.enviro_post).subscribe({
                 next: (response) => {
@@ -316,6 +312,7 @@ export class FPNPage implements OnInit {
                     if(response.success === false) 
                     {
                         let message = response.message + " (Please Edit)";
+                        this.offenceSwitcherForserver()
                         this.presentAlert('Error', message);
                     } else {
                         this.fpn = response.data;
@@ -329,6 +326,7 @@ export class FPNPage implements OnInit {
                 },
                 error: (error) => {
                     console.error('Error:', error);
+                    this.offenceSwitcherForserver()
                     if (error == "Http failure response for https??app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                     {
                         this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
@@ -337,6 +335,14 @@ export class FPNPage implements OnInit {
                     }                }
             });
         }
+    }
+
+    offenceSwitcherForserver() {
+        let offence = this.enviro_post.offence_id;
+        let offence_group = this.enviro_post.offence_type_id;
+
+        this.enviro_post.offence_id = offence_group;
+        this.enviro_post.offence_type_id = offence;
     }
 
     refresh() {
