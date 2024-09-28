@@ -83,11 +83,12 @@ export class QueueComponent  implements OnInit {
                 }
             },
             error: (error) => {
-                // console.error('Error:', error);
-                this.presentAlert('Error', error);
-                console.log(error);
-
-                // Handle the error here
+                if (error == "Http failure response for https??app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
+                {
+                    this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
+                } else {
+                    this.presentAlert('Error', error);
+                }
             }
         });
         // Add form submission logic here
