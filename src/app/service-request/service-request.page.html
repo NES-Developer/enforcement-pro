@@ -29,6 +29,9 @@
     <ion-item>
         <ion-input type="text" [(ngModel)]="device_id" (ionChange)="storeAppLog()"></ion-input>
     </ion-item>
+    <ion-item>
+        <ion-button expand="block" shape="full" (click)="deviceValidation()">Verify Device</ion-button>
+    </ion-item>
 
     <!-- Site Select -->
     <ion-item>
@@ -45,6 +48,9 @@
     <!-- Zone Select -->
     <ion-item>
         <ion-label>Zones</ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-button expand="block" shape="full" (click)="ZoneDetection()">Find your Zone</ion-button>
     </ion-item>
     <ion-item>
         <ion-select multiple="false" [(ngModel)]="zone_id" (ionChange)="storeAppLog()">
@@ -76,9 +82,7 @@
         <ion-input [disabled]="true" type="text" [(ngModel)]="position_lat" (ionChange)="storeAppLog()"></ion-input>
     </ion-item>
 
-    <ion-item>
-        <ion-button expand="block" shape="full" (click)="ZoneDetection()">Find your Zone</ion-button>
-    </ion-item>
+
 
     <ion-item>
         <ion-button expand="block" shape="full" (click)="autoLogin()">Auto Login</ion-button>

@@ -271,6 +271,27 @@ export class ServiceRequestPage implements OnInit {
         });
     }
 
+    deviceValidation() {
+        this.api.deviceValidation(this.app_log.device_id).subscribe({
+            next: (response) => {
+                // console.log('Response:', response);
+                // Handle the response here
+                let message = response.message;
+                if(response.success === false) 
+                {
+                    let message = response.message;
+                    this.presentAlert('Error', message);
+                } else {
+                    this.presentAlert('Success', message);
+                }
+            },
+            error: (error) => {
+                // console.error('Error:', error);
+                this.presentAlert('Error', 'Server Error.');
+            }
+        });
+    }
+
     ZoneDetection() {
         if (this.app_log.lat !== "0" && this.app_log.lng !== "0" && this.app_log.site_id !== "0" ) {
             let zone_detection = new ZoneDetection();

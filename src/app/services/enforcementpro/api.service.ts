@@ -50,6 +50,14 @@ export class ApiService {
         return this.http.post(url, data, { headers: this.getHeaders() });
     }
 
+    deviceValidation(data: string): Observable<any> {
+        let object = {
+            device_id: data
+        };
+        const url = `${this.baseUrl}/device/verify'`;
+        return this.http.post(url, object, { headers: this.getHeaders() });
+    }
+
     getSRData(): Observable<any> {
         const url = `${this.baseUrl}/sr/data`;
         return this.http.get(url, { headers: this.getHeaders() });
