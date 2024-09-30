@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
 import { DataService } from './data.service';
 import { EnviroPost } from '../../models/enviro';
 import { AppLog } from 'src/app/models/app-log';
+import { ZoneDetection } from 'src/app/models/zone-detection';
 
 @Injectable({
   providedIn: 'root'
@@ -41,6 +42,11 @@ export class ApiService {
     
     postTrack(data: AppLog): Observable<any> {
         const url = `${this.baseUrl}/user/track`;
+        return this.http.post(url, data, { headers: this.getHeaders() });
+    }
+
+    zoneDetection(data: ZoneDetection): Observable<any> {
+        const url = `${this.baseUrl}/find/zone`;
         return this.http.post(url, data, { headers: this.getHeaders() });
     }
 

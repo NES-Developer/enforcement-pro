@@ -15,7 +15,10 @@ import { SiteOffence } from '../models/site-offence';
 import { Observable, Subscriber } from 'rxjs';
 import { AlertController } from '@ionic/angular';
 import { Login } from '../models/login';
+import { ZoneDetection } from '../models/zone-detection';
 //import * as L from 'leaflet';
+import { ConstantsService } from '../services/constants.service';
+
 
 @Component({
   selector: 'app-service-request',
@@ -38,6 +41,7 @@ export class ServiceRequestPage implements OnInit {
     zone_id: string = '0';
 
     app_log: AppLog;
+    app_version: string = '';
 
     constructor(
         private auth: AuthService,
@@ -45,6 +49,7 @@ export class ServiceRequestPage implements OnInit {
         private router: Router,
         private api: ApiService,
         private alertController: AlertController,
+        private constantsService: ConstantsService
 
     ) {
         this.auth.checkLoggedIn();
@@ -204,6 +209,10 @@ export class ServiceRequestPage implements OnInit {
             this.app_log.lng = position.longitude;
             this.position_lng = position.longitude;
         });
+
+        this.app_version = this.constantsService.APP_VERSION;
+        // console.log('App Version:', this.constantsService.APP_VERSION);
+
     }
 
     private getCurrentPosition(): any {
@@ -245,7 +254,7 @@ export class ServiceRequestPage implements OnInit {
     ping() {
         this.api.postTrack(this.app_log).subscribe({
             next: (response) => {
-                console.log('Response:', response);
+                // console.log('Response:', response);
                 // Handle the response here
                 if(response.success === false) 
                 {
@@ -256,10 +265,36 @@ export class ServiceRequestPage implements OnInit {
                 }
             },
             error: (error) => {
-                console.error('Error:', error);
+                // console.error('Error:', error);
                 this.presentAlert('Error', 'Try Auto-Login.');
             }
         });
+    }
+
+    ZoneDetection() {
+        if (this.app_log.lat !== "0" && this.app_log.lng !== "0" && this.app_log.site_id !== "0" ) {
+            let zone_detection = new ZoneDetection();
+            zone_detection.lat = this.app_log.lat;
+            zone_detection.lng = this.app_log.lng;
+            zone_detection.site_id = this.app_log.site_id;
+            
+            this.api.zoneDetection(zone_detection).subscribe({
+                next: (response) => {
+                    if (response.success === false){
+                        this.presentAlert('Error', response.message);
+                    } else {
+                        this.app_log.zone_id = response.id;
+                        this.presentAlert('Success', 'You are at ' + response.name);
+                    }
+                },
+                error: (error) => {
+                    // console.error('Error:', error);
+                    this.presentAlert('Error', 'Server Error');
+                }
+            });
+        } else {
+            this.presentAlert("Error", "Please wait for your location to be loaded. Try again later.")
+        }
     }
 
     async presentAlert(header: string, message: string) {

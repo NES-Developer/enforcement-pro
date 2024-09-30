@@ -65,7 +65,10 @@ export class HomePage implements OnInit {
     loadData() {
 
         this.app_log = this.data.getAppLog();
+
+        
         if(this.data.checkAppLog()) {
+            this.ping();
             setInterval(() => {
                 this.ping();
             }, 120000); // 2 minutes in milliseconds
