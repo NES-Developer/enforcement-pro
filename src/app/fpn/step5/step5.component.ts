@@ -10,6 +10,7 @@ import * as moment from 'moment';  // Import moment.js for date formatting
 import { GeocodingService } from '../../services/geocoding.service';
 // import { GoogleMap } from '@capacitor/google-maps';
 import * as L from 'leaflet';
+import { HttpClient } from '@angular/common/http';
 
 
 
@@ -35,7 +36,8 @@ export class Step5Component  implements OnInit, AfterViewInit {
         private api: ApiService,
         private data: DataService,
         private geocodingService: GeocodingService,
-        private elementRef: ElementRef
+        private elementRef: ElementRef,
+        private http: HttpClient
 
     ) {
         const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
@@ -120,11 +122,33 @@ export class Step5Component  implements OnInit, AfterViewInit {
         });
     }
     toggleMap(){
-        this.showLeaf=!this.showLeaf;
-        if(this.showLeaf){
-            this.loadMap();
-        }
+        this.showLeaf=true;
     }
+
+    searchPlace(): void {
+        var query=this.enviro_post.offence_location;
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
+        
+        this.http.get(url).subscribe((results: any) => {
+          console.log(results);
+          if (results.length > 0) {
+            const place = results[0];
+            this.map.flyTo([place.lat, place.lon], 15);
+
+            const icon = L.icon({
+                iconUrl: 'assets/marker-icon.png',
+                shadowUrl: 'assets/marker-shadow.png',
+                popupAnchor: [13, 0],
+              });
+        
+          
+            const marker = L.marker([place.lat, place.lon], {icon}).bindPopup(`You searched for: ${place.display_name}`);
+            marker.addTo(this.map);
+          } else {
+            // alert('Place not found!');
+          }
+        });
+      }
     private loadMap(): void {
         this.map = L.map(this.elementRef.nativeElement.querySelector('#map')).setView([51.5074, -0.1278], 12);
 
@@ -141,12 +165,12 @@ export class Step5Component  implements OnInit, AfterViewInit {
             this.map.flyTo([position.latitude, position.longitude], 15);
         
             const icon = L.icon({
-                iconUrl: 'https://static.vecteezy.com/system/resources/previews/023/554/762/original/red-map-pointer-icon-on-a-transparent-background-free-png.png',
+                iconUrl: 'assets/marker-icon.png',
                 shadowUrl: 'assets/marker-shadow.png',
                 popupAnchor: [13, 0],
-            });
+              });
         
-            const marker = L.marker([position.latitude, position.longitude], {  }).bindPopup('Angular Leaflet');
+            const marker = L.marker([position.latitude, position.longitude], {icon  }).bindPopup('Angular Leaflet');
             marker.addTo(this.map);
         });
 

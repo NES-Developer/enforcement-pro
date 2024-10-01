@@ -30,7 +30,7 @@
         Offence Location
     </ion-label>
 </ion-item>
-<ion-content  [ngClass]="{ 'hiddenLeaf': showLeaf, 'showLeaf': !showLeaf }">
+<ion-content  [ngClass]="{ 'showLeaf': showLeaf, 'hiddenLeaf': !showLeaf }">
     <div id="map-container">
         <div id="map"></div>
       </div>
@@ -40,7 +40,7 @@
 </ion-item>
 
 <ion-item>
-    <ion-button (click)="toggleMap()" class="location-search" expand="block">Search Location</ion-button>
+    <ion-button (click)="toggleMap();searchPlace()" class="location-search" expand="block">Search Location</ion-button>
 </ion-item>
 
 <!-- Offender Reply Select -->
