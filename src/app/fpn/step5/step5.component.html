@@ -30,8 +30,17 @@
         Offence Location
     </ion-label>
 </ion-item>
-<ion-item>
+<ion-content  [ngClass]="{ 'hiddenLeaf': showLeaf, 'showLeaf': !showLeaf }">
+    <div id="map-container">
+        <div id="map"></div>
+      </div>
+  </ion-content>
+<ion-item> 
     <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_location"></ion-input>
+</ion-item>
+
+<ion-item>
+    <ion-button (click)="toggleMap()" class="location-search" expand="block">Search Location</ion-button>
 </ion-item>
 
 <!-- Offender Reply Select -->

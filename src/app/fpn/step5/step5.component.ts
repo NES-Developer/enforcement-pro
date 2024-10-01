@@ -23,6 +23,7 @@ export class Step5Component  implements OnInit, AfterViewInit {
     apiKey: string = '';
     address: string = '';
     map!: L.Map;
+    showLeaf=false;
     marker!: L.Marker;
     weather: Weather[] = [];
     visibility: Visibility[] = [];
@@ -118,7 +119,12 @@ export class Step5Component  implements OnInit, AfterViewInit {
         }
         });
     }
-
+    toggleMap(){
+        this.showLeaf=!this.showLeaf;
+        if(this.showLeaf){
+            this.loadMap();
+        }
+    }
     private loadMap(): void {
         this.map = L.map(this.elementRef.nativeElement.querySelector('#map')).setView([51.5074, -0.1278], 12);
 

@@ -2,10 +2,29 @@
     display: block;
     height: 100vh; /* Full viewport height */
   }
+  .showLeaf{
+    display: block;
+  }
+  .hiddenLeaf{
+    display:none;
+  }
+  .showLeaf,.hiddenLeaf{
+    height:320px;
+  }
+  #map-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    width: 100%; 
+    margin: 20px auto; 
+  }
   
-  #mapContainer {
-    height: 100px; /* Full height of the parent */
-    width: 100%;  /* Full width of the parent */
+  #map {
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 20px;
   }
 
   .center {
@@ -16,7 +35,10 @@
     width: 50%;
   }
   
-  
+  .location-search{
+    width:100%;
+    height:40px;
+  }
   
   ion-content {
     --background: WHITE; /* Set content background to white */
@@ -25,7 +47,7 @@
   ion-header {
     --background: var(--ion-color-primary);
     --color: white;
-  }
+  } 
   
   ION-TOOLBAR {
     --background: WHITE;
