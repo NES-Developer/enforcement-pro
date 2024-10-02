@@ -8,6 +8,7 @@ import { DataService } from '../../services/enforcementpro/data.service';
 import { OffenceGroup } from '../../models/offence-group';
 import { Offence } from '../../models/offence';
 import { SiteOffence } from 'src/app/models/site-offence';
+import { UpperCaseWords } from 'src/app/helpers/utils'
 
 @Component({
   selector: 'app-step6',
@@ -62,8 +63,12 @@ export class Step6Component implements OnInit, AfterViewInit {
 
         this.selected_site_offence = this.data.findSiteOffence(this.enviro_post.offence_id);
     }
+    onInputChange(){
+        UpperCaseWords(this.enviro_post); 
+    }
 
     saveEnviroData() {
+        this.onInputChange();
         this.data.setEnviroPost(this.enviro_post);
     }
 

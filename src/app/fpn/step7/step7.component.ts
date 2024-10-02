@@ -4,6 +4,7 @@ import { HairColour } from '../../models/hair_colour';
 import { NotebookEntry } from '../../models/notebook-entry';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { EnviroPost } from '../../models/enviro';
+import { UpperCaseWords } from 'src/app/helpers/utils'
 
 @Component({
   selector: 'app-step7',
@@ -58,8 +59,13 @@ export class Step7Component  implements OnInit {
         this.hair_colours = this.data.getHairColours();
         
     }
+  
+    onInputChange(){ 
+        UpperCaseWords(this.enviro_post); 
+    }
 
     saveEnviroData() {
+        this.onInputChange();
         if (this.enviro_post.notebook_entries.hair !== 0 && this.enviro_post.notebook_entries.were !== '' && this.enviro_post.notebook_entries.did !== '' && this.enviro_post.notebook_entries.is_fpn_advised !== '' && this.enviro_post.notebook_entries.is_fpn_handed !== '')
         {
             this.data.setEnviroPost(this.enviro_post);

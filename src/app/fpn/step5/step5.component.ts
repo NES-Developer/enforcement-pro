@@ -11,6 +11,7 @@ import { GeocodingService } from '../../services/geocoding.service';
 // import { GoogleMap } from '@capacitor/google-maps';
 import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
+import { UpperCaseWords } from 'src/app/helpers/utils'
 
 
 
@@ -78,8 +79,12 @@ export class Step5Component  implements OnInit, AfterViewInit {
             this.enviro_post.lng = position.longitude;
         });
     }
+    onInputChange(){
+        UpperCaseWords(this.enviro_post); 
+    }
 
     saveEnviroData() {
+        this.onInputChange();
         const formattedDate = moment(this.enviro_post.offence_datetime).format('YYYY-MM-DD HH:mm');
         const formattedIssueDate = moment(this.enviro_post.issue_datetime).format('YYYY-MM-DD HH:mm');
         this.enviro_post.offence_datetime = formattedDate.toString();

@@ -4,6 +4,7 @@ import { DataService } from '../../services/enforcementpro/data.service';
 import { OffenceLocationSuffix } from '../../models/offence-location-suffix';
 import { OffenceHow } from '../../models/offence-how';
 import { EnviroPost } from 'src/app/models/enviro';
+import { UpperCaseWords } from 'src/app/helpers/utils'
 
 @Component({
   selector: 'app-step4',
@@ -38,8 +39,13 @@ export class Step4Component  implements OnInit {
         }
     }
 
-    saveEnviroData() {
-        this.data.setEnviroPost(this.enviro_post);
+    onInputChange(){
+        UpperCaseWords(this.enviro_post); 
     }
+
+    saveEnviroData() {
+        this.onInputChange();
+        this.data.setEnviroPost(this.enviro_post);
+    } 
 
 }

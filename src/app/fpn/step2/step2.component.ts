@@ -16,7 +16,8 @@ import { OffenceHow } from 'src/app/models/offence-how'
 import { EnviroPost } from '../../models/enviro';
 import { FPNPage } from '../fpn.page';
 import { Salutation } from '../../models/salutation';
-import { Zone } from '../../models/zone';
+import { Zone } from '../../models/zone'; 
+import { UpperCaseWords } from 'src/app/helpers/utils'
 
 @Component({
     selector: 'app-step2',
@@ -108,18 +109,16 @@ export class Step2Component implements OnInit {
             this.enviro_post = enviro_post;
         }
         this.populateDateOfBirth();
+    } 
+    onInputChange(){
+        UpperCaseWords(this.enviro_post); 
     }
- 
+
     saveEnviroData() {
-        this.enviro_post.first_name = this.capitalizeWords(this.enviro_post.first_name);
-        this.enviro_post.last_name = this.capitalizeWords(this.enviro_post.last_name);
+        this.onInputChange();
         this.data.setEnviroPost(this.enviro_post);
     } 
 
-    capitalizeWords(name: string): string {
-        if (!name) return '';
-        return name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-      }
 }
 
 

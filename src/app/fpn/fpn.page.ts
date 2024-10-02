@@ -82,7 +82,7 @@ export class FPNPage implements OnInit {
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
                 // alert(1);
-                console.log(data);
+                // console.log(data);
 
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
@@ -228,6 +228,11 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 5:
+                  if (this.enviro_post.offence_location == '') {
+                    this.presentAlert('Wait!', 'Please provide Offence Location');
+                    return false;
+                } 
+
                 if (this.enviro_post.land_type_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide Land Type.');
                     return false;
@@ -301,9 +306,10 @@ export class FPNPage implements OnInit {
     }
 
     submitForm() {
+        console.log(this.enviro_post);
         let checker = this.validator();
         if (checker) {
-
+ 
             this.offenceSwitcherForserver()
 
             this.api.postFPN(this.enviro_post).subscribe({

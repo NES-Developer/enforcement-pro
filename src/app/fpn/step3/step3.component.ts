@@ -5,6 +5,7 @@ import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { IDShown } from '../../models/id-shown';
 import { EnviroPost } from '../../models/enviro';
+import { UpperCaseWords } from 'src/app/helpers/utils'
 
 @Component({
   selector: 'app-step3',
@@ -40,8 +41,13 @@ export class Step3Component  implements OnInit {
         }
     }
 
-    saveEnviroData() {
-        this.data.setEnviroPost(this.enviro_post);
+    onInputChange(){
+        UpperCaseWords(this.enviro_post); 
     }
+
+    saveEnviroData() {
+        this.onInputChange();
+        this.data.setEnviroPost(this.enviro_post);
+    } 
 
 }
