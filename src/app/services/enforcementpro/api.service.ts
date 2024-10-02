@@ -8,8 +8,9 @@ import { Router } from '@angular/router'; // Import Router
 import { AuthService } from './auth.service';
 import { DataService } from './data.service';
 import { EnviroPost } from '../../models/enviro';
-import { AppLog } from 'src/app/models/app-log';
-import { ZoneDetection } from 'src/app/models/zone-detection';
+import { AppLog } from '../../models/app-log';
+import { ZoneDetection } from '../../models/zone-detection';
+import { NotebookEntry } from '../../models/notebook-entry';
 
 @Injectable({
   providedIn: 'root'
@@ -37,6 +38,11 @@ export class ApiService {
 
     postFPN(data: EnviroPost): Observable<any> {
         const url = `${this.baseUrl}/enviro1`;
+        return this.http.post(url, data, { headers: this.getHeaders() });
+    }
+
+    postNoteBook(data: NotebookEntry): Observable<any> {
+        const url = `${this.baseUrl}/enviro/notebook`;
         return this.http.post(url, data, { headers: this.getHeaders() });
     }
     

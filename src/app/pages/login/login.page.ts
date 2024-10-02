@@ -61,7 +61,7 @@ export class LoginPage implements OnInit {
                 }
             },
             (error) => {
-                this.presentAlert("Login Attempt Failed", error)
+                this.presentAlert("Login Attempt Failed", "Server Error: " + error.message)
             }
         );
     }

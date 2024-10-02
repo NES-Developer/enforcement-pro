@@ -186,6 +186,7 @@ export class ServiceRequestPage implements OnInit {
     loadData() {
         this.selected_site = this.data.getSelectedSite();
         this.site_id = this.selected_site.id;
+        console.log(this.site_id);
 
         this.sites = this.data.getSites();
         this.zones = this.data.getZones();
@@ -293,11 +294,11 @@ export class ServiceRequestPage implements OnInit {
     }
 
     ZoneDetection() {
-        if (this.app_log.lat !== "0" && this.app_log.lng !== "0" && this.app_log.site_id !== "0" ) {
+        if (this.app_log.lat !== "0" && this.app_log.lng !== "0" && this.site_id !== 0 ) {
             let zone_detection = new ZoneDetection();
             zone_detection.lat = this.app_log.lat;
             zone_detection.lng = this.app_log.lng;
-            zone_detection.site_id = this.app_log.site_id;
+            zone_detection.site_id = this.site_id.toString();
             
             this.api.zoneDetection(zone_detection).subscribe({
                 next: (response) => {

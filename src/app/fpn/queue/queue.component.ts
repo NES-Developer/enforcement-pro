@@ -33,11 +33,7 @@ export class QueueComponent  implements OnInit {
         private api: ApiService,
         private data:DataService,
         private alertController: AlertController,
-        private router: Router,
-
-        // private fpnPage: FPNPage
-
-        // private fpnPage: FPNPage
+        private router: Router
     ) {
         this.app_log = new AppLog();
     }
@@ -47,7 +43,11 @@ export class QueueComponent  implements OnInit {
 
     loadData() {
         this.enviro_que =  this.data.getEnviroQue();
-        console.log(this.enviro_que);
+        this.ping();
+        if(this.data.checkAppLog()) {
+            setInterval(() => {
+            }, 120000); // 2 minutes in milliseconds
+        }
     }
 
     submitFPN(enviro_post: EnviroPost) {
@@ -76,7 +76,6 @@ export class QueueComponent  implements OnInit {
 
                     let fpn = response.data;
 
-
                     Clipboard.write({
                         string: fpn.ticket
                     });
@@ -88,15 +87,14 @@ export class QueueComponent  implements OnInit {
             error: (error) => {
                 this.offenceSwitcherForserver(enviro_post);
 
-                if (error == "Http failure response for https??app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
+                if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                 {
                     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
                 } else {
-                    this.presentAlert('Error', error);
-                }
+                    this.presentAlert('Error', error.message);
+                }  
             }
         });
-        // Add form submission logic here
     }
 
     offenceSwitcherForserver(enviro_post: EnviroPost) {
@@ -143,7 +141,7 @@ export class QueueComponent  implements OnInit {
     editFPN(enviro_post: EnviroPost) {
         this.data.setEnviroPost(enviro_post);
         // this.fpnPage.route();
-        this.router.navigate(['/notebook']);
-
+        // this.router.navigate(['/notebook']);
+        this.router.navigate(['/notebook', 0]); // 1 means it is enviro_post
     }
 }

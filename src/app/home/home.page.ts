@@ -63,17 +63,14 @@ export class HomePage implements OnInit {
     }
 
     loadData() {
-
         this.app_log = this.data.getAppLog();
 
-        
         if(this.data.checkAppLog()) {
             this.ping();
             setInterval(() => {
                 this.ping();
             }, 120000); // 2 minutes in milliseconds
         }
-
 
         this.getRecentFPN();
 
@@ -194,5 +191,16 @@ export class HomePage implements OnInit {
         });
         await alert.present();
     }
+
+    notebookEntry(fpn: any) {
+        this.router.navigate(['/notebook', fpn.id], { queryParams: { fpn_number: fpn.fpn_number } });
+
+        console.log(fpn.notebook_entry);//notebook_entry
+    }
+
+    notebookEntryIsEmpty(fpn: any): boolean {
+        return !fpn.notebook_entry || fpn.notebook_entry.length === 0;
+    }
+      
 
 }

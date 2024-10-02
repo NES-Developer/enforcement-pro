@@ -41,9 +41,9 @@ export class FPNPage implements OnInit {
     ) {
         this.auth.checkLoggedIn();
 
-        if (!this.data.checkFPNData()){
+        // if (!this.data.checkFPNData()){
             this.getFPNData();
-        }
+        // }
 
         let enviro_post = this.data.getEnviroPost();
         if (enviro_post) {
@@ -68,15 +68,12 @@ export class FPNPage implements OnInit {
 
     loadData() {
         this.app_log = this.data.getAppLog();
+        this.ping();
         if(this.data.checkAppLog()) {
             setInterval(() => {
-                this.ping();
             }, 120000); // 2 minutes in milliseconds
         }
 
-        // this.enviro_post = this.data.getEnviroPost();
-
-        // console.log(this.enviro_post);
     }
 
     getFPNData(): void {
@@ -91,6 +88,7 @@ export class FPNPage implements OnInit {
                 this.data.setSalutations(salutations);
 
                 let builds = data.data.builds;
+                console.log(builds);
                 this.data.setBuilds(builds);
 
                 let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
@@ -270,12 +268,16 @@ export class FPNPage implements OnInit {
                     this.presentAlert('Wait!', 'Please provide if FPN is handed.');
                     return false;
                 }
-                if (!this.enviro_post.notebook_entries.hair) {
+                if (this.enviro_post.notebook_entries.hair == 0) {
                     this.presentAlert('Wait!', 'Please provide hair details.');
                     return false;
                 }
-                if (!this.enviro_post.notebook_entries.were) {
-                    this.presentAlert('Wait!', 'Please provide hair details.');
+                if (this.enviro_post.notebook_entries.were == '') {
+                    this.presentAlert('Wait!', 'Please provide were details.');
+                    return false;
+                }
+                if (this.enviro_post.notebook_entries.did == '') {
+                    this.presentAlert('Wait!', 'Please provide did details.');
                     return false;
                 }
 
@@ -324,14 +326,15 @@ export class FPNPage implements OnInit {
                     }
                 },
                 error: (error) => {
-                    console.error('Error:', error);
+                    console.error('Error:', error.message);
                     this.offenceSwitcherForserver()
-                    if (error == "Http failure response for https??app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
+                    if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                     {
                         this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
                     } else {
-                        this.presentAlert('Error', error);
-                    }                }
+                        this.presentAlert('Error', error.message);
+                    }                
+                }
             });
         }
     }

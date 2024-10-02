@@ -80,10 +80,17 @@
                     <ion-col size="3">
                         <ion-label>{{ fpn.fpn_number }}</ion-label>
                     </ion-col>
-                    <ion-col size="6">
+                    <ion-col size="4">
                         <ion-label>{{ fpn.offender?.first_name }} {{ fpn.offender?.last_name }}</ion-label>
                     </ion-col>
                     <ion-col size="3">
+                        <!-- <div>
+                            {{ fpn.notebook_entry?.enviro_id?.toString() }}
+                        </div> -->
+                        <ion-badge *ngIf="!notebookEntryIsEmpty(fpn)" color="primary">Notebook Found</ion-badge>
+                        <ion-button *ngIf="notebookEntryIsEmpty(fpn)" (click)="notebookEntry(fpn)" color="dark">NoteBook Entry</ion-button>
+                    </ion-col>
+                    <ion-col size="2">
                         <ion-button (click)="copyUrlFPN(fpn.fpn_number)" color="dark">Copy URL</ion-button>
                     </ion-col>
                 </ion-row>

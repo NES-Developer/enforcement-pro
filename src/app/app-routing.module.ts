@@ -25,9 +25,10 @@ const routes: Routes = [
     component: QueueComponent,
   },
   {
-    path: 'notebook',
-    loadChildren: () => import('./pages/notebook/notebook.module').then( m => m.NotebookPageModule)
-  },
+    path: 'notebook/:id', 
+    loadChildren: () => import('./pages/notebook/notebook.module').then(m => m.NotebookPageModule)
+  }
+  
 ];
 @NgModule({
   imports: [
