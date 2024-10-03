@@ -228,6 +228,11 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 5:
+                if (this.enviro_post.poi == '') {
+                    this.presentAlert('Wait!', 'Please provide POI');
+                    return false;
+                } 
+            
                   if (this.enviro_post.offence_location == '') {
                     this.presentAlert('Wait!', 'Please provide Offence Location');
                     return false;

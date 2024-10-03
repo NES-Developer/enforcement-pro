@@ -60,7 +60,7 @@ export class ApiService {
         let object = {
             device_id: data
         };
-        const url = `${this.baseUrl}/device/verify'`;
+        const url = `${this.baseUrl}/device/verify`;
         console.log(url, object, this.http.post(url, object))
         return this.http.post(url, object);
     }
