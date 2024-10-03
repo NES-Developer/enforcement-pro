@@ -68,7 +68,6 @@ export class NotebookPage implements OnInit {
 
         this.route2.queryParams.subscribe(params => {
             this.fpn_number = params['fpn_number']; // Fallback to null if not present
-            // console.log(1,fpn_number);
           });
         
         this.app_log = new AppLog();
@@ -175,17 +174,18 @@ export class NotebookPage implements OnInit {
                         this.offenceSwitcherForserver(this.enviro_post);
                         let message = response.message + " (Please Edit)";
                         this.presentAlert('Error', message);
-                    } else {
-                        let fpn_number = response.data.fpn_number;
-                        this.presentAlert('Success', fpn_number);
-    
-                        let fpn = response.data;
+                    } else {                        
+                        let fpn = response.data;    
 
                         Clipboard.write({
                             string: fpn.ticket
                         });
                         this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
+                        
                         this.data.spliceEnviroQue(this.enviro_post);
+                        this.enviro_post = new EnviroPost();
+                        this.data.setEnviroPost(this.enviro_post);
+
                         this.route('/tabs/fpn');
                     }
                 }
@@ -207,16 +207,8 @@ export class NotebookPage implements OnInit {
                         let message = response.message + " (Please Edit)";
                         this.presentAlert('Error', message);
                     } else {
-                        // let fpn_number = response.data.fpn_number;
                         this.presentAlert('Success', 'Notebook entry captured');
     
-                        // let fpn = response.data;
-
-                        // Clipboard.write({
-                        //     string: fpn.ticket
-                        // });
-                        // this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
-                        // this.data.spliceEnviroQue(this.enviro_post);
                         this.route('');
                     }
                 }

@@ -61,7 +61,8 @@ export class ApiService {
             device_id: data
         };
         const url = `${this.baseUrl}/device/verify'`;
-        return this.http.post(url, object, { headers: this.getHeaders() });
+        console.log(url, object, this.http.post(url, object))
+        return this.http.post(url, object);
     }
 
     getSRData(): Observable<any> {

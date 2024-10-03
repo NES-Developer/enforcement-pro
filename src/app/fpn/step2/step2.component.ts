@@ -69,7 +69,6 @@ export class Step2Component implements OnInit {
     }
 
     updateDateOfBirth() {
-        // Validate the inputs before combining
         if (this.birthYear && this.birthMonth && this.birthDay) {
           if (this.birthMonth > 12 || this.birthDay > 31) {
             console.error('Invalid date: Day cannot be greater than 31 and month cannot be greater than 12.');
@@ -83,13 +82,10 @@ export class Step2Component implements OnInit {
         }
     }
 
-    // Method to populate the inputs with the existing date_of_birth when the page loads
     populateDateOfBirth() {
         if (this.enviro_post.date_of_birth) {
-        // Split the date_of_birth (assuming it's in yyyy/mm/dd format)
         const [year, month, day] = this.enviro_post.date_of_birth.split('/');
 
-        // Assign the split values to the respective inputs
         this.birthYear = +year;
         this.birthMonth = +month;
         this.birthDay = +day;
@@ -110,12 +106,13 @@ export class Step2Component implements OnInit {
         }
         this.populateDateOfBirth();
     } 
+
     onInputChange(){
         UpperCaseWords(this.enviro_post); 
     }
 
     saveEnviroData() {
-        this.onInputChange();
+        // this.onInputChange();
         this.data.setEnviroPost(this.enviro_post);
     } 
 

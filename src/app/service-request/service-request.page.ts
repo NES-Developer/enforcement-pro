@@ -287,7 +287,7 @@ export class ServiceRequestPage implements OnInit {
                 }
             },
             error: (error) => {
-                // console.error('Error:', error);
+                console.error('Error:', error);
                 this.presentAlert('Error', 'Server Error.');
             }
         });
