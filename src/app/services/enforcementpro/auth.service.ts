@@ -43,7 +43,9 @@ export class AuthService {
         this.storeToken();
         this.storeUser();
 
-        this.router.navigate(['']);
+        this.router.navigateByUrl('').then(() => {
+            window.location.reload();
+        });
     }
 
     storeToken() {
@@ -78,7 +80,7 @@ export class AuthService {
 
     checkLoggedIn() {
         if (this.getToken() === '' || this.getUser() === null) {
-            this.router.navigate(['/login']);
+            this.logout();
         } 
     }
       
@@ -92,7 +94,9 @@ export class AuthService {
         
         this.data.removeAllData();
 
-        this.router.navigate(['/login']);
+        this.router.navigateByUrl('/login').then(() => {
+            window.location.reload();
+        });
     }
 
    
