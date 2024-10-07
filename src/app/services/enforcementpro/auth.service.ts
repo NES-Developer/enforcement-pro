@@ -94,9 +94,7 @@ export class AuthService {
         
         this.data.removeAllData();
 
-        this.router.navigateByUrl('/login').then(() => {
-            window.location.reload();
-        });
+        this.router.navigate(['/login']);
     }
 
    
