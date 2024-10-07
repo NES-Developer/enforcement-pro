@@ -19,7 +19,7 @@ import { NotebookEntry } from '../../models/notebook-entry';
 })
 export class NotebookPage implements OnInit {
     id: any;
-
+    currentStep: number = 1;
     enviro_post: EnviroPost;
     notebook_entries: NotebookEntry; 
     app_log: AppLog;
@@ -39,7 +39,6 @@ export class NotebookPage implements OnInit {
     {
         this.id = this.route2.snapshot.paramMap.get('id');
 
-        console.log(this.id);
         if (this.id == 0)
         {
             let enviro_post = this.data.getEnviroPost();
@@ -57,18 +56,25 @@ export class NotebookPage implements OnInit {
                 this.enviro_post.notebook_entries = new NotebookEntry();
                 this.notebook_entries = new NotebookEntry();
             }
-            else{
+            else
+            {
                 this.notebook_entries = this.enviro_post.notebook_entries;
             }
+
+            this.route2.queryParams.subscribe(params => {
+                this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
+            });
+
+
         } else
         {
             this.notebook_entries = new NotebookEntry();
             this.enviro_post = new EnviroPost();
-        }
 
-        this.route2.queryParams.subscribe(params => {
-            this.fpn_number = params['fpn_number']; // Fallback to null if not present
-          });
+            this.route2.queryParams.subscribe(params => {
+                this.fpn_number = params['fpn_number']; // Fallback to null if not present
+            });
+        }
         
         this.app_log = new AppLog();
 
@@ -99,11 +105,6 @@ export class NotebookPage implements OnInit {
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
-
-        // if (this.id > 0)
-        // {
-            
-        // }
 
         this.ping();
         if(this.data.checkAppLog()) {
@@ -144,7 +145,15 @@ export class NotebookPage implements OnInit {
             this.enviro_post = new EnviroPost();
             this.data.setEnviroPost(this.enviro_post);
         }
-        this.router.navigate([route]);
+
+        if (route == "/fpn/queue")
+        {
+            this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
+        } 
+        else
+        {
+            this.router.navigate([route]);
+        }
     }
 
     saveEnviroData() {
@@ -208,8 +217,11 @@ export class NotebookPage implements OnInit {
                         this.presentAlert('Error', message);
                     } else {
                         this.presentAlert('Success', 'Notebook entry captured');
-    
-                        this.route('');
+
+                        this.router.navigateByUrl('').then(() => {
+                            window.location.reload();
+                        });
+                        
                     }
                 }
             });

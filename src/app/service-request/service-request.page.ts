@@ -280,15 +280,15 @@ export class ServiceRequestPage implements OnInit {
                 let message = response.message;
                 if(response.success === false) 
                 {
-                    let message = response.message;
-                    this.presentAlert('Error', message);
+                    this.presentAlert('Error', response.msg);
+
                 } else {
                     this.presentAlert('Success', message);
                 }
             },
             error: (error) => {
                 console.error('Error:', error);
-                this.presentAlert('Error', 'Server Error.');
+                this.presentAlert('Error', 'Server Error: ' + error.message );
             }
         });
     }

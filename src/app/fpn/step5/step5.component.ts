@@ -34,6 +34,11 @@ export class Step5Component  implements OnInit, AfterViewInit {
     enviro_post: EnviroPost = new EnviroPost();
     private accessToken = 'pryBQPsykVwwDlHKRCzuceqEyJjYgmcNXjLk11h0hzFzWdVRDygST2uJMGmWO5Av';
 
+    offence_date: string = '';
+    offence_time: string = '';
+    issue_date: string = '';
+    issue_time: string = '';
+
     constructor(
         private api: ApiService,
         private data: DataService,
@@ -73,25 +78,49 @@ export class Step5Component  implements OnInit, AfterViewInit {
             this.enviro_post = enviro_post;
         }
 
+        // Parse offence_datetime if it's not empty
+        if (!this.offence_date && !this.offence_time && this.enviro_post.offence_datetime) {
+            const offenceDateTime = moment(this.enviro_post.offence_datetime);
+            this.offence_date = offenceDateTime.format('YYYY-MM-DD');
+            this.offence_time = offenceDateTime.format('HH:mm');
+        }
+
+        // Parse issue_datetime if it's not empty
+        if (!this.issue_date && !this.issue_time && this.enviro_post.issue_datetime) {
+            const issueDateTime = moment(this.enviro_post.issue_datetime);
+            this.issue_date = issueDateTime.format('YYYY-MM-DD');
+            this.issue_time = issueDateTime.format('HH:mm');
+        }
+
         this.getCurrentPosition()
         .subscribe((position: any) => {
             this.enviro_post.lat = position.latitude;
             this.enviro_post.lng = position.longitude;
         });
     }
+
     onInputChange(){
         UpperCaseWords(this.enviro_post); 
     }
 
     saveEnviroData() {
         this.onInputChange();
-        const formattedDate = moment(this.enviro_post.offence_datetime).format('YYYY-MM-DD HH:mm');
-        const formattedIssueDate = moment(this.enviro_post.issue_datetime).format('YYYY-MM-DD HH:mm');
+
+        const formattedIssueDate = this.formatDateTime(this.issue_date, this.issue_time);
+        const formattedDate = this.formatDateTime(this.offence_date, this.offence_time);
+
         this.enviro_post.offence_datetime = formattedDate.toString();
-        this.enviro_post.issue_datetime = formattedIssueDate.toString();            
+        this.enviro_post.issue_datetime = formattedIssueDate.toString();    
+
+        console.log(this.enviro_post.issue_datetime, this.enviro_post.offence_datetime)
+
         this.data.setEnviroPost(this.enviro_post);
     }
 
+    // Method to combine date and time into a datetime string
+    formatDateTime(date: string, time: string): string {
+        return moment(`${date} ${time}`).format('YYYY-MM-DD HH:mm');
+    }
 
     onSearch() {
         this.geocodingService.geocode(this.address).subscribe((result) => {

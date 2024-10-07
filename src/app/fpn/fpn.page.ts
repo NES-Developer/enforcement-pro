@@ -11,10 +11,9 @@ import { POIPrefix } from '../models/poi-prefix';
 import { EnviroPost } from '../models/enviro';
 import { AlertController } from '@ionic/angular';
 import { Clipboard } from '@capacitor/clipboard';
-
 import { AppLog } from '../models/app-log';
 import { AppLauncher } from '@capacitor/app-launcher';
-
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-fpn',
@@ -24,40 +23,54 @@ import { AppLauncher } from '@capacitor/app-launcher';
 export class FPNPage implements OnInit {
 
     app_log: AppLog;
-
     map: any;
-
+    currentStep: number = 1;
     enviro_post: EnviroPost;
     fpn: any;
-
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
+    id: any;
 
     constructor(
         private auth: AuthService,
         private data: DataService,
         private api: ApiService,
         private alertController: AlertController,
+        private route2: ActivatedRoute,
+        private router: Router,
 
     ) {
         this.auth.checkLoggedIn();
 
-        // if (!this.data.checkFPNData()){
+        if (!this.data.checkFPNData()){
             this.getFPNData();
-        // }
+        }
 
         let enviro_post = this.data.getEnviroPost();
         if (enviro_post) {
             this.enviro_post = enviro_post;
+
+            this.route2.queryParams.subscribe(params => {
+                let currentStep = params['currentStep'] ?? 1; // Fallback to 1 if null or undefined
+
+                if (currentStep !== 1)
+                {
+                    this.currentStep = parseInt(currentStep);
+                } else {
+                    this.currentStep = 1;
+                }
+            });
+            
         } else {
             this.enviro_post = new EnviroPost();
+
+            this.currentStep = 1;
         }
 
         this.app_log = new AppLog();
     }
 
-
-    route():void {
-        this.currentStep = 7;
+    route(route: string) {
+        this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
     }
 
     ngOnInit() {
@@ -73,7 +86,6 @@ export class FPNPage implements OnInit {
             setInterval(() => {
             }, 120000); // 2 minutes in milliseconds
         }
-
     }
 
     getFPNData(): void {
@@ -81,9 +93,7 @@ export class FPNPage implements OnInit {
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
-                // alert(1);
-                console.log(data);
-
+                
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
 
@@ -133,7 +143,6 @@ export class FPNPage implements OnInit {
             },
             error: (error) => {
                 console.error('Error fetching SR Data:', error);
-                // Handle error as needed
             }
         });
     }
@@ -150,8 +159,6 @@ export class FPNPage implements OnInit {
           .map(id => groups.find(group => group.id === id) as OffenceGroup);
     }
     
-    currentStep: number = 1;
-
     validator(): boolean {
         switch (this.currentStep) {
             case 1:
@@ -228,12 +235,7 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 5:
-                if (this.enviro_post.poi == '') {
-                    this.presentAlert('Wait!', 'Please provide POI');
-                    return false;
-                } 
-            
-                  if (this.enviro_post.offence_location == '') {
+                if (this.enviro_post.offence_location == '') {
                     this.presentAlert('Wait!', 'Please provide Offence Location');
                     return false;
                 } 
@@ -380,6 +382,7 @@ export class FPNPage implements OnInit {
                     text: primary_button_title,
                     handler: () => {
                         if (header == "Success") {
+                            this.currentStep = 1;
                             window.location.reload();
                         }
                     }
@@ -388,6 +391,7 @@ export class FPNPage implements OnInit {
                     text: secondary_button_title,
                     handler: () => {
                         if (header == "Success") {
+                            this.currentStep = 1;
                             this.openOtherApp();
                         }
                     }
@@ -436,11 +440,11 @@ export class FPNPage implements OnInit {
 
         if (checker) {
             let queue = this.data.getEnviroQue();
-            if (queue.length < 6) {
+            if (queue.length < 7) {
                 this.data.pushEnviroQue();
                 window.location.reload();
             } else {
-                this.presentAlert('Error', 'Queue has exceeded 5, please submit. Submit some FPNs on queue to increase space.')
+                this.presentAlert('Error', 'Queue has exceeded 6, please submit. Submit some FPNs on queue to increase space.')
             }
         }
         

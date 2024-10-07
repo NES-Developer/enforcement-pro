@@ -3,17 +3,11 @@ import { EnviroPost } from '../../models/enviro';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { AlertController } from '@ionic/angular';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FPNPage } from '../fpn.page';
 import { Clipboard } from '@capacitor/clipboard';
-
-
-// import { Filesystem, Directory } from '@capacitor/filesystem';
 import { AppLog } from '../../models/app-log';
-
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-// import { Http } from '@capacitor-community/http';
-
 
 @Component({
   selector: 'app-queue',
@@ -22,20 +16,23 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 })
 export class QueueComponent  implements OnInit {
 
-    // enviro_post: EnviroPost = new EnviroPost();
+    currentStep: number = 1;
     enviro_que: EnviroPost[] = [];
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
-
     app_log: AppLog;
-
 
     constructor(
         private api: ApiService,
         private data:DataService,
         private alertController: AlertController,
-        private router: Router
+        private router: Router,
+        private route2: ActivatedRoute
     ) {
         this.app_log = new AppLog();
+
+        this.route2.queryParams.subscribe(params => {
+            this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
+        });
     }
     ngOnInit(): void {
         this.loadData();
@@ -46,6 +43,7 @@ export class QueueComponent  implements OnInit {
         this.ping();
         if(this.data.checkAppLog()) {
             setInterval(() => {
+                this.ping(); 
             }, 120000); // 2 minutes in milliseconds
         }
     }
@@ -129,6 +127,17 @@ export class QueueComponent  implements OnInit {
         });
     }
 
+    route (route: string) {
+        if (route == "/tabs/fpn")
+        {
+            this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
+        } 
+        else
+        {
+            this.router.navigate([route]);
+        }
+    }
+
     async presentAlert(header: string, message: string) {
         const alert = await this.alertController.create({
           header: header,
@@ -140,8 +149,6 @@ export class QueueComponent  implements OnInit {
 
     editFPN(enviro_post: EnviroPost) {
         this.data.setEnviroPost(enviro_post);
-        // this.fpnPage.route();
-        // this.router.navigate(['/notebook']);
-        this.router.navigate(['/notebook', 0]); // 1 means it is enviro_post
+        this.router.navigate(['/notebook', 0], { queryParams: { currentStep: this.currentStep } });
     }
 }

@@ -112,7 +112,7 @@ export class Step2Component implements OnInit {
     }
 
     saveEnviroData() {
-        // this.onInputChange();
+        this.onInputChange();
         this.data.setEnviroPost(this.enviro_post);
     } 
 

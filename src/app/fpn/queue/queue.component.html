@@ -2,7 +2,7 @@
     <ion-toolbar>
         <ion-row>
             <ion-col>
-                <ion-button href="/tabs/fpn">
+                <ion-button (click)="route('/tabs/fpn')">
                     <ion-icon name="arrow-back"></ion-icon>
                 </ion-button>
             </ion-col>
@@ -12,7 +12,7 @@
                 </ion-title>
             </ion-col>
             <ion-col>
-                <ion-button href="/tabs/home">
+                <ion-button (click)="route('/tabs/home')">
                     <ion-icon name="home"></ion-icon>
                 </ion-button>
             </ion-col>

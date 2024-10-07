@@ -2,7 +2,7 @@
     <ion-toolbar>
         <ion-row>
             <ion-col>
-                <ion-button href="/fpn/queue">
+                <ion-button (click)="route('/fpn/queue')">
                     <ion-icon name="time"></ion-icon>
                 </ion-button>
                 <ion-button (click)="refresh()">
@@ -15,7 +15,7 @@
                 </ion-title>
             </ion-col>
             <ion-col>
-                <ion-button href="/fpn/photo">
+                <ion-button (click)="route('/fpn/photo')">
                     <ion-icon name="camera"></ion-icon>
                     <ion-badge color="white">
                         {{enviro_post.offence_images.length !== null ? enviro_post.offence_images.length : 0}}

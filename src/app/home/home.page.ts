@@ -143,12 +143,22 @@ export class HomePage implements OnInit {
 
     logout(): void {
         let queue = this.data.getEnviroQue();
-        if (queue.length == 0) {
+    
+        // Check if there are any FPNs with an empty notebook entry
+        let outstandingNotebookEntries = this.recent_fpns.some(fpn => this.notebookEntryIsEmpty(fpn));
+    
+        if (queue.length == 0 && !outstandingNotebookEntries) {
+            // Proceed with logout if there are no outstanding notebook entries
             this.auth.logout();
+        } else if (outstandingNotebookEntries) {
+            // Alert user to complete all notebook entries before logging out
+            this.presentAlert('Error', 'Please complete all outstanding Notebook Entries before logging out.');
         } else {
-            this.presentAlert('Error', 'Found FPNs on Queue,  please submit before logging out.')
+            // Alert user if there are FPNs in the queue
+            this.presentAlert('Error', 'Found FPNs on Queue, please submit before logging out.');
         }
     }
+    
 
     copyUrlFPN (fpn_number: string) {
         let url = this.getFpnImageUrl(fpn_number).toString();

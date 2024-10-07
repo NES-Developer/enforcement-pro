@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { EnviroPost } from '../../models/enviro';
 import { DataService } from '../../services/enforcementpro/data.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-photo',
@@ -17,12 +18,22 @@ export class PhotoComponent implements OnInit, AfterViewInit {
     @ViewChild('canvas')
     public canvas!: ElementRef;
 
+    currentStep: number = 1;
+
     enviro_post: EnviroPost = new EnviroPost();
     captures: string[] = [];
     error: any;
     isCaptured!: boolean;
 
-    constructor(private data: DataService) {}
+    constructor(
+        private data: DataService,
+        private router: Router,
+        private route2: ActivatedRoute
+        ) {
+            this.route2.queryParams.subscribe(params => {
+                this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
+            });
+        }
 
     ngOnInit() {
         this.loadData();
@@ -52,15 +63,25 @@ export class PhotoComponent implements OnInit, AfterViewInit {
         }
         }
     }
-  
 
-  capture() {
-    this.drawImageToCanvas(this.video.nativeElement);
-    const capturedImage = this.canvas.nativeElement.toDataURL('image/png');
-    this.captures.push(capturedImage);
-    this.enviro_post.offence_images.push(capturedImage);
-    this.saveEnviroData();
-  }
+    capture() {
+        this.drawImageToCanvas(this.video.nativeElement);
+        const capturedImage = this.canvas.nativeElement.toDataURL('image/png');
+        this.captures.push(capturedImage);
+        this.enviro_post.offence_images.push(capturedImage);
+        this.saveEnviroData();
+    }
+
+    route (route: string) {
+        if (route == "/tabs/fpn")
+        {
+            this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
+        } 
+        else
+        {
+            this.router.navigate([route]);
+        }
+    }
 
     setPhoto(idx: number) {
         this.isCaptured = true;
