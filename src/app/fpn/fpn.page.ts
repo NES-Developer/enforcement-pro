@@ -29,6 +29,7 @@ export class FPNPage implements OnInit {
     fpn: any;
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
     id: any;
+    isSubmitting: boolean = false;
 
     constructor(
         private auth: AuthService,
@@ -316,10 +317,13 @@ export class FPNPage implements OnInit {
     }
 
     submitForm() {
-        console.log(this.enviro_post);
+        if (this.isSubmitting) {
+            return;
+        }
+
         let checker = this.validator();
         if (checker) {
- 
+            this.isSubmitting = true;
             this.offenceSwitcherForserver()
 
             this.api.postFPN(this.enviro_post).subscribe({
@@ -329,7 +333,8 @@ export class FPNPage implements OnInit {
                     if(response.success === false) 
                     {
                         let message = response.message + " (Please Edit)";
-                        this.offenceSwitcherForserver()
+                        this.offenceSwitcherForserver();
+                        this.isSubmitting = false;
                         this.presentAlert('Error', message);
                     } else {
                         this.fpn = response.data;
@@ -338,20 +343,26 @@ export class FPNPage implements OnInit {
                         Clipboard.write({
                             string: this.fpn.ticket
                         });
+                        this.isSubmitting = false;
                         this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + '. URL has been copied to your clipboard.');     
                     }
+
                 },
                 error: (error) => {
                     console.error('Error:', error.message);
-                    this.offenceSwitcherForserver()
+                    this.offenceSwitcherForserver();
+                    this.isSubmitting = false;
                     if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                     {
                         this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
                     } else {
                         this.presentAlert('Error', error.message);
-                    }                
+                    }  
+
                 }
             });
+
+
         }
     }
 
@@ -436,14 +447,25 @@ export class FPNPage implements OnInit {
     }
 
     saveFPN() {
+        if (this.isSubmitting) {
+            return;
+        }
+
         let checker = this.validator();
 
         if (checker) {
+            this.isSubmitting = true;
             let queue = this.data.getEnviroQue();
             if (queue.length < 7) {
                 this.data.pushEnviroQue();
+                this.enviro_post = new EnviroPost();
+                this.currentStep = 1;
+                this.isSubmitting = false;
+
                 window.location.reload();
             } else {
+                this.isSubmitting = false;
+
                 this.presentAlert('Error', 'Queue has exceeded 6, please submit. Submit some FPNs on queue to increase space.')
             }
         }
