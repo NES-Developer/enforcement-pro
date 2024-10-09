@@ -20,11 +20,11 @@
       </div>
   </ion-content>
 <ion-item> 
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_location"></ion-input>
+    <ion-input #firstInput type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_location"></ion-input>
 </ion-item>
 
 <ion-item>
-    <ion-button (click)="toggleMap();searchPlace()" class="location-search" expand="block">Search Location</ion-button>
+    <ion-button (click)="toggleMap();" class="location-search" expand="block">Search Location</ion-button>
 </ion-item>
 
 <!-- Offender Reply Select -->

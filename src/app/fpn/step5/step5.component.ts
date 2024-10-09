@@ -6,6 +6,7 @@ import { Visibility } from '../../models/visibility';
 import { POIPrefix } from '../../models/poi-prefix';
 import { EnviroPost } from '../../models/enviro';
 import { Observable, Subscriber } from 'rxjs';
+import { AlertController, IonInput } from '@ionic/angular';
 import * as moment from 'moment';  // Import moment.js for date formatting
 import { GeocodingService } from '../../services/geocoding.service';
 // import { GoogleMap } from '@capacitor/google-maps';
@@ -21,6 +22,7 @@ import { UpperCaseWords } from 'src/app/helpers/utils'
   styleUrls: ['./step5.component.scss'],
 })
 export class Step5Component  implements OnInit, AfterViewInit {
+    @ViewChild('firstInput', { static: false }) firstInput: IonInput | any;
     @ViewChild('mapContainer', { static: false }) mapRef!: ElementRef<HTMLElement>;
     apiKey: string = '';
     address: string = '';
@@ -39,12 +41,18 @@ export class Step5Component  implements OnInit, AfterViewInit {
     issue_date: string = '';
     issue_time: string = '';
 
+
+    alertHeader:string= '';
+    alertSubHeader:string=  '';
+    alertMessage:string=  '';
+
     constructor(
         private api: ApiService,
         private data: DataService,
         private geocodingService: GeocodingService,
         private elementRef: ElementRef,
-        private http: HttpClient
+        private http: HttpClient,
+        private alertController: AlertController
 
     ) {
         const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
@@ -55,6 +63,9 @@ export class Step5Component  implements OnInit, AfterViewInit {
     
     ngOnInit() {
         this.loadData();
+        setTimeout(() => {
+            this.firstInput.setFocus();
+          }, 300); // Add a small delay to ensure the view is fully loaded
     }
 
     ngAfterViewInit(): void {
@@ -157,7 +168,18 @@ export class Step5Component  implements OnInit, AfterViewInit {
         });
     }
     toggleMap(){
-        this.showLeaf=true;
+        if(this.enviro_post.offence_location == ""){
+
+            this.alertHeader= 'Wait';
+            this.alertSubHeader=  'Location missing';
+            this.alertMessage=  'Please enter a location before searching.';
+
+            this.showAlert();
+            this.showLeaf=false; 
+            return;
+        }
+        this.showLeaf=true; 
+        this.searchPlace();
     }
 
     searchPlace(): void {
@@ -171,7 +193,7 @@ export class Step5Component  implements OnInit, AfterViewInit {
           console.log(results);
           if (results.length > 0) {
             const place = results[0];
-            this.map.flyTo([place.lat, place.lon], 15);
+            this.map.flyTo([place.lat, place.lon], 15); 
     
             const icon = L.icon({
               iconUrl: 'assets/marker-icon.png',
@@ -232,6 +254,17 @@ export class Step5Component  implements OnInit, AfterViewInit {
         }, 0);
         }
     }
+
+    async showAlert() {
+        const alert = await this.alertController.create({
+          header: this.alertHeader,
+          subHeader: this.alertSubHeader,
+          message: this.alertMessage,
+          buttons: ['OK']
+        });
+    
+        await alert.present();
+      }
 
     @HostListener('window:resize', ['$event'])
     onResize(event: Event): void {
