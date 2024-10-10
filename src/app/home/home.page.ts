@@ -11,6 +11,7 @@ import { AlertController } from '@ionic/angular';
 import { isEmpty } from 'rxjs';
 
 import { AppLauncher } from '@capacitor/app-launcher';
+import { LoadingService } from '../services/loading.service';
 
 @Component({
   selector: 'app-home',
@@ -37,7 +38,8 @@ export class HomePage implements OnInit {
         private data: DataService,
         private router: Router,
         private http: HttpClient,
-        private alertController: AlertController
+        private alertController: AlertController,
+        private loading:LoadingService,
     ) {
         this.app_log = new AppLog()
     }
@@ -93,14 +95,17 @@ export class HomePage implements OnInit {
     }
 
     getRecentFPN() {
+        this.loading.showLoading();
         let user_id = this.auth.getUser().id;
         this.api.getRecentFPNs(user_id).subscribe({
             next: (response) => {
                 this.recent_fpns = response.data;
                 console.log('Response:', response);
+                this.loading.hideLoading();
             },
             error: (error) => {
                 console.error('Error:', error);
+                this.loading.hideLoading();
             }
         })
     }
@@ -142,6 +147,7 @@ export class HomePage implements OnInit {
     }
 
     logout(): void {
+        this.loading.showLoading();
         let queue = this.data.getEnviroQue();
     
         // Check if there are any FPNs with an empty notebook entry
@@ -149,12 +155,16 @@ export class HomePage implements OnInit {
     
         if (queue.length == 0 && !outstandingNotebookEntries) {
             // Proceed with logout if there are no outstanding notebook entries
+            this.loading.hideLoading();
             this.auth.logout();
         } else if (outstandingNotebookEntries) {
+            this.loading.hideLoading();
             // Alert user to complete all notebook entries before logging out
             this.presentAlert('Error', 'Please complete all outstanding Notebook Entries before logging out.');
+          
         } else {
             // Alert user if there are FPNs in the queue
+            this.loading.hideLoading();
             this.presentAlert('Error', 'Found FPNs on Queue, please submit before logging out.');
         }
     }

@@ -6,6 +6,7 @@ import { AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { DataService } from 'src/app/services/enforcementpro/data.service';
 import { Login } from '../../models/login';
+import { LoadingService } from 'src/app/services/loading.service';
 
 
 // import { NgForm } from '@angular/forms';
@@ -28,7 +29,7 @@ export class LoginPage implements OnInit {
         private auth: AuthService,
         private alertController: AlertController,
         private router: Router,
-
+        private loading:LoadingService,
         private data: DataService
         
     ) {
@@ -38,6 +39,7 @@ export class LoginPage implements OnInit {
 
     ngOnInit() {
         this.auth.checkLoggedIn();
+        this.loading.hideLoading();
         //alert(this.auth.userLoggedIn());
     }
 

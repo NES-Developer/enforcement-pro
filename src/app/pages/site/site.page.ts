@@ -4,6 +4,7 @@ import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
+import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-site',
@@ -26,7 +27,8 @@ export class SitePage implements OnInit {
         private api: ApiService,
         private data: DataService,
         private router: Router,
-        private alertController: AlertController
+        private alertController: AlertController,
+        private loading:LoadingService
     ) {
         
     }
@@ -35,10 +37,13 @@ export class SitePage implements OnInit {
     }
 
     logout(): void {
+        this.loading.showLoading();
         let queue = this.data.getEnviroQue();
         if (queue.length == 0) {
+            this.loading.hideLoading();
             this.auth.logout();
         } else {
+            this.loading.hideLoading();
             this.presentAlert('Error', 'Found FPNs on Queue,  please submit before logging out.')
         }
     }

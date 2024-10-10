@@ -6,7 +6,10 @@
   "webDir": "www",
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 0
+      "splashShowDuration": 3000,
+      "launchShowDuration": 0,  
+      "backgroundColor": "#ffffff", 
+      "splash": "splash.png"
     }
   }
 }

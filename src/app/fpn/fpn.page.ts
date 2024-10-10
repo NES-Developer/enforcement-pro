@@ -14,6 +14,7 @@ import { Clipboard } from '@capacitor/clipboard';
 import { AppLog } from '../models/app-log';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { ActivatedRoute, Router } from '@angular/router';
+import { LoadingService } from '../services/loading.service';
 
 @Component({
   selector: 'app-fpn',
@@ -38,6 +39,7 @@ export class FPNPage implements OnInit {
         private alertController: AlertController,
         private route2: ActivatedRoute,
         private router: Router,
+        private loading:LoadingService,
 
     ) {
         this.auth.checkLoggedIn();
@@ -325,9 +327,10 @@ export class FPNPage implements OnInit {
         if (checker) {
             this.isSubmitting = true;
             this.offenceSwitcherForserver()
-
+            this.loading.showLoading();
             this.api.postFPN(this.enviro_post).subscribe({
                 next: (response) => {
+                    this.loading.hideLoading();
                     console.log('Response:', response);
                     // Handle the response here
                     if(response.success === false) 
@@ -349,6 +352,7 @@ export class FPNPage implements OnInit {
 
                 },
                 error: (error) => {
+                    this.loading.hideLoading();
                     console.error('Error:', error.message);
                     this.offenceSwitcherForserver();
                     this.isSubmitting = false;
@@ -375,6 +379,7 @@ export class FPNPage implements OnInit {
     }
 
     refresh() {
+        this.loading.showLoading();
         window.location.reload();
     }
 

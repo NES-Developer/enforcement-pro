@@ -8,6 +8,7 @@ import { FPNPage } from '../fpn.page';
 import { Clipboard } from '@capacitor/clipboard';
 import { AppLog } from '../../models/app-log';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-queue',
@@ -26,7 +27,8 @@ export class QueueComponent  implements OnInit {
         private data:DataService,
         private alertController: AlertController,
         private router: Router,
-        private route2: ActivatedRoute
+        private route2: ActivatedRoute,
+        private loading:LoadingService
     ) {
         this.app_log = new AppLog();
 

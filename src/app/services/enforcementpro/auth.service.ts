@@ -7,6 +7,7 @@ import { Injectable } from '@angular/core';
 
 import { Router } from '@angular/router'; // Import Router
 import { DataService } from './data.service';
+import { LoadingService } from '../loading.service';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +21,8 @@ export class AuthService {
     constructor(
         private http: HttpClient,
         private router: Router,
-        private data: DataService
+        private data: DataService,
+        private loading:LoadingService,
         // private alertController: AlertController
 
     ) {}

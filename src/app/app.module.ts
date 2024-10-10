@@ -9,6 +9,7 @@ import { AppComponent } from './app.component';
 
 import { ApiService } from './services/enforcementpro/api.service';
 import { provideHttpClient } from '@angular/common/http'; // New import
+import { LoaderComponent } from './loader/loader.component';
 
 // import { IonicSignaturePadModule,IonicsignaturepadProvider } from 'ionicsignaturepad';
 
@@ -18,7 +19,10 @@ import { provideHttpClient } from '@angular/common/http'; // New import
 
 
 @NgModule({
-    declarations: [AppComponent],
+    declarations: [
+        AppComponent,
+        LoaderComponent
+    ],
     imports: [
         BrowserModule, 
         IonicModule.forRoot(), 

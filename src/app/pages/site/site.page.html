@@ -54,6 +54,10 @@
     <!-- Site List -->
     <ion-list *ngIf=" searchQuery == '' ">
         <div>
+            <div class="site-load" *ngIf="sites.length<1">
+                <img src="../assets/loader.gif">
+               
+              </div>
             <ion-item *ngFor="let site of sites">
                 <ion-grid>
                 <ion-row>
