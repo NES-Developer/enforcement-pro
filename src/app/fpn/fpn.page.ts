@@ -78,8 +78,6 @@ export class FPNPage implements OnInit {
 
     ngOnInit() {
         this.loadData();
-        let user = this.auth.getUser();
-        this.enviro_post.officer_id = user.id;
     }
 
     loadData() {
@@ -318,6 +316,11 @@ export class FPNPage implements OnInit {
         }
     }
 
+    assignOfficerId() {
+        let user = this.auth.getUser();
+        this.enviro_post.officer_id = user.id;
+    }
+
     submitForm() {
         if (this.isSubmitting) {
             return;
@@ -326,8 +329,9 @@ export class FPNPage implements OnInit {
         let checker = this.validator();
         if (checker) {
             this.isSubmitting = true;
-            this.offenceSwitcherForserver()
             this.loading.showLoading();
+            this.offenceSwitcherForserver();
+            this.assignOfficerId();
             this.api.postFPN(this.enviro_post).subscribe({
                 next: (response) => {
                     this.loading.hideLoading();
@@ -336,8 +340,12 @@ export class FPNPage implements OnInit {
                     if(response.success === false) 
                     {
                         let message = response.message + " (Please Edit)";
-                        this.offenceSwitcherForserver();
+
                         this.isSubmitting = false;
+                        this.loading.hideLoading();
+
+                        this.offenceSwitcherForserver();
+                        
                         this.presentAlert('Error', message);
                     } else {
                         this.fpn = response.data;
@@ -346,23 +354,31 @@ export class FPNPage implements OnInit {
                         Clipboard.write({
                             string: this.fpn.ticket
                         });
+
                         this.isSubmitting = false;
+                        this.loading.hideLoading();
+                        
                         this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + '. URL has been copied to your clipboard.');     
                     }
 
                 },
                 error: (error) => {
-                    this.loading.hideLoading();
-                    console.error('Error:', error.message);
                     this.offenceSwitcherForserver();
+
                     this.isSubmitting = false;
+                    this.loading.hideLoading();
+
                     if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                     {
                         this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
-                    } else {
+                    }
+                    else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
+                    {
+                        this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
+                    } 
+                    else {
                         this.presentAlert('Error', error.message);
-                    }  
-
+                    }   
                 }
             });
 
@@ -460,16 +476,25 @@ export class FPNPage implements OnInit {
 
         if (checker) {
             this.isSubmitting = true;
+            this.loading.showLoading();
+            this.offenceSwitcherForserver();
+            this.assignOfficerId();
             let queue = this.data.getEnviroQue();
+
+            this.loading.hideLoading();
+
             if (queue.length < 7) {
+                this.assignOfficerId();
                 this.data.pushEnviroQue();
                 this.enviro_post = new EnviroPost();
                 this.currentStep = 1;
                 this.isSubmitting = false;
+                this.loading.hideLoading();
 
                 window.location.reload();
             } else {
                 this.isSubmitting = false;
+                this.loading.hideLoading();
 
                 this.presentAlert('Error', 'Queue has exceeded 6, please submit. Submit some FPNs on queue to increase space.')
             }
