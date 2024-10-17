@@ -1,0 +1,70 @@
+
+  
+  
+  ion-content {
+    --background: WHITE; /* Set content background to white */
+  }
+  
+  ion-header {
+    --background: var(--ion-color-primary);
+    --color: white;
+  }
+  
+  
+  ion-button {
+    --background: #d5a431;
+    --color: WHITE;
+  
+  }
+  
+
+  
+  ion-select {
+    --background: WHITE; /* Set content background to white */
+  }
+  
+  ion-item {
+    --background: WHITE;
+    --color: black;
+    --border-color:white;
+  }
+  
+
+  
+  ion-label {
+    text-align: left; /* align text to the center */
+    width: 100%; /* set width to 80% */
+    max-width: 100%; /* set max-width to 80% */
+  
+  }
+  
+  ion-input {
+    --background: #F7F7F7; /* light grey color */
+    --border-radius: 5px;
+    --border-color: black;
+    text-align: center; /* align text to the center */
+    width: 100%; /* set width to 80% */
+    max-width: 100%; /* set max-width to 80% */
+  }
+  
+  ion-textarea {
+    --background: #F7F7F7; /* light grey color */
+    --border-radius: 5px;
+    --border-color: black;
+    text-align: center; /* align text to the center */
+    width: 100%; /* set width to 80% */
+    max-width: 100%; /* set max-width to 80% */
+  }
+  
+  ion-select {
+    --background: #F7F7F7; /* light grey color */
+    --border-radius: 5px;
+    width: 100%; /* set width to 80% */
+    max-width: 100%; /* set max-width to 80% */
+  }
+  
+  .medium-label {
+    font-weight: 500; /* Medium font weight */
+    font-size: 16px; /* Medium font size */
+    margin-bottom: 8px; /* Adjust margin for spacing */
+  }

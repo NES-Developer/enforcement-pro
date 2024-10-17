@@ -1,0 +1,145 @@
+<ion-item>
+    <h4>
+        Offender Detail
+    </h4>
+</ion-item>
+
+<!-- Title Select -->
+<ion-item>
+    <ion-label>Title *</ion-label>
+</ion-item>
+<ion-item>
+    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
+        <ion-select-option *ngFor="let salutation of salutations"> 
+            {{ salutation.title }}     
+        </ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- Full Name Text -->
+<ion-item>
+    <ion-label>
+        Forename *
+    </ion-label>
+    <ion-label>
+        Surname *
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.first_name"></ion-input>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.last_name"></ion-input>
+</ion-item>
+
+<!-- House Number Text -->
+<!-- <ion-item>
+    <ion-label>
+        House No/Flat
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text" (ionChange)="saveEnviroData()"></ion-input>
+</ion-item> -->
+
+<!-- Address Text -->
+<ion-item>
+    <ion-label>
+        Address *
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-textarea  (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.address"></ion-textarea>
+</ion-item>
+
+<!-- Town Text -->
+<ion-item>
+    <ion-label>
+        Town *
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town"></ion-input>
+</ion-item>
+
+<!-- Country and Postal Code Text -->
+<ion-item>
+    <ion-label>
+        Country *
+    </ion-label>
+    <ion-label>
+        Postal Code *
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.county" disabled="true"></ion-input>
+    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.post_code" style="text-transform:uppercase"></ion-input>
+</ion-item>
+
+<!-- Date of birth date -->
+<ion-item>
+    <ion-label>Date of Birth (DD/MM/YYYY) *</ion-label>
+</ion-item>
+
+<ion-item>
+
+    <ion-input
+        type="number"
+        min="1"
+        max="31"
+        [(ngModel)]="birthDay"
+        (ionChange)="updateDateOfBirth()"
+        placeholder="DD"
+        ></ion-input>
+
+    <ion-input
+        type="number"
+        min="1"
+        max="12"
+        [(ngModel)]="birthMonth"
+        (ionChange)="updateDateOfBirth()"
+        placeholder="MM"
+        ></ion-input>
+
+    <ion-input
+        type="number"
+        min="1900"
+        max="2099"
+        [(ngModel)]="birthYear"
+        (ionChange)="updateDateOfBirth()"
+        placeholder="YYYY"
+        ></ion-input>
+
+</ion-item>
+
+<!-- Gender Select -->
+<ion-item>
+    <ion-label>
+        Gender *
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="enviro_post.gender">
+        <ion-select-option>Male</ion-select-option>
+        <ion-select-option>Female</ion-select-option>
+        <ion-select-option>Other</ion-select-option>
+    </ion-select>
+</ion-item>
+
+<!-- BWC Text -->
+<ion-item>
+    <ion-label>
+        Did you activate BWC
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-select interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="enviro_post.is_bwc_active">
+        <ion-select-option>Yes</ion-select-option>
+        <ion-select-option>No</ion-select-option>
+    </ion-select>
+</ion-item>
+
+<ion-item>
+</ion-item>
+<ion-item>
+</ion-item>
+<ion-item>
+</ion-item>

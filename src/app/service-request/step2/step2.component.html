@@ -1,0 +1,243 @@
+<div *ngIf="service_request.business_waste_status == 'Yes'">
+    <ion-item>
+        <ion-label><strong><u>Personal Information</u></strong></ion-label>
+    </ion-item>
+    
+    <!-- Title Text -->
+    <ion-item>
+        <ion-label>
+            Title
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-select interface="action-sheet" multiple="false" [(ngModel)]="service_request.title" (ionChange)="storeServiceRequest()">
+            <ion-select-option>Mr</ion-select-option>
+            <ion-select-option>Mrs</ion-select-option>
+            <ion-select-option>Ms</ion-select-option>
+            <ion-select-option>Dr</ion-select-option>
+            <ion-select-option>Prof</ion-select-option>
+            <ion-select-option>Other</ion-select-option>
+        </ion-select>
+    </ion-item>
+    
+    <!-- Job Title Text -->
+    <ion-item>
+        <ion-label>
+            Job Title
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.job_title" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- First Name Text -->
+    <ion-item>
+        <ion-label>
+            First Name
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.first_name" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Last Name Text -->
+    <ion-item>
+        <ion-label>
+            Last Name
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.last_name" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Address Text -->
+    <ion-item>
+        <ion-label>
+            Address
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.address" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Home Telephone Text -->
+    <ion-item>
+        <ion-label>
+            Home Telephone
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="tel" [(ngModel)]="service_request.home_telephone" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Work Telephone Text -->
+    <ion-item>
+        <ion-label>
+            Work Telephone
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="tel" [(ngModel)]="service_request.work_telephone" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Email Text -->
+    <ion-item>
+        <ion-label>
+            Email
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="email" [(ngModel)]="service_request.email" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Ion Divider-->
+</div>
+    
+<div *ngIf="service_request.complaint_option_status == 'Provide Details'">
+    
+    <ion-item>
+        <ion-label><strong><u>Business Information</u></strong></ion-label>
+    </ion-item>
+    
+    <!-- Business Name Text -->
+    <ion-item>
+        <ion-label>
+            Business Name
+        </ion-label>
+    </ion-item>
+    <ion-item>
+            <ion-input type="text" [(ngModel)]="service_request.business_name" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Business Address Text -->
+    <ion-item>
+        <ion-label>
+            Business Address
+        </ion-label>
+    </ion-item>
+    <ion-item>
+            <ion-input type="text" [(ngModel)]="service_request.business_address" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Business Town & Country Text -->
+    <ion-item>
+        <ion-label>
+            Business Town
+        </ion-label>
+        <ion-label>
+            Business Country
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.business_town" (ionChange)="storeServiceRequest()"></ion-input>
+        <ion-input type="text" [(ngModel)]="service_request.business_country" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Business Postcode Text -->
+    <ion-item>
+        <ion-label>
+            Business Postcode
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.business_postal_code" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Address 2 Text -->
+    <ion-item>
+        <ion-label>
+            Address 2
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.address2" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Town Text -->
+    <ion-item>
+        <ion-label>
+            Complaint Town
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.complaint_town" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Complaint Country Text -->
+    <ion-item>
+        <ion-label>
+            Complaint Country
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.complaint_country" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Complaint Postal Code Text -->
+    <ion-item>
+        <ion-label>
+            Complaint Postal Code
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="text" [(ngModel)]="service_request.complaint_postal_code" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Gender Text -->
+    <ion-item>
+        <ion-label>
+            Gender
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-select interface="action-sheet" multiple="false" [(ngModel)]="service_request.gender" (ionChange)="storeServiceRequest()">
+            <ion-select-option>Male</ion-select-option>
+            <ion-select-option>Female</ion-select-option>
+            <ion-select-option>Other</ion-select-option>
+        </ion-select>
+    </ion-item>
+    
+    <!-- Date of Birth Text-->
+    <ion-item>
+        <ion-label>
+            Date of Birth
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-input type="date" [(ngModel)]="service_request.date_of_birth" (ionChange)="storeServiceRequest()"></ion-input>
+    </ion-item>
+    
+    <!-- Ethnicity -->
+    <ion-item>
+        <ion-label>
+            Ethnicity
+        </ion-label>
+    </ion-item>
+    <ion-item>
+        <ion-select interface="action-sheet" multiple="false" [(ngModel)]="service_request.ethnicity" (ionChange)="storeServiceRequest()">
+            <ion-select-option>IC1 - White - North European</ion-select-option>
+            <ion-select-option>IC2 - White - South European</ion-select-option>
+            <ion-select-option>IC3 - Black</ion-select-option>
+            <ion-select-option>IC4 - Asian (India, Pakistan, Bangladesh, Napal)</ion-select-option>
+            <ion-select-option>IC5 - Chinese, Japanese or other South East Asian</ion-select-option>
+            <ion-select-option>IC6 - Arabic or North African</ion-select-option>
+            <ion-select-option>IC9 - Unknown</ion-select-option>
+        </ion-select>
+    </ion-item>
+</div>
+
+<div *ngIf="service_request.business_waste_status == 'No' && service_request.complaint_option_status == 'Remain Anonymous'">
+    <ion-item>
+        <ion-label>
+            You Have Selected to 'Remain Anonymous' and No to 'Business Waste'. Please click Next.
+        </ion-label>
+    </ion-item>
+</div>
+
+<div *ngIf="service_request.business_waste_status == '' && service_request.complaint_option_status == ''">
+    <ion-item>
+        <ion-label>
+            Please click Next.
+        </ion-label>
+    </ion-item>
+</div>

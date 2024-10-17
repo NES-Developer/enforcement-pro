@@ -1,0 +1,177 @@
+<ion-item>
+    <h4>
+        Confirmation Screen
+    </h4>
+</ion-item>
+
+<ion-accordion-group>
+
+    <ion-accordion value="first">
+        <ion-item slot="header" color="dark">
+            <ion-label>Offence Detail</ion-label>
+        </ion-item>
+        <div class="bg-light text-dark" slot="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-4">Site:</div>
+                    <div class="col-8">{{ getNameById(0,'site') }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Zone:</div>
+                    <div class="col-8">{{ getNameById(enviro_post.zone_id, 'zone') }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Offence Type:</div>
+                    <div class="col-8">{{ getNameById(enviro_post.offence_type_id, 'offence_type') }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Offence:</div>
+                    <div class="col-8">{{ getNameById(enviro_post.offence_id, 'offence') }}</div>
+                </div>
+            </div>
+        </div>
+    </ion-accordion>
+    
+    <ion-accordion value="second">
+        <ion-item slot="header" color="dark">
+            <ion-label>Offender Detail</ion-label>
+        </ion-item>
+        <div class="bg-light text-dark" slot="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-4">Full Name:</div>
+                    <div class="col-8">{{ enviro_post.first_name }} {{ enviro_post.last_name }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Full Address:</div>
+                    <div class="col-8">{{ enviro_post.address }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Postal Code:</div>
+                    <div class="col-8">{{ enviro_post.post_code }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Is BWC Advised:</div>
+                    <div class="col-8">{{ enviro_post.is_bwc_active }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Gender:</div>
+                    <div class="col-8">{{ enviro_post.gender }}</div>
+                </div>
+            </div>
+        </div>
+    </ion-accordion>
+
+    <ion-accordion value="third">
+        <ion-item slot="header" color="dark">
+            <ion-label>Wittness Detail</ion-label>
+        </ion-item>
+        <div class="bg-light text-dark" slot="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-4">Wittness Name:</div>
+                    <div class="col-8">{{ enviro_post.witness_name }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Witness Phone:</div>
+                    <div class="col-8">{{ enviro_post.witness_phone }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Witness Statement:</div>
+                    <div class="col-8">{{ enviro_post.witness_statement }}</div>
+                </div>
+            </div>
+        </div>
+    </ion-accordion>
+    
+    <ion-accordion value="fourth">
+        <ion-item slot="header" color="dark">
+            <ion-label>Offence Image</ion-label>
+        </ion-item>
+        <div class="bg-light text-dark" slot="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col" *ngFor="let offence_image of enviro_post.offence_images">
+                        <img [src]="offence_image" style="height: 80px; border-radius:5px; "/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ion-accordion>
+
+    <ion-accordion value="fifth">
+        <ion-item slot="header" color="dark">
+            <ion-label>Charges Detail</ion-label>
+        </ion-item>
+        <div class="bg-light text-dark" slot="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-4">Reduced Wittness:</div>
+                    <div class="col-8">
+                        £{{ selected_site_offence?.charge_amount_reduced }} If paid within {{ selected_site_offence?.charge_days_reduced }} days
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Full Wittness:</div>
+                    <div class="col-8">
+                        £{{ selected_site_offence?.charge_amount_full }} If paid within {{ selected_site_offence?.charge_days_full }} days
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ion-accordion>
+
+</ion-accordion-group>
+
+<ion-item *ngIf="enviro_post.signature">
+    <h5>
+        Add Your Digital Signature
+    </h5>
+</ion-item>
+
+<ion-item *ngIf="!enviro_post.signature">
+    <h5>
+        Your Stored Digital Picture
+    </h5>
+</ion-item>
+
+<ion-item *ngIf="enviro_post.signature">
+    <div>
+        <img width="500" height="300" style="border:1px solid transparent;border-radius:5px; background: #A9A9A9;" />
+    </div>
+</ion-item>
+
+<ion-item *ngIf="!enviro_post.signature">
+    <div>
+        <canvas #canvas width="500" height="300" style="border:1px solid transparent;border-radius:5px; background: #A9A9A9;"></canvas>
+    </div>
+</ion-item>
+
+<ion-item>
+    <div class="row" *ngIf="!enviro_post.signature">
+        <div class="col-4">
+            <button class="btn btn-dark" (click)="clear()">Clear</button>
+        </div>
+        <div class="col-4">
+            {{today | date:'medium'}}
+        </div>
+        <div class="col-4">
+            <button class="btn btn-dark m-2" (click)="save()">Save</button>
+        </div>
+    </div>
+    <div class="row" *ngIf="enviro_post.signature">
+        <div class="col-4">
+            <button class="btn btn-dark" (click)="clear()">Clear</button>
+        </div>
+        <div class="col-4">
+            {{today | date:'medium'}}
+        </div>
+    </div>
+</ion-item>
+
+<ion-item>
+</ion-item>
+<ion-item>
+</ion-item>
+<ion-item>
+</ion-item>
