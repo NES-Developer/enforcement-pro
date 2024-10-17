@@ -47,11 +47,9 @@ export class QueueComponent  implements OnInit {
     loadData() {
         this.enviro_que =  this.data.getEnviroQue();
         this.ping();
-        if(this.data.checkAppLog()) {
-            setInterval(() => {
-                this.ping(); 
-            }, 120000); // 2 minutes in milliseconds
-        }
+        setInterval(() => {
+            this.ping();
+        }, 120000); // 2 minutes in milliseconds
     }
 
     submitFPN(enviro_post: EnviroPost) {

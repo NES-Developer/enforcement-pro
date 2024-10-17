@@ -82,11 +82,11 @@ export class FPNPage implements OnInit {
 
     loadData() {
         this.app_log = this.data.getAppLog();
+
         this.ping();
-        if(this.data.checkAppLog()) {
             setInterval(() => {
+                this.ping();
             }, 120000); // 2 minutes in milliseconds
-        }
     }
 
     getFPNData(): void {
@@ -396,6 +396,7 @@ export class FPNPage implements OnInit {
 
     refresh() {
         this.loading.showLoading();
+        this.getFPNData();
         window.location.reload();
     }
 
