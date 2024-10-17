@@ -68,7 +68,10 @@ export class QueueComponent  implements OnInit {
                 if(response.success === false) 
                 {
                     let message = response.message + " (Please Edit)";
+                    
                     this.isSubmitting = false;
+                    this.loading.hideLoading();
+
                     this.presentAlert('Error', message);
                 } else {
                     let fpn_number = response.data.fpn_number;
@@ -79,7 +82,10 @@ export class QueueComponent  implements OnInit {
                     Clipboard.write({
                         string: fpn.ticket
                     });
+
                     this.isSubmitting = false;
+                    this.loading.hideLoading();
+
                     this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
                     this.data.spliceEnviroQue(enviro_post);
                     this.enviro_que = this.data.getEnviroQue();
@@ -87,6 +93,8 @@ export class QueueComponent  implements OnInit {
             },
             error: (error) => {
                 this.isSubmitting = false;
+                this.loading.hideLoading();
+
                 if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                 {
                     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
