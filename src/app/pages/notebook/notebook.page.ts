@@ -10,6 +10,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Clipboard } from '@capacitor/clipboard';
 import { AppLog } from '../../models/app-log';
 import { NotebookEntry } from '../../models/notebook-entry';
+import { Weather } from '../../models/weather';
+import { Visibility } from '../../models/visibility';
+import { POIPrefix } from '../../models/poi-prefix';
+import { Offence } from '../../models/offence';
+import { OffenceGroup } from '../../models/offence-group';
+import { SiteOffence } from '../../models/site-offence';
 
 
 @Component({
@@ -107,10 +113,9 @@ export class NotebookPage implements OnInit {
         }
 
         this.ping();
-        if(this.data.checkAppLog()) {
-            setInterval(() => {
-            }, 120000); // 2 minutes in milliseconds
-        }
+        setInterval(() => {
+            this.ping();
+        }, 120000); // 2 minutes in milliseconds
     }
 
     validator(): boolean {
@@ -257,6 +262,80 @@ export class NotebookPage implements OnInit {
             ],
         });
         await alert.present();
+    }
+
+    getFPNData(): void {
+        let site: any = this.data.getSelectedSite();
+        let site_id: number = site.id;
+        this.api.getFPNData(site_id).subscribe({
+            next: (data) => {
+                let salutations = data.data.salutations;
+                this.data.setSalutations(salutations);
+
+                let builds = data.data.builds;
+                console.log(builds);
+                this.data.setBuilds(builds);
+
+                let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
+                this.data.setHairColors(hair_colours);
+
+                let zones = data.data.zones;
+                this.data.setZones(zones);
+
+                let offence_how = data.data.offence_how;
+                this.data.setOffenceHow(offence_how);
+
+                let offence_location_suffix = data.data.offence_location_suffix;
+                this.data.setOffenceLocationSuffix(offence_location_suffix);
+
+                let address_verified_by = data.data.address_verified_via;
+                this.data.setAddressVerifiedBy(address_verified_by);
+
+                let ethnicities = data.data.ethnicities;
+                this.data.setEthnicities(ethnicities);
+
+                let id_shown = data.data.id_shown;
+                this.data.setIdShown(id_shown);
+
+                let weather: Weather[] = data.data.weathers;
+                this.data.setWeather(weather);
+
+                let visibility: Visibility[] = data.data.visibility;
+                this.data.setVisibility(visibility);
+
+                let poi_prefix: POIPrefix[] = data.data.poi_prefix;
+                this.data.setPOIPrefix(poi_prefix);
+
+                let site_offence = data.data.site_offences;
+                this.data.setSiteOffences(site_offence);
+
+                let offences = this.extractOffence(site_offence);
+                this.data.setOffences(offences);
+
+                let offenceGroups = this.extractOffenceGroups(offences);
+                this.data.setOffenceGroups(offenceGroups);
+
+                this.loadData();
+
+            },
+            error: (error) => {
+                this.loadData();
+
+                console.error('Error fetching FPN Data:', error + '. Try see if the backup loader worked.');
+            }
+        });
+    }
+
+    extractOffence(site_offences: SiteOffence[]): Offence[] {
+        const groups = site_offences.map(site_offence => site_offence.offences);
+        return Array.from(new Set(groups.map(group => group.id)))
+          .map(id => groups.find(group => group.id === id) as Offence);
+    }
+
+    extractOffenceGroups(offences: Offence[]): OffenceGroup[] {
+        const groups = offences.map(offence => offence.offenceGroup);
+        return Array.from(new Set(groups.map(group => group.id)))
+          .map(id => groups.find(group => group.id === id) as OffenceGroup);
     }
 
 }

@@ -8,7 +8,8 @@ import { FPNPage } from '../fpn.page';
 import { Clipboard } from '@capacitor/clipboard';
 import { AppLog } from '../../models/app-log';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { LoadingService } from 'src/app/services/loading.service';
+import { LoadingService } from '../../services/loading.service';
+import { AuthService } from '../../services/enforcementpro/auth.service';
 
 @Component({
   selector: 'app-queue',
@@ -21,6 +22,7 @@ export class QueueComponent  implements OnInit {
     enviro_que: EnviroPost[] = [];
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
     app_log: AppLog;
+    isSubmitting: boolean = false;
 
     constructor(
         private api: ApiService,
@@ -28,7 +30,8 @@ export class QueueComponent  implements OnInit {
         private alertController: AlertController,
         private router: Router,
         private route2: ActivatedRoute,
-        private loading:LoadingService
+        private loading:LoadingService,
+        private auth: AuthService
     ) {
         this.app_log = new AppLog();
 
@@ -36,6 +39,7 @@ export class QueueComponent  implements OnInit {
             this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
         });
     }
+
     ngOnInit(): void {
         this.loadData();
     }
@@ -43,32 +47,29 @@ export class QueueComponent  implements OnInit {
     loadData() {
         this.enviro_que =  this.data.getEnviroQue();
         this.ping();
-        if(this.data.checkAppLog()) {
-            setInterval(() => {
-                this.ping(); 
-            }, 120000); // 2 minutes in milliseconds
-        }
+        setInterval(() => {
+            this.ping();
+        }, 120000); // 2 minutes in milliseconds
     }
 
     submitFPN(enviro_post: EnviroPost) {
-        console.log('Form submitted!');
+        if (this.isSubmitting) {
+            return;
+        }
 
-        this.offenceSwitcherForserver(enviro_post);
-
-        let offence = enviro_post.offence_id;
-        let offence_group = enviro_post.offence_type_id;
-
-        enviro_post.offence_id = offence_group;
-        enviro_post.offence_type_id = offence;
+        this.isSubmitting = true;
+        this.loading.showLoading();
 
         this.api.postFPN(enviro_post).subscribe({
             next: (response) => {
-                console.log('Response:', response);
                 // Handle the response here
                 if(response.success === false) 
                 {
                     let message = response.message + " (Please Edit)";
-                    this.offenceSwitcherForserver(enviro_post);
+                    
+                    this.isSubmitting = false;
+                    this.loading.hideLoading();
+
                     this.presentAlert('Error', message);
                 } else {
                     let fpn_number = response.data.fpn_number;
@@ -79,30 +80,37 @@ export class QueueComponent  implements OnInit {
                     Clipboard.write({
                         string: fpn.ticket
                     });
+
+                    this.isSubmitting = false;
+                    this.loading.hideLoading();
+
                     this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
                     this.data.spliceEnviroQue(enviro_post);
                     this.enviro_que = this.data.getEnviroQue();
                 }
             },
             error: (error) => {
-                this.offenceSwitcherForserver(enviro_post);
+                this.isSubmitting = false;
+                this.loading.hideLoading();
 
                 if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                 {
                     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
-                } else {
+                }
+                else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
+                {
+                    this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
+                } 
+                else {
                     this.presentAlert('Error', error.message);
                 }  
             }
         });
     }
 
-    offenceSwitcherForserver(enviro_post: EnviroPost) {
-        let offence = enviro_post.offence_id;
-        let offence_group = enviro_post.offence_type_id;
-
-        enviro_post.offence_id = offence_group;
-        enviro_post.offence_type_id = offence;
+    assignOfficerId(enviro_post: EnviroPost) {
+        let user = this.auth.getUser();
+        enviro_post.officer_id = user.id;
     }
 
     // Helper function to convert blob to base64

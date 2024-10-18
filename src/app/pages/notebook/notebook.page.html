@@ -189,7 +189,6 @@
     <ion-item>
         <ion-input type="text" [(ngModel)]="notebook_entries.bwv_assest" (ionChange)="saveEnviroData()"></ion-input>
     </ion-item>
-    
 
     <ion-item>
         <ion-row *ngIf="id == 0">
@@ -208,6 +207,12 @@
                 <ion-button expand="full" shape="full" (click)="submitForm()">Submit</ion-button>
             </ion-col>
         </ion-row>
+    </ion-item>
+
+    <ion-item>
+        <ion-col size="12">
+            <ion-button expand="full" shape="full" (click)="getFPNData()">Reload Data</ion-button>
+        </ion-col>
     </ion-item>
 
     <ion-item>
