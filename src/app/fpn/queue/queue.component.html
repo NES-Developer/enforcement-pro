@@ -1,0 +1,43 @@
+<ion-header [translucent]="true">
+    <ion-toolbar>
+        <ion-row>
+            <ion-col>
+                <ion-button (click)="route('/tabs/fpn')">
+                    <ion-icon name="arrow-back"></ion-icon>
+                </ion-button>
+            </ion-col>
+            <ion-col>
+                <ion-title>
+                    FPN Queue
+                </ion-title>
+            </ion-col>
+            <ion-col>
+                <ion-button (click)="route('/tabs/home')">
+                    <ion-icon name="home"></ion-icon>
+                </ion-button>
+            </ion-col>
+        </ion-row>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+    <ion-header collapse="condense">
+        <ion-toolbar>
+            <ion-title size="large">FPN Queue</ion-title>
+        </ion-toolbar>
+    </ion-header>
+
+    <ion-list [inset]="true">
+
+        <ion-item [button]="true" *ngFor="let enviro_post of enviro_que">
+            <ion-icon color="tertiary" slot="start" name="refresh-circle" size="large" (click)="submitFPN(enviro_post)"></ion-icon>
+            <ion-label>Offender Name: {{ enviro_post.first_name }} {{ enviro_post.last_name }}</ion-label>
+            <ion-label>Witness Name: {{ enviro_post.witness_name }}</ion-label>
+            <ion-icon color="tertiary" slot="start" name="create" size="large" (click)="editFPN(enviro_post)"></ion-icon>
+            <ion-note slot="end">
+                <img [src]="enviro_post.offence_images[1]" style="height: 80px; border-radius: 5px;" />
+            </ion-note>
+        </ion-item>
+    </ion-list>
+
+</ion-content>
