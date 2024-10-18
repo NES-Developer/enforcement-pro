@@ -18,8 +18,6 @@ import { FPNPage } from '../fpn.page';
 import { Salutation } from '../../models/salutation';
 import { Zone } from '../../models/zone'; 
 import { UpperCaseWords } from 'src/app/helpers/utils'
-import { ValidatePersonService } from 'src/app/services/validate-person.service';
-import { AlertController, IonInput } from '@ionic/angular';
 
 @Component({
     selector: 'app-step2',
@@ -50,17 +48,11 @@ export class Step2Component implements OnInit {
 
     enviro_post: EnviroPost = new EnviroPost();
 
-    alertHeader:string= '';
-    alertSubHeader:string=  '';
-    alertMessage:string=  '';
-
 
     constructor(
         private api: ApiService,
         private data:DataService,
-        private fpnComponent: FPNPage,
-        private validatePerson:ValidatePersonService,
-        private alertController: AlertController
+        private fpnComponent: FPNPage
     ) {
     }
 
@@ -88,97 +80,9 @@ export class Step2Component implements OnInit {
           this.enviro_post.date_of_birth = formattedDate;
           this.data.setEnviroPost(this.enviro_post);
         }
-    } 
-
-    ValidatePerson(){
-
-        if(this.enviro_post.first_name =="" && this.enviro_post.last_name ==""){
-            this.alertHeader= 'Missing Field';
-            this.alertSubHeader=  'Value required';
-            this.alertMessage=  'First Name and surname is requred';
-
-            this.showAlert();
-            return;
-        }
-
-
-        if(this.enviro_post.address ==""){
-            this.alertHeader= 'Missing Field';
-            this.alertSubHeader=  'Value required';
-            this.alertMessage=  'Address is required';
-
-            this.showAlert();
-            return;
-        }
-
-        if(this.enviro_post.date_of_birth  ==""){
-            this.alertHeader= 'Missing Field';
-            this.alertSubHeader=  'Value required';
-            this.alertMessage=  'Date of birth is required';
-
-            this.showAlert();
-            return;
-        }
-
-        if(this.enviro_post.post_code  ==""){
-            this.alertHeader= 'Missing Field';
-            this.alertSubHeader=  'Value required';
-            this.alertMessage=  'Postal code is required';
-
-            this.showAlert();
-            return;
-        }
-        if(this.enviro_post.town ==""){
-            this.alertHeader= 'Missing Field';
-            this.alertSubHeader=  'Value required';
-            this.alertMessage=  'Town  is required';
-
-            this.showAlert();
-            return;
-        }
-
-       this.validatePerson.generateBearerToken().subscribe(response => {
-        console.log('Token generated:', response); 
-  
-        // Once the token is generated, you can make authenticated requests
-        this.validatePerson.makeAuthenticatedRequest('/v1/reports/')
-          .subscribe(data => {
-
-           var userData={
-                "report_type_id": "7a9ee450-6a8e-4174-a1bf-80e0fb7b2112",
-                "forename": this.enviro_post.first_name,
-                "middlename": "",
-                "surname": this.enviro_post.last_name,
-                "dob": this.enviro_post.date_of_birth ,
-                "address": {
-                "address1": this.enviro_post.address,
-                "address2": this.enviro_post.town,
-                "address3": null,
-                "address4": null,
-                "address5": null,
-                "postcode": this.enviro_post.post_code
-                },
-                "enduser_agreement": true,
-                "reference": "1wfref-4ffef-222",
-                "scorecard_id": "be42fc5b-96aa-4f9e-8b15-2e87f3e03ab8",
-                "test": true 
-                }
-
-                this.validatePerson.makeAuthenticatedRequest('/v1/reports/',userData)
-                .subscribe(data => {
-                    console.log(data);
-
-                    this.alertHeader= 'User information';
-                    this.alertSubHeader=  'User data';
-                    this.alertMessage=  'user data';
-
-                    this.showAlert();
-                });
-            console.log('API response:', data);
-          });
-      });
     }
-    populateDateOfBirth() { 
+
+    populateDateOfBirth() {
         if (this.enviro_post.date_of_birth) {
         const [year, month, day] = this.enviro_post.date_of_birth.split('/');
 
@@ -188,17 +92,6 @@ export class Step2Component implements OnInit {
         }
     }
 
-
-    async showAlert() {
-        const alert = await this.alertController.create({
-          header: this.alertHeader,
-          subHeader: this.alertSubHeader,
-          message: this.alertMessage,
-          buttons: ['OK']
-        });
-    
-        await alert.present();
-      }
     loadData() {
         this.offence_how = this.data.getOffenceHow();
         this.offence_location_suffix = this.data.getOffenceLocationSuffix();
