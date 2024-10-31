@@ -33,7 +33,8 @@ export class DataService {
     private live_url: string = 'https://app.enforcementpro.co.uk';
     private dev_url: string = 'https://app.enforcementpro.co.uk';
     private google_key: string = 'AIzaSyAfk02RCKQgVc4__wbyFgnpraBOhMeK6K4';
-
+    private api_app_version: string = '';
+    private api_app_url: string = 'https://drive.google.com/file/d/15KLQYvY5-qyyTNBI4WlGiDpPZ6m9yLns/view';
 
 
     private dynamic_feilds_data: any = {};
@@ -110,7 +111,8 @@ export class DataService {
         this.enviro_post = this.loadObjectFromLocalStorage('enviro_post');
         this.app_log = this.loadObjectFromLocalStorage('app_log');//app_log
 
-        // this.selected_site = parseInt(this.loadStringFromLocalStorage('selected_site'));
+        this.api_app_version = this.loadStringFromLocalStorage('api_app_version');
+        this.api_app_url = this.loadStringFromLocalStorage('api_app_url');
     }
 
     private loadStringFromLocalStorage(key: string): string {
@@ -139,6 +141,16 @@ export class DataService {
 
     private saveArrayToLocalStorage(key: string, data: any[]): void {
         localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    setApiAppVersion(api_app_version: string): void {
+        this.api_app_version = api_app_version;
+        this.saveStringToLocalStorage('api_app_version', this.api_app_version);
+    }
+
+    setApiAppUrl(api_app_url: string): void {
+        this.api_app_url = api_app_url;
+        this.saveStringToLocalStorage('api_app_url', this.api_app_url);
     }
 
     setDynamicFeildData(dynamic_feilds_data: any): void {
@@ -307,6 +319,14 @@ export class DataService {
         }
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
+
+    checkApiAppVersion(): boolean {
+        return this.api_app_version !== '';
+    }
+
+    checkNoteBookEntriesData(): boolean {
+        return this.builds.length > 0 && this.hair_colours.length > 0;
+    }
       
     checkSelectedSite(): boolean {
         return this.selected_site !== null;
@@ -338,6 +358,14 @@ export class DataService {
 
     getGoogleKey(): string {
         return this.google_key;
+    }
+
+    getApiAppUrl(): string {
+        return this.api_app_url;
+    }
+
+    getApiAppVersion(): string {
+        return this.api_app_version;
     }
 
     getUrl(): string {

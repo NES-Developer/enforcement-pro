@@ -27,6 +27,9 @@ import { ConstantsService } from '../services/constants.service';
 })
 export class ServiceRequestPage implements OnInit {
 
+    api_app_version: string = "";
+    api_app_url: string = "";
+
     map: any;
     selected_site!: Site;
 
@@ -42,6 +45,8 @@ export class ServiceRequestPage implements OnInit {
 
     app_log: AppLog;
     app_version: string = '';
+
+    // app_version: str
 
     constructor(
         private auth: AuthService,
@@ -69,9 +74,31 @@ export class ServiceRequestPage implements OnInit {
 
         if (this.data.checkSelectedSite() == false) {
             this.navigate('site');
-        }        
+        }   
+        
+        if (this.data.checkApiAppVersion() == false) {
+            this.getVersion();
+        }
 
         this.loadData();
+    }
+
+    getVersion()
+    {
+        this.api.getApiVersion().subscribe(
+            (response) => {
+                console.log(response);
+                this.api_app_version = response.data.version;
+                this.api_app_url = response.data.url;
+                this.data.setApiAppVersion(this.api_app_version);
+                this.data.setApiAppUrl(this.api_app_url)
+            },
+            (error) => {
+                console.log(error);
+
+                this.presentAlert("Failed", "Failed to get app version Network Error")
+            }
+        );
     }
 
     autoLogin() {
@@ -90,6 +117,11 @@ export class ServiceRequestPage implements OnInit {
                 this.presentAlert("Login Attempt Failed", "Please Logout and Login again.")
             }
         );
+    }
+
+    downloadFile() {
+        // Open the file URL in a new tab to trigger download
+        window.open(this.api_app_url, '_blank');
     }
 
     storeAppLog() {
@@ -186,7 +218,10 @@ export class ServiceRequestPage implements OnInit {
     loadData() {
         this.selected_site = this.data.getSelectedSite();
         this.site_id = this.selected_site.id;
-        console.log(this.site_id);
+
+        this.api_app_version = this.data.getApiAppVersion();
+        this.api_app_url = this.data.getApiAppVersion();
+        // console.log(this.site_id);
 
         this.sites = this.data.getSites();
         this.zones = this.data.getZones();
@@ -204,12 +239,12 @@ export class ServiceRequestPage implements OnInit {
         this.app_log.user_id = this.auth.getUser().id;
 
         this.getCurrentPosition()
-        .subscribe((position: any) => {
-            this.app_log.lat = position.latitude;
-            this.position_lat = position.latitude;
-            this.app_log.lng = position.longitude;
-            this.position_lng = position.longitude;
-        });
+            .subscribe((position: any) => {
+                this.app_log.lat = position.latitude;
+                this.position_lat = position.latitude;
+                this.app_log.lng = position.longitude;
+                this.position_lng = position.longitude;
+            });
 
         this.app_version = this.constantsService.APP_VERSION;
         // console.log('App Version:', this.constantsService.APP_VERSION);

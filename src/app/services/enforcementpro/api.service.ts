@@ -70,6 +70,11 @@ export class ApiService {
         return this.http.get(url, { headers: this.getHeaders() });
     }
 
+    getApiVersion(): Observable<any> {
+        const url = `${this.baseUrl}/version`;
+        return this.http.get(url);//Nemo
+    }
+
     getRecentFPNs(user_id: number): Observable<any> {
         const url = `${this.baseUrl}/get-recent-fpn/${user_id}`;
         return this.http.get(url, { headers: this.getHeaders() });
@@ -79,6 +84,7 @@ export class ApiService {
         const url = `${this.baseUrl}/sites/${site_id}/fpn`;
         return this.http.get(url, { headers: this.getHeaders() });
     }
+
 
     getSites(): Observable<any> {
         const url = `${this.baseUrl}/sites`;

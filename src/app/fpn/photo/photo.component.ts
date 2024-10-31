@@ -45,22 +45,22 @@ export class PhotoComponent implements OnInit, AfterViewInit {
 
     async setupDevices() {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: { exact: "environment" }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { exact: "environment" }
+                }
+                });
+                if (stream) {
+                    this.video.nativeElement.srcObject = stream;
+                    this.video.nativeElement.play();
+                    this.error = null;
+                } else {
+                    this.error = "You have no output video device";
+                }
+            } catch (e) {
+                // this.error = e;
             }
-            });
-            if (stream) {
-            this.video.nativeElement.srcObject = stream;
-            this.video.nativeElement.play();
-            this.error = null;
-            } else {
-            this.error = "You have no output video device";
-            }
-        } catch (e) {
-            // this.error = e;
-        }
         }
     }
 

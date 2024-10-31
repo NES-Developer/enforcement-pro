@@ -23,7 +23,9 @@ import { SiteOffence } from '../../models/site-offence';
   templateUrl: './notebook.page.html',
   styleUrls: ['./notebook.page.scss'],
 })
+
 export class NotebookPage implements OnInit {
+    
     id: any;
     currentStep: number = 1;
     enviro_post: EnviroPost;
@@ -105,9 +107,14 @@ export class NotebookPage implements OnInit {
     }
 
     loadData() {
+        if(!this.data.checkNoteBookEntriesData()) {
+            this.getFPNData();
+        }
+
         this.builds = this.data.getBuilds();
         this.hair_colours = this.data.getHairColours();
         let enviro_post =  this.data.getEnviroPost();
+
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
@@ -272,12 +279,11 @@ export class NotebookPage implements OnInit {
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
 
-                let builds = data.data.builds;
-                console.log(builds);
-                this.data.setBuilds(builds);
+                this.builds = data.data.builds;
+                this.data.setBuilds(this.builds);
 
-                let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
-                this.data.setHairColors(hair_colours);
+                this.hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
+                this.data.setHairColors(this.hair_colours);
 
                 let zones = data.data.zones;
                 this.data.setZones(zones);
@@ -314,8 +320,6 @@ export class NotebookPage implements OnInit {
 
                 let offenceGroups = this.extractOffenceGroups(offences);
                 this.data.setOffenceGroups(offenceGroups);
-
-                this.loadData();
 
             },
             error: (error) => {

@@ -137,47 +137,70 @@ export class Step2Component implements OnInit {
             return;
         }
 
-       this.validatePerson.generateBearerToken().subscribe(response => {
-        console.log('Token generated:', response); 
-  
-        // Once the token is generated, you can make authenticated requests
-        this.validatePerson.makeAuthenticatedRequest('/v1/reports/')
-          .subscribe(data => {
+        var offenderData = {
+            "forename": this.enviro_post.first_name,
+            "surname": this.enviro_post.last_name,
+            // "dob": this.formatDateForRequest(this.enviro_post.date_of_birth),
+            "address1": this.enviro_post.address,
+            "address2": this.enviro_post.town,
+            "postcode": this.enviro_post.post_code
+        };
 
-           var userData={
-                "report_type_id": "7a9ee450-6a8e-4174-a1bf-80e0fb7b2112",
-                "forename": this.enviro_post.first_name,
-                "middlename": "",
-                "surname": this.enviro_post.last_name,
-                "dob": this.enviro_post.date_of_birth ,
-                "address": {
-                "address1": this.enviro_post.address,
-                "address2": this.enviro_post.town,
-                "address3": null,
-                "address4": null,
-                "address5": null,
-                "postcode": this.enviro_post.post_code
-                },
-                "enduser_agreement": true,
-                "reference": "1wfref-4ffef-222",
-                "scorecard_id": "be42fc5b-96aa-4f9e-8b15-2e87f3e03ab8",
-                "test": true 
+        this.validatePerson.validateIdetity(offenderData)
+            .subscribe(data => {
+                console.log(data);
+
+                if (data?.Summary.Status) {
+                    this.alertHeader = 'Success';
+                    this.alertSubHeader = 'Information Validated';
+                    this.alertMessage = 'Offenders Information Has Been Validated';
+
+                    const forename = this.capitalizeSentence(data.Address.Forename || '');
+                    const middleName = this.capitalizeSentence(data.Address.MiddleName || '');
+                    this.enviro_post.first_name = `${forename} ${middleName}`.trim();
+                    this.enviro_post.last_name = this.capitalizeSentence(data.Address.Surname || '');
+
+                    // if (data.Address.DOB !== "0000-00-00" || data.Address.DOB !== null)
+                    // {
+                    //     this.enviro_post.date_of_birth = data.Address.DOB ? this.formatDateForDisplay(data.Address.DOB) : '';
+                    //     this.populateDateOfBirth();
+                    // }
+
+
+                    if (data.Address.AddressFound && data.Address.CleanedAddress) {
+                        const address1 = this.capitalizeSentence(data.Address.CleanedAddress.Address1 || '');
+                        const address2 = this.capitalizeSentence(data.Address.CleanedAddress.Address2 || '');
+                        this.enviro_post.address = `${address1}, ${address2}`.trim();
+                        this.enviro_post.post_code = data.Address.CleanedAddress.Postcode || '';
+                    }
+                } else {
+                    this.alertHeader = 'Invalid';
+                    this.alertSubHeader = 'Information Incorrect';
+                    this.alertMessage = 'Offenders Information Has Been Found False, Please request correct details.';
                 }
 
-                this.validatePerson.makeAuthenticatedRequest('/v1/reports/',userData)
-                .subscribe(data => {
-                    console.log(data);
+                this.showAlert();
+            });
 
-                    this.alertHeader= 'User information';
-                    this.alertSubHeader=  'User data';
-                    this.alertMessage=  'user data';
-
-                    this.showAlert();
-                });
-            console.log('API response:', data);
-          });
-      });
+       
     }
+
+    // Helper function to capitalize the first letter of each sentence
+    capitalizeSentence(text: string): string {
+        return text.toLowerCase().replace(/(^\w{1}|\.\s*\w{1})/g, match => match.toUpperCase());
+    }
+
+   // Helper function to format date for display as YYYY/MM/DD
+    formatDateForDisplay(date: string): string {
+        return date.replace(/-/g, '/');
+    }
+
+    // Helper function to format date for request as YYYY-MM-DD
+    formatDateForRequest(date: string): string {
+        return date.replace(/\//g, '-');
+    }
+
+
     populateDateOfBirth() { 
         if (this.enviro_post.date_of_birth) {
         const [year, month, day] = this.enviro_post.date_of_birth.split('/');

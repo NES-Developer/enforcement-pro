@@ -370,13 +370,18 @@ export class FPNPage implements OnInit {
 
                     if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                     {
-                        this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
+                        this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
                     }
+                    else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 500 OK")
+                    {
+                        this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
+                    } 
                     else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
                     {
-                        this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then naviage back and Submit');
+                        this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
                     } 
-                    else {
+                    else 
+                    {
                         this.presentAlert('Error', error.message);
                     }   
                 }
