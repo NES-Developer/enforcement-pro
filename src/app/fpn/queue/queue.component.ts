@@ -78,13 +78,13 @@ export class QueueComponent  implements OnInit {
                     let fpn = response.data;
 
                     Clipboard.write({
-                        string: fpn.ticket
+                        string: fpn.fpn_number
                     });
 
                     this.isSubmitting = false;
                     this.loading.hideLoading();
 
-                    this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
+                    this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
                     this.data.spliceEnviroQue(enviro_post);
                     this.enviro_que = this.data.getEnviroQue();
                 }

@@ -355,13 +355,13 @@ export class FPNPage implements OnInit {
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
                         Clipboard.write({
-                            string: this.fpn.ticket
+                            string: this.fpn.fpn_number
                         });
 
                         this.isSubmitting = false;
                         this.loading.hideLoading();
                         
-                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + '. URL has been copied to your clipboard.');     
+                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + ' has been copied to your clipboard.');     
                     }
 
                 },

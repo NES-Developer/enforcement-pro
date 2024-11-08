@@ -170,12 +170,11 @@ export class HomePage implements OnInit {
     }
     
 
-    copyUrlFPN (fpn_number: string) {
-        let url = this.getFpnImageUrl(fpn_number).toString();
+    copyFPNNumber (fpn_number: string) {
         Clipboard.write({
-            string: url
+            string: fpn_number
         });
-        this.presentAlert('Successful', 'Copied FPN Url to Clipboard')
+        this.presentAlert('Successful', 'Copied FPN Number to Clipboard')
     }
 
     async openOtherApp() {
