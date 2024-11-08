@@ -6,6 +6,10 @@ import { DataService } from '../../services/enforcementpro/data.service';
 import { EnviroPost } from '../../models/enviro';
 import { UpperCaseWords } from 'src/app/helpers/utils'
 
+import { Ethnicity } from 'src/app/models/ethnicity';
+import { Weather } from '../../models/weather';
+import { Visibility } from '../../models/visibility';
+
 @Component({
   selector: 'app-step7',
   templateUrl: './step7.component.html',
@@ -15,25 +19,9 @@ export class Step7Component  implements OnInit {
 
     // enviro_post: EnviroPost;
     enviro_post = new EnviroPost();
-
-    // notebook_entries: NotebookEntry = {
-    //     enviro_id: 0,
-    //     is_fpn_advised: '',
-    //     is_fpn_handed: '',
-    //     height_in_feet: '',
-    //     height_in_inch: '',
-    //     build: '',
-    //     hair: 0,
-    //     distance_from_offender: '',
-    //     distinguishing_features: '',
-    //     have_reason: '',
-    //     nearest_bin: '',
-    //     were: '',
-    //     did: '',
-    //     police_comments: '',
-    //     offender_comments: '',
-    //     bwv_assest: ''
-    // };
+    ethnicities: Ethnicity[] = [];
+    weather: Weather[] = [];
+    visibility: Visibility[] = [];
 
     builds: Build[] = [];
     hair_colours: HairColour[] = [];
@@ -57,6 +45,9 @@ export class Step7Component  implements OnInit {
     loadData() {
         this.builds = this.data.getBuilds();
         this.hair_colours = this.data.getHairColours();
+        this.ethnicities = this.data.getEthnicities();
+        this.weather = this.data.getWeather();
+        this.visibility = this.data.getVisibility();
         
     }
   

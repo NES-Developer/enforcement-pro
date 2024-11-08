@@ -8,7 +8,6 @@ import { OffenceGroup } from '../../models/offence-group';
 import { Offence } from '../../models/offence';
 import { FormGroup } from '@angular/forms';
 import { SiteOffence } from '../../models/site-offence';
-import { Ethnicity } from 'src/app/models/ethnicity';
 import { AddressVerifiedBy } from '../../models/address-verified-by';
 import { IDShown } from 'src/app/models/id-shown';
 import { OffenceLocationSuffix } from 'src/app/models/offence-location-suffix';
@@ -34,7 +33,7 @@ export class Step2Component implements OnInit {
     birthMonth: number = 1;
     birthDay: number = 1;
 
-    ethnicities: Ethnicity[] = [];
+    // ethnicities: Ethnicity[] = [];
     offence_how: OffenceHow[] = [];
     offence_location_suffix: OffenceLocationSuffix[] = [];
     address_verified_by: AddressVerifiedBy[] = [];
@@ -226,7 +225,7 @@ export class Step2Component implements OnInit {
         this.offence_how = this.data.getOffenceHow();
         this.offence_location_suffix = this.data.getOffenceLocationSuffix();
         this.address_verified_by = this.data.getAddressVerifiedBy();
-        this.ethnicities = this.data.getEthnicities();
+        // this.ethnicities = this.data.getEthnicities();
         this.id_shown = this.data.getIDShown();
         let enviro_post =  this.data.getEnviroPost();
         this.salutations = this.data.getSalutations();

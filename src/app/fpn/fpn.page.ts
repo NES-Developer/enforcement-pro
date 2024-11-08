@@ -178,6 +178,10 @@ export class FPNPage implements OnInit {
                 break;
             case 2:
                 console.log(this.enviro_post);
+                if (this.enviro_post.is_bwc_active == '') {
+                    this.presentAlert('Wait!', 'Please provide BWC.');
+                    return false;
+                }
                 if (this.enviro_post.salutation == '') {
                     this.presentAlert('Wait!', 'Please provide offender Salutation.');
                     return false;
@@ -206,18 +210,8 @@ export class FPNPage implements OnInit {
                     this.presentAlert('Wait!', 'Please provide offender Postal Code.');
                     return false;
                 }
-                if (this.enviro_post.gender == '') {
-                    this.presentAlert('Wait!', 'Please provide offender Gender.');
-                    return false;
-                }
                 if (this.enviro_post.town == '') {
                     this.presentAlert('Wait!', 'Please provide offender Town.');
-                    return false;
-                }
-                break;
-            case 3:
-                if (this.enviro_post.ethnicity_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide offender Ethnicity.');
                     return false;
                 }
                 break;
@@ -248,14 +242,7 @@ export class FPNPage implements OnInit {
                     this.presentAlert('Wait!', 'Please provide Land Type.');
                     return false;
                 }
-                if (this.enviro_post.visibility_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide Visibility.');
-                    return false;
-                }
-                if (this.enviro_post.weather_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide Weather.');
-                    return false;
-                }
+                
                 if (!this.enviro_post.offence_datetime) {
                     this.presentAlert('Wait!', 'Please provide Offence timestamp.');
                     return false;
@@ -294,6 +281,22 @@ export class FPNPage implements OnInit {
                 }
                 if (this.enviro_post.notebook_entries.did == '') {
                     this.presentAlert('Wait!', 'Please provide did details.');
+                    return false;
+                }
+                if (this.enviro_post.notebook_entries.gender == '') {
+                    this.presentAlert('Wait!', 'Please provide offender Gender.');
+                    return false;
+                }
+                if (this.enviro_post.notebook_entries.visibility_id <= 0) {
+                    this.presentAlert('Wait!', 'Please provide Visibility.');
+                    return false;
+                }
+                if (this.enviro_post.notebook_entries.weather_id <= 0) {
+                    this.presentAlert('Wait!', 'Please provide Weather.');
+                    return false;
+                }
+                if (this.enviro_post.notebook_entries.ethnicity_id <= 0) {
+                    this.presentAlert('Wait!', 'Please provide offender Ethnicity.');
                     return false;
                 }
 
@@ -368,11 +371,11 @@ export class FPNPage implements OnInit {
                     this.isSubmitting = false;
                     this.loading.hideLoading();
 
-                    if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
+                    if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK ")
                     {
                         this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
                     }
-                    else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 500 OK")
+                    else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 500 OK ")
                     {
                         this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
                     } 
@@ -402,6 +405,7 @@ export class FPNPage implements OnInit {
     refresh() {
         this.loading.showLoading();
         this.getFPNData();
+        this.loading.hideLoading();
         window.location.reload();
     }
 
@@ -474,10 +478,6 @@ export class FPNPage implements OnInit {
     }
 
     saveFPN() {
-        if (this.isSubmitting) {
-            return;
-        }
-
         let checker = this.validator();
 
         if (checker) {
@@ -487,8 +487,6 @@ export class FPNPage implements OnInit {
             this.assignOfficerId();
             let queue = this.data.getEnviroQue();
 
-            this.loading.hideLoading();
-
             if (queue.length < 7) {
                 this.assignOfficerId();
                 this.data.pushEnviroQue();
@@ -496,13 +494,12 @@ export class FPNPage implements OnInit {
                 this.currentStep = 1;
                 this.isSubmitting = false;
                 this.loading.hideLoading();
-
                 window.location.reload();
+
             } else {
                 this.isSubmitting = false;
                 this.loading.hideLoading();
-
-                this.presentAlert('Error', 'Queue has exceeded 6, please submit. Submit some FPNs on queue to increase space.')
+                this.presentAlert('Error', 'Queue has exceeded 7, please submit. Submit some FPNs on queue to increase space.')
             }
         }
         

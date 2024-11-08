@@ -32,31 +32,6 @@
     </ion-select>
 </ion-item>
 
-<!-- Ref No Text -->
-<ion-item>
-    <ion-label>
-        Ref No
-    </ion-label>
-</ion-item>
-<ion-item>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.ref_no"></ion-input>
-</ion-item>
-
-
-  <!-- Address Proof Select -->
-  <ion-item>
-    <ion-label>
-        Ethnicity *
-    </ion-label>
-</ion-item>
-<ion-item>
-<ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.ethnicity_id">
-    <ion-select-option *ngFor="let group of ethnicities" [value]="group.id">
-        {{ group.textOnMachine }}
-    </ion-select-option>
-</ion-select>
-</ion-item>
-
 <ion-item>
 </ion-item>
 <ion-item>

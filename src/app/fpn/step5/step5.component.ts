@@ -1,8 +1,7 @@
 import { Component, ElementRef, OnInit, AfterViewInit, ViewChild, HostListener } from '@angular/core';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
-import { Weather } from '../../models/weather';
-import { Visibility } from '../../models/visibility';
+
 import { POIPrefix } from '../../models/poi-prefix';
 import { EnviroPost } from '../../models/enviro';
 import { Observable, Subscriber } from 'rxjs';
@@ -30,8 +29,6 @@ export class Step5Component  implements OnInit, AfterViewInit {
     showLeaf=false;
     marker!: L.Marker;
     markersLayer!: L.LayerGroup; 
-    weather: Weather[] = [];
-    visibility: Visibility[] = [];
     poi_prefix: POIPrefix[] = [];
     enviro_post: EnviroPost = new EnviroPost();
     private accessToken = 'pryBQPsykVwwDlHKRCzuceqEyJjYgmcNXjLk11h0hzFzWdVRDygST2uJMGmWO5Av';
@@ -72,35 +69,14 @@ export class Step5Component  implements OnInit, AfterViewInit {
         this.loadMap();
       }
 
-    get offenceDateTimeISO(): string {
-        return this.enviro_post.offence_datetime ? moment(this.enviro_post.offence_datetime).format('YYYY-MM-DDTHH:mm:ss') : '';
-    }
-
-    get issueDateTimeISO(): string {
-        return this.enviro_post.issue_datetime ? moment(this.enviro_post.issue_datetime).format('YYYY-MM-DDTHH:mm:ss') : '';
-    }
 
     loadData() {
-        this.weather = this.data.getWeather();
-        this.visibility = this.data.getVisibility();
+        // this.weather = this.data.getWeather();
+        // this.visibility = this.data.getVisibility();
         this.poi_prefix = this.data.getPOIPrefix();
         let enviro_post =  this.data.getEnviroPost();
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
-        }
-
-        // Parse offence_datetime if it's not empty
-        if (!this.offence_date && !this.offence_time && this.enviro_post.offence_datetime) {
-            const offenceDateTime = moment(this.enviro_post.offence_datetime);
-            this.offence_date = offenceDateTime.format('YYYY-MM-DD');
-            this.offence_time = offenceDateTime.format('HH:mm');
-        }
-
-        // Parse issue_datetime if it's not empty
-        if (!this.issue_date && !this.issue_time && this.enviro_post.issue_datetime) {
-            const issueDateTime = moment(this.enviro_post.issue_datetime);
-            this.issue_date = issueDateTime.format('YYYY-MM-DD');
-            this.issue_time = issueDateTime.format('HH:mm');
         }
 
         this.getCurrentPosition()

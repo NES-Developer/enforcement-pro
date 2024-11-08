@@ -16,6 +16,7 @@ import { POIPrefix } from '../../models/poi-prefix';
 import { Offence } from '../../models/offence';
 import { OffenceGroup } from '../../models/offence-group';
 import { SiteOffence } from '../../models/site-offence';
+import { Ethnicity } from 'src/app/models/ethnicity';
 
 
 @Component({
@@ -32,6 +33,9 @@ export class NotebookPage implements OnInit {
     notebook_entries: NotebookEntry; 
     app_log: AppLog;
     fpn_number: string = "";
+    ethnicities: Ethnicity[] = [];
+    weather: Weather[] = [];
+    visibility: Visibility[] = [];
 
     builds: Build[] = [];
     hair_colours: HairColour[] = [];
@@ -114,6 +118,9 @@ export class NotebookPage implements OnInit {
         this.builds = this.data.getBuilds();
         this.hair_colours = this.data.getHairColours();
         let enviro_post =  this.data.getEnviroPost();
+        this.ethnicities = this.data.getEthnicities();
+        this.weather = this.data.getWeather();
+        this.visibility = this.data.getVisibility();
 
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
@@ -142,11 +149,27 @@ export class NotebookPage implements OnInit {
             this.presentAlert('Wait!', 'Please provide were details.');
             return false;
         }
-
         if (this.notebook_entries.did == '') {
             this.presentAlert('Wait!', 'Please provide did details.');
             return false;
         }
+        if (this.notebook_entries.gender == '') {
+            this.presentAlert('Wait!', 'Please provide offender Gender.');
+            return false;
+        }
+        if (this.notebook_entries.visibility_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide Visibility.');
+            return false;
+        }
+        if (this.notebook_entries.weather_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide Weather.');
+            return false;
+        }
+        if (this.notebook_entries.ethnicity_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide offender Ethnicity.');
+            return false;
+        }
+        
         console.log(this.enviro_post.notebook_entries);
         return true;
     }
