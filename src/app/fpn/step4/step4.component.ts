@@ -37,6 +37,7 @@ export class Step4Component  implements OnInit {
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
+        // this.enviro_post.language = "English";
     }
 
     onInputChange(){

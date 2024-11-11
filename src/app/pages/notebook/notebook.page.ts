@@ -87,13 +87,15 @@ export class NotebookPage implements OnInit {
                 this.fpn_number = params['fpn_number']; // Fallback to null if not present
             });
         }
+
+        this.loadData();
         
         this.app_log = new AppLog();
 
      }
 
     ngOnInit() {
-        this.loadData();
+        
     }
 
     ping() {
@@ -320,17 +322,17 @@ export class NotebookPage implements OnInit {
                 let address_verified_by = data.data.address_verified_via;
                 this.data.setAddressVerifiedBy(address_verified_by);
 
-                let ethnicities = data.data.ethnicities;
-                this.data.setEthnicities(ethnicities);
+                this.ethnicities = data.data.ethnicities;
+                this.data.setEthnicities(this.ethnicities);
 
                 let id_shown = data.data.id_shown;
                 this.data.setIdShown(id_shown);
 
-                let weather: Weather[] = data.data.weathers;
-                this.data.setWeather(weather);
+                this.weather = data.data.weathers;
+                this.data.setWeather(this.weather);
 
-                let visibility: Visibility[] = data.data.visibility;
-                this.data.setVisibility(visibility);
+                this.visibility = data.data.visibility;
+                this.data.setVisibility(this.visibility);
 
                 let poi_prefix: POIPrefix[] = data.data.poi_prefix;
                 this.data.setPOIPrefix(poi_prefix);

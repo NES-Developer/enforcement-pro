@@ -23,7 +23,7 @@ export class EnviroPost {
    officer_id: number = 0;
    offence_id: number = 0;
    offence_type_id: number = 0;
-   language: string = '';
+   language: string = 'English';
    admin_id: number = 0;
    offender_id: number = 0;
    prefix_id: number = 0;

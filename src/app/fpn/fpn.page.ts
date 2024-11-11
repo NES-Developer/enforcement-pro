@@ -481,7 +481,6 @@ export class FPNPage implements OnInit {
         let checker = this.validator();
 
         if (checker) {
-            // this.isSubmitting = true;
             this.loading.showLoading();
             this.offenceSwitcherForserver();
             this.assignOfficerId();
@@ -490,10 +489,10 @@ export class FPNPage implements OnInit {
             if (queue.length < 9) {
                 this.assignOfficerId();
                 this.data.pushEnviroQue();
-                // this.enviro_post = new EnviroPost();
-                // this.currentStep = 1;
+                this.enviro_post = new EnviroPost();
+                this.currentStep = 1;
                 this.loading.hideLoading();
-                // window.location.reload();
+                window.location.reload();
 
             } else {
                 this.loading.hideLoading();
