@@ -28,6 +28,7 @@ import { Ethnicity } from 'src/app/models/ethnicity';
 export class NotebookPage implements OnInit {
     
     id: any;
+    isSubmitting: boolean = false;
     currentStep: number = 1;
     enviro_post: EnviroPost;
     notebook_entries: NotebookEntry; 
@@ -88,14 +89,23 @@ export class NotebookPage implements OnInit {
             });
         }
 
-        this.loadData();
+        // this.loadData();
         
         this.app_log = new AppLog();
 
      }
 
-    ngOnInit() {
-        
+     ngOnInit(): void {
+
+        if (!this.data.checkFPNData()){
+            this.getFPNData();
+        }
+
+        if(!this.data.checkNoteBookEntriesData()) {
+            this.getFPNData();
+        }
+
+        this.loadData();
     }
 
     ping() {
@@ -113,20 +123,14 @@ export class NotebookPage implements OnInit {
     }
 
     loadData() {
-        if(!this.data.checkNoteBookEntriesData()) {
-            this.getFPNData();
-        }
+        this.app_log = this.data.getAppLog();
 
         this.builds = this.data.getBuilds();
         this.hair_colours = this.data.getHairColours();
-        let enviro_post =  this.data.getEnviroPost();
+        this.enviro_post =  this.data.getEnviroPost();
         this.ethnicities = this.data.getEthnicities();
         this.weather = this.data.getWeather();
         this.visibility = this.data.getVisibility();
-
-        if (enviro_post !== null) {
-            this.enviro_post = enviro_post;
-        }
 
         this.ping();
         setInterval(() => {
@@ -205,11 +209,17 @@ export class NotebookPage implements OnInit {
     }
 
     submitFpn() {
+        if (this.isSubmitting) {
+            return;
+        }
+
         let checker = this.validator();
 
         if (checker) {
 
             this.offenceSwitcherForserver(this.enviro_post);
+
+            this.isSubmitting = true;
 
             this.api.postFPN(this.enviro_post).subscribe({
                 next: (response) => {
@@ -219,6 +229,7 @@ export class NotebookPage implements OnInit {
                     {
                         this.offenceSwitcherForserver(this.enviro_post);
                         let message = response.message + " (Please Edit)";
+                        this.isSubmitting = false;
                         this.presentAlert('Error', message);
                     } else {                        
                         let fpn = response.data;    
@@ -231,7 +242,7 @@ export class NotebookPage implements OnInit {
                         this.data.spliceEnviroQue(this.enviro_post);
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
-
+                        this.isSubmitting = false;
                         this.route('/tabs/fpn');
                     }
                 }
@@ -294,6 +305,13 @@ export class NotebookPage implements OnInit {
             ],
         });
         await alert.present();
+    }
+
+    refresh() {
+        // this.loading.showLoading();
+        this.getFPNData();
+        // this.loading.hideLoading();
+        window.location.reload();
     }
 
     getFPNData(): void {

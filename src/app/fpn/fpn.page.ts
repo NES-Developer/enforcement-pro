@@ -84,9 +84,9 @@ export class FPNPage implements OnInit {
         this.app_log = this.data.getAppLog();
 
         this.ping();
-            setInterval(() => {
-                this.ping();
-            }, 120000); // 2 minutes in milliseconds
+        setInterval(() => {
+            this.ping();
+        }, 120000); // 2 minutes in milliseconds
     }
 
     getFPNData(): void {
@@ -478,6 +478,10 @@ export class FPNPage implements OnInit {
     }
 
     saveFPN() {
+        if (this.isSubmitting) {
+            return;
+        }
+
         let checker = this.validator();
 
         if (checker) {
@@ -492,7 +496,6 @@ export class FPNPage implements OnInit {
                 this.enviro_post = new EnviroPost();
                 this.currentStep = 1;
                 this.loading.hideLoading();
-                window.location.reload();
 
             } else {
                 this.loading.hideLoading();
