@@ -7,6 +7,6 @@ export class ConstantsService {
 
     constructor() { }
 
-    public readonly APP_VERSION = '10.2.3';
+    public readonly APP_VERSION = '10.2.4';
 
 }

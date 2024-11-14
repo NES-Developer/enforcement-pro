@@ -251,9 +251,16 @@ export class NotebookPage implements OnInit {
     }
 
     submitForm () {
+        if (this.isSubmitting) {
+            return;
+        }
+
         let checker = this.validator();
+
         if (checker)
         {
+            this.isSubmitting = true;
+
             this.notebook_entries.enviro_id = this.id;
             this.api.postNoteBook(this.notebook_entries).subscribe({
                 next: (response) => {
@@ -262,10 +269,11 @@ export class NotebookPage implements OnInit {
                     if(response.success === false) 
                     {
                         let message = response.message + " (Please Edit)";
+                        this.isSubmitting = false;
                         this.presentAlert('Error', message);
                     } else {
                         this.presentAlert('Success', 'Notebook entry captured');
-
+                        this.isSubmitting = false;
                         this.router.navigateByUrl('').then(() => {
                             window.location.reload();
                         });
