@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 // const JsBarcode = require('jsbarcode'); // Use require for CommonJS module
 // const QRCode = require('qrcode'); // Use require for CommonJS module
-import bwipjs from 'bwip-js';
+import JsBarcode from 'jsbarcode';
 // import { QRCode } from 'qrcode';
 import QRCode from 'qrcode'
 
@@ -24,7 +24,6 @@ export class TicketService {
     // enviro_post: EnviroPost;
     url: string = '';
 
-
     constructor (
         private data: DataService,
         private auth: AuthService
@@ -38,26 +37,23 @@ export class TicketService {
             throw new Error('Enviro data is missing');
         }
 
-
         // Generate FPN Number and Barcode
         let last_enviro_id: number = this.data.getLastFpnId(); // Fetch the last environment ID
         last_enviro_id = last_enviro_id ? 0 : 20000;
         const fpn_number: string = this.generateFpnNumber(last_enviro_id);
         const barcode = this.generateBarcodeNumber(fpn_number);
 
-    
-        // Barcode Generation using bwip-js
-        // const barcodeBuffer = await bwipjs.toBuffer({
-        //     bcid: 'code128',        // Barcode type
-        //     text: barcode, // Text to encode
-        //     scale: 3,               // 3x scaling factor
-        //     height: 10,             // Bar height, in millimeters
-        //     includetext: true,      // Show human-readable text
-        //     textxalign: 'center',   // Align text
-        // });
-        // const barcodeBase64 = `data:image/png;base64,${barcodeBuffer.toString('base64')}`;
-        // alert(99);
-          
+        const barcodeCanvas = document.createElement('canvas');
+
+        JsBarcode(barcodeCanvas, barcode, {
+            format: 'CODE128',        // Barcode type
+            displayValue: true,       // Show human-readable text
+            textAlign: 'center',      // Align text
+            height: 50,               // Bar height in pixels
+            margin: 0,                // No margin
+        });
+        
+        const barcodeBase64 = barcodeCanvas.toDataURL('image/png'); // Get Base64 representation          
 
         let site: Site = this.data.getSelectedSite();
         let selected_site_offence: SiteOffence | undefined = this.data.findSiteOffence(enviro_post.offence_id);
@@ -68,16 +64,19 @@ export class TicketService {
         // QR Code Generation
         const qrCodeCanvas = document.createElement('canvas');
         const paysite = `https://paymyfpn.co.uk/fpn/${site.slug}`;
-         QRCode.toCanvas(qrCodeCanvas, paysite, {
+        QRCode.toCanvas(qrCodeCanvas, paysite, {
             width: 150,
             margin: 1,
         });
+
+        // Extract Base64 Data from the Canvas
+        const qrCodeBase64 = qrCodeCanvas.toDataURL('image/png');
+
 
         let url_suffix = this.data.getUrl();
 
         let url: string = url_suffix + '/' + site.logo;
 
-    
         // HTML Template Generation
         const ticketHTML = `
             <div style="text-align: center;">
@@ -107,10 +106,14 @@ export class TicketService {
                 <h5>How To Pay</h5>
                 <p>By Internet (Debit Card): Visit <a href="https://paymyfpn.co.uk/fpn/${site.slug}" target="_blank">www.paymyfpn.co.uk/fpn/${site.slug}</a></p>
                 <p>Scan the QR code below:</p>
-                <div>${qrCodeCanvas}</div>
+                <div style="display: flex; justify-content: center; align-items: center; with:50%;">
+                    <img src="${qrCodeBase64}" alt="QR Code" style="margin: auto;" />
+                </div>
                 <p>By Telephone: Call 0330 314 9705</p>
                 <p>By Cash: Pay at any Post Office Outlet with the barcode below:</p>
-                <div><img src="" alt="Barcode" /></div>
+                <div style="display: flex; justify-content: center; align-items: center; with:70%;">
+                    <img src="${barcodeBase64}" alt="Barcode" />
+                </div>
             </div>
             <div style="margin-top: 10px;">
                 <table style="width: 100%; border-top: 1px solid black; padding-top: 5px;">
@@ -126,7 +129,6 @@ export class TicketService {
         // Parse Ticket Template
         const parsedHTML = this.parseTicketTemplate(ticketHTML);
 
-        // Convert HTML to Blob and Base64
         // Convert Parsed HTML to Image Blob
         const container = document.createElement('div');
         // container.innerHTML = parsedHTML;
@@ -135,38 +137,10 @@ export class TicketService {
         const blob = new Blob([parsedHTML], { type: 'image/png' });
         const base64Image: any = this.convertBlobToBase64(blob);
 
-        // Extract and Return Base64 Data
-        // const base64String = base64Image.split(',')[1]; // Extract Base64 data after the MIME type
-
-        console.log(blob,base64Image,parsedHTML,container);
+        console.log(blob,parsedHTML);
 
         return base64Image as string;
 
-        // console.log('Generated Base64 Image:', `data:image/png;base64,${base64Image}`);
-
-        // return `data:image/png;base64,${base64Image}`;
-
-        // // Check if Blob is generated
-        // if (!pngBlob) {
-        //     throw new Error('Failed to generate PNG blob from HTML');
-        // } else {
-        //     base64Image = this.convertBlobToBase64(pngBlob);
-        // }
-
-        // // Convert Blob to Base64
-
-        // // Log or return the Base64 Image String
-        // console.log('Generated Base64 Image:', base64Image);
-        
-
-        // console.log(base64Image);
-        // alert(111);
-
-        // // Return Base64 Image String
-        // return base64Image as string;
-    
-        // Return Base64 Image String
-        // return base64Image;
     }
 
     // Generate Barcode Number Function
