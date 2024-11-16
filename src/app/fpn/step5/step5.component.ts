@@ -6,7 +6,7 @@ import { POIPrefix } from '../../models/poi-prefix';
 import { EnviroPost } from '../../models/enviro';
 import { Observable, Subscriber } from 'rxjs';
 import { AlertController, IonInput } from '@ionic/angular';
-import * as moment from 'moment';  // Import moment.js for date formatting
+import moment from 'moment';  // Import moment.js for date formatting
 import { GeocodingService } from '../../services/geocoding.service';
 // import { GoogleMap } from '@capacitor/google-maps';
 import * as L from 'leaflet';

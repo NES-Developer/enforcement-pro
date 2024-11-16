@@ -29,7 +29,7 @@ export class Step1Component  implements OnInit {
     constructor(
         private api: ApiService,
         private data:DataService,
-        private fpnPage: FPNPage
+        private fpnPage: FPNPage,
     ) {
         
     }
@@ -78,7 +78,6 @@ export class Step1Component  implements OnInit {
         let offence = this.data.findOffenceById(id);
         if (offence) {
             this.offence = offence;
-            console.log(this.offence);
         }
         this.saveEnviroData();
     }

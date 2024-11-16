@@ -10,6 +10,7 @@ import { AppLog } from '../../models/app-log';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { LoadingService } from '../../services/loading.service';
 import { AuthService } from '../../services/enforcementpro/auth.service';
+import { TicketService } from 'src/app/Service/ticket.service';
 
 @Component({
   selector: 'app-queue',
@@ -31,7 +32,8 @@ export class QueueComponent  implements OnInit {
         private router: Router,
         private route2: ActivatedRoute,
         private loading:LoadingService,
-        private auth: AuthService
+        private auth: AuthService,
+        private ticket: TicketService
     ) {
         this.app_log = new AppLog();
 
@@ -160,6 +162,16 @@ export class QueueComponent  implements OnInit {
           buttons: ['Okay'],
         });
         await alert.present();
+    }
+
+    copyTicketClipboard(enviro_post: EnviroPost) {
+        let ticket = this.ticket.generateWelcomeTicket(enviro_post);
+        Clipboard.write({
+            string: ticket.toString()
+        });
+        console.log(ticket);
+        this.presentAlert('Success', 'N')
+        // return ticket;
     }
 
     editFPN(enviro_post: EnviroPost) {

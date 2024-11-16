@@ -1,6 +1,6 @@
 import { IonDatetime } from "@ionic/angular";
 import { NotebookEntry } from "./notebook-entry";
-import * as moment from 'moment';  // Import moment.js for date formatting
+import moment from 'moment';  // Import moment.js for date formatting
 
 export class EnviroPost {
    salutation: string = '';

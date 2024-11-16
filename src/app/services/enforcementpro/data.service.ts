@@ -28,7 +28,7 @@ import { Login } from '../../models/login';
 })
 export class DataService {
 
-    private selected_offence_type: number = 0;
+    private last_fpn_id: number = 0;
 
     private live_url: string = 'https://app.enforcementpro.co.uk';
     private dev_url: string = 'https://app.enforcementpro.co.uk';
@@ -113,6 +113,16 @@ export class DataService {
 
         this.api_app_version = this.loadStringFromLocalStorage('api_app_version');
         this.api_app_url = this.loadStringFromLocalStorage('api_app_url');
+        this.last_fpn_id = this.loadIntFromLocalStorage('last_fpn_id');
+    }
+
+    private loadIntFromLocalStorage(key: string): number {
+        let int = localStorage.getItem(key)
+        let data: number = 0;
+        if (int) {
+            data = parseInt(int);
+        }
+        return data;
     }
 
     private loadStringFromLocalStorage(key: string): string {
@@ -131,6 +141,10 @@ export class DataService {
     }
 
 
+    private saveIntToLocalStorage(key: string, data: number): void {
+        localStorage.setItem(key, data.toString());
+    }
+
     private saveStringToLocalStorage(key: string, data: string): void {
         localStorage.setItem(key, data);
     }
@@ -143,10 +157,16 @@ export class DataService {
         localStorage.setItem(key, JSON.stringify(data));
     }
 
+    setLastFpnId(last_fpn_id: number): void {
+        this.last_fpn_id = last_fpn_id;
+        this.saveIntToLocalStorage('last_fpn_id', this.last_fpn_id);
+    }
+
     setApiAppVersion(api_app_version: string): void {
         this.api_app_version = api_app_version;
         this.saveStringToLocalStorage('api_app_version', this.api_app_version);
     }
+
 
     setApiAppUrl(api_app_url: string): void {
         this.api_app_url = api_app_url;
@@ -356,6 +376,10 @@ export class DataService {
         return this.app_log !== null && this.app_log.device_id !== null && this.app_log.lat !== null && this.app_log.lng !== null;
     }
 
+    getLastFpnId(): number {
+        return this.last_fpn_id;
+    }
+
     getGoogleKey(): string {
         return this.google_key;
     }
@@ -406,10 +430,6 @@ export class DataService {
 
     getServiceRequest(): ServiceRequest {
         return this.service_request;
-    }
-
-    getSelectedOffenseType(): any {
-        return this.selected_offence_type;
     }
 
     getDynamicFields(): any[] {
