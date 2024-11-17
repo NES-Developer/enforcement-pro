@@ -3,6 +3,9 @@ import { NotebookEntry } from "./notebook-entry";
 import moment from 'moment';  // Import moment.js for date formatting
 
 export class EnviroPost {
+
+   fpn_number: string = '';
+
    salutation: string = '';
    first_name: string = '';
    last_name: string = '';

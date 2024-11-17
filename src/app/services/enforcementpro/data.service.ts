@@ -340,6 +340,10 @@ export class DataService {
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
 
+    addFpnNumberQue(fpn_number: string, index: number): void {
+        this.enviro_que[index].fpn_number = fpn_number;
+    }
+
     checkApiAppVersion(): boolean {
         return this.api_app_version !== '';
     }

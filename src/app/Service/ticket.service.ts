@@ -167,23 +167,12 @@ export class TicketService {
         // Parse Ticket Template
         const parsedHTML = this.parseTicketTemplate(ticketHTML);
 
-        // Convert Parsed HTML to Image Blob
-        // const container = document.createElement('div');
-        // container.innerHTML = parsedHTML;
-
-        // container.innerHTML = parsedHTML;
-
-        // const dataUrl = toPng(container, {
-        //     backgroundColor: 'white',
-            // pixelRatio: 4,
-            // width: 595,
-            // height: 842,
-        // });
-
-        // const blob = new Blob([parsedHTML], { type: 'image/png' });
-        // const base64Image: any = this.convertBlobToBase64(blob);
-
-        // console.log(44,container,parsedHTML,dataUrl);
+        let enviro_que = this.data.getEnviroQue();
+        for (let x = 0; x < enviro_que.length; x++) {
+            if (enviro_que[x].signature == enviro_post.signature) {
+                this.data.addFpnNumberQue(fpn_number, x);
+            }
+        }
 
         return parsedHTML;
 

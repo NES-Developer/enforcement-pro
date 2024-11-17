@@ -82,10 +82,11 @@ export class QueueComponent  implements OnInit {
         }, 120000); // 2 minutes in milliseconds
     }
 
-    submitFPN(enviro_post: EnviroPost) {
+    submitFPN(enviro_post: any) {
         if (this.isSubmitting) {
             return;
         }
+        
 
         this.isSubmitting = true;
         this.loading.showLoading();
