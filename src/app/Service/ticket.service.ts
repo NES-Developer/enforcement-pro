@@ -38,11 +38,16 @@ export class TicketService {
             throw new Error('Enviro data is missing');
         }
 
-        // Generate FPN Number and Barcode
-        let last_enviro_id: number = this.data.getLastFpnId(); // Fetch the last environment ID
-        last_enviro_id = last_enviro_id ? 0 : 20000;
-        const fpn_number: string = this.generateFpnNumber(last_enviro_id);
-        const barcode = this.generateBarcodeNumber(fpn_number);
+        if (enviro_post.fpn_number !== '') {
+            // Generate FPN Number and Barcode
+            let last_enviro_id: number = this.data.getLastFpnId(); // Fetch the last environment ID
+            last_enviro_id = last_enviro_id ? 0 : 20000;
+            enviro_post.fpn_number = this.generateFpnNumber(last_enviro_id);
+        }
+
+        const barcode = this.generateBarcodeNumber(enviro_post.fpn_number);
+
+        
 
         const barcodeCanvas = document.createElement('canvas');
 
@@ -94,7 +99,7 @@ export class TicketService {
                 <div>
                     <div>Protect</div>
                     <div>${offence?.engLegislation?.legislation || ''}</div>
-                    <h4>Ref No: ${fpn_number}</h4>
+                    <h4>Ref No: ${enviro_post.fpn_number}</h4>
                     <div>Name: <strong>${enviro_post.first_name} ${enviro_post.last_name}</strong></div>
                     <div>DOB: <strong>${enviro_post.date_of_birth}</strong></div>
                     <div>Address: <strong>${enviro_post.address}</strong></div>
@@ -170,7 +175,7 @@ export class TicketService {
         let enviro_que = this.data.getEnviroQue();
         for (let x = 0; x < enviro_que.length; x++) {
             if (enviro_que[x].signature == enviro_post.signature) {
-                this.data.addFpnNumberQue(fpn_number, x);
+                this.data.addFpnNumberQue(enviro_post.fpn_number, x);
             }
         }
 
