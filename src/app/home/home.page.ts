@@ -96,18 +96,21 @@ export class HomePage implements OnInit {
 
     getRecentFPN() {
         this.loading.showLoading();
-        let user_id = this.auth.getUser().id;
-        this.api.getRecentFPNs(user_id).subscribe({
-            next: (response) => {
-                this.recent_fpns = response.data;
-                console.log('Response:', response);
-                this.loading.hideLoading();
-            },
-            error: (error) => {
-                console.error('Error:', error);
-                this.loading.hideLoading();
-            }
-        })
+        let user = this.auth.getUser();
+        if (user) {
+            this.api.getRecentFPNs(user.id).subscribe({
+                next: (response) => {
+                    this.recent_fpns = response.data;
+                    console.log('Response:', response);
+                    this.loading.hideLoading();
+                },
+                error: (error) => {
+                    console.error('Error:', error);
+                    this.loading.hideLoading();
+                }
+            });
+        }
+        
     }
 
     getFpnImageUrl(fpn_number: string) {

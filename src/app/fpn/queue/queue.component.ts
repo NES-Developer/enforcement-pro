@@ -11,6 +11,11 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { LoadingService } from '../../services/loading.service';
 import { AuthService } from '../../services/enforcementpro/auth.service';
 import { TicketService } from 'src/app/Service/ticket.service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { toPng } from 'html-to-image';
+
+// import * as htmlToImage from 'html-to-image';
+
 
 @Component({
   selector: 'app-queue',
@@ -21,9 +26,13 @@ export class QueueComponent  implements OnInit {
 
     currentStep: number = 1;
     enviro_que: EnviroPost[] = [];
+    enviro_que_addition: any[] = [];
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
     app_log: AppLog;
     isSubmitting: boolean = false;
+
+    // html_bool: boolean = fals;
+    // html_string: SafeHtml = "";
 
     constructor(
         private api: ApiService,
@@ -33,13 +42,22 @@ export class QueueComponent  implements OnInit {
         private route2: ActivatedRoute,
         private loading:LoadingService,
         private auth: AuthService,
-        private ticket: TicketService
+        private ticket: TicketService,
+
+        private sanitizer: DomSanitizer
     ) {
+
         this.app_log = new AppLog();
 
         this.route2.queryParams.subscribe(params => {
             this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
         });
+
+       
+
+        // const rawHtml = ``;
+        // this.html_string = this.sanitizer.bypassSecurityTrustHtml(rawHtml);
+        // console.log(this.html_string)
     }
 
     ngOnInit(): void {
@@ -48,6 +66,16 @@ export class QueueComponent  implements OnInit {
 
     loadData() {
         this.enviro_que =  this.data.getEnviroQue();
+        this.enviro_que_addition = this.enviro_que;
+        for (let x=0; x<this.enviro_que.length; x++) {
+            const rawHtml = `` // Assuming the raw HTML exists in ``
+            this.enviro_que_addition[x] = {
+                ...this.enviro_que_addition[x], // Retain existing properties
+                html_bool: false, // Add html_bool
+                html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
+            };
+        }
+
         this.ping();
         setInterval(() => {
             this.ping();
@@ -115,10 +143,11 @@ export class QueueComponent  implements OnInit {
         });
     }
 
-    assignOfficerId(enviro_post: EnviroPost) {
-        let user = this.auth.getUser();
-        enviro_post.officer_id = user.id;
-    }
+
+    // assignOfficerId(enviro_post: EnviroPost) {
+    //     let user = this.auth.getUser();
+    //     enviro_post.officer_id = user.id;
+    // }
 
     // Helper function to convert blob to base64
     convertBlobToBase64(blob: Blob) {
@@ -164,15 +193,36 @@ export class QueueComponent  implements OnInit {
         await alert.present();
     }
 
-    copyTicketClipboard(enviro_post: EnviroPost) {
+    previewTicket(enviro_post: EnviroPost) {
         let ticket = this.ticket.generateWelcomeTicket(enviro_post);
-        Clipboard.write({
-            string: ticket.toString()
-        });
-        console.log(ticket);
-        this.presentAlert('Success', 'N')
-        // return ticket;
+
+        for (let x = 0; x<this.enviro_que_addition.length; x++) {
+            if (this.enviro_que_addition[x] == enviro_post) {
+                this.enviro_que_addition[x].html_bool = true;
+                this.enviro_que_addition[x].html_string = ticket;
+            }
+        }
     }
+
+    copyTicketToClipboard(enviro_post: any) {
+        const element = document.getElementById('html_ticket');
+        if (element) {
+          toPng(element)
+            .then((dataUrl) => {
+                // console.log(dataUrl);
+                Clipboard.write({
+                    string: dataUrl
+                });
+                this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
+            //   enviro_post.html_string = dataUrl; // Set base64 image as the new html_string
+            })
+            .catch((error) => {
+                console.error('Error generating image:', error);
+            });
+        } else {
+            console.error('Element with id "html_ticket" not found.');
+        }
+      }
 
     editFPN(enviro_post: EnviroPost) {
         this.data.setEnviroPost(enviro_post);

@@ -4,6 +4,7 @@ import { tap } from 'rxjs/operators';
 import { AlertController } from '@ionic/angular';
 
 import { Injectable } from '@angular/core';
+import { User } from '../../models/user';
 
 import { Router } from '@angular/router'; // Import Router
 import { DataService } from './data.service';
@@ -14,7 +15,8 @@ import { LoadingService } from '../loading.service';
 })
 export class AuthService {
     private token: string = '';
-    private user: any = null;
+    
+    private user: User;
 
     private baseUrl: string = 'https://app.enforcementpro.co.uk/api/app';
 
@@ -25,7 +27,9 @@ export class AuthService {
         private loading:LoadingService,
         // private alertController: AlertController
 
-    ) {}
+    ) {
+        this.user = new User();
+    }
 
     login(id: string, pin: string): Observable<any> {
         const url = `${this.baseUrl}/login`;
@@ -39,26 +43,25 @@ export class AuthService {
       }
     
     handleLoginResponse(response: any): void {
-        this.token = response.access_token;
-        this.user = response.user;
-
-        this.storeToken();
-        this.storeUser();
+        this.storeToken(response.access_token);
+        this.storeUser(response.user);
 
         this.router.navigateByUrl('').then(() => {
             window.location.reload();
         });
     }
 
-    storeToken() {
+    storeToken(token: string) {
+        this.token = token;
         localStorage.setItem('token', this.token);
     }
 
-    storeUser() {
+    storeUser(user: User) {
+        this.user = user;
         localStorage.setItem('user', JSON.stringify(this.user));
     }
 
-    getToken() {
+    getToken(): String {
         if (this.token === '') {
             let token = localStorage.getItem('token');
             if(token === null) {
@@ -69,13 +72,20 @@ export class AuthService {
         return this.token;
     }
 
-    getUser() {
+    getUser(): User | null {
         if (!this.user) {
             let userJson = localStorage.getItem('user');
-            if (!userJson) {
+            if (userJson) {
+                this.user = JSON.parse(userJson); // Convert JSON string to object
+            }
+            else {
+                if (this.getToken() === '')
+                {
+                    this.logout();
+                } 
+                
                 return null;
             }
-            this.user = JSON.parse(userJson); // Convert JSON string to object
         }
         return this.user;
     }
@@ -89,7 +99,7 @@ export class AuthService {
 
     logout() {
         this.token = '';
-        this.user = null;
+        this.user = new User();
 
         localStorage.removeItem('token');
         localStorage.removeItem('user');

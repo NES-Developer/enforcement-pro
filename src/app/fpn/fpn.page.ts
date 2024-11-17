@@ -321,7 +321,10 @@ export class FPNPage implements OnInit {
 
     assignOfficerId() {
         let user = this.auth.getUser();
-        this.enviro_post.officer_id = user.id;
+        if (user)
+        {
+            this.enviro_post.officer_id = user.id;
+        }
     }
 
     submitForm() {

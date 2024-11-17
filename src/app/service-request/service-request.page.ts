@@ -18,6 +18,7 @@ import { Login } from '../models/login';
 import { ZoneDetection } from '../models/zone-detection';
 //import * as L from 'leaflet';
 import { ConstantsService } from '../services/constants.service';
+import { User } from '../models/user';
 
 
 @Component({
@@ -128,9 +129,10 @@ export class ServiceRequestPage implements OnInit {
         this.app_log.device_id = this.device_id;
         this.app_log.site_id = this.site_id.toString();
         this.app_log.zone_id = this.zone_id;
-        let user = this.auth.getUser();
-        this.app_log.user_id = user.id;
-        console.log(2, this.app_log.user_id);
+        let user: User | null = this.auth.getUser();
+        if (user) {
+            this.app_log.user_id = user.id.toString();
+        }
 
         this.getCurrentPosition()
         .subscribe((position: any) => {
@@ -236,7 +238,10 @@ export class ServiceRequestPage implements OnInit {
             this.device_id = this.app_log.device_id;
             this.zone_id = this.app_log.zone_id;
         }
-        this.app_log.user_id = this.auth.getUser().id;
+        let user = this.auth.getUser();
+        if (user) {
+            this.app_log.user_id = user.id.toString();
+        }
 
         this.getCurrentPosition()
             .subscribe((position: any) => {

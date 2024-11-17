@@ -10,6 +10,7 @@ import QRCode from 'qrcode'
 import { EnviroPost } from '../models/enviro';
 import { DataService } from '../services/enforcementpro/data.service';
 import { Site } from '../models/site';
+import { User } from '../models/user';
 import { SiteOffence } from '../models/site-offence';
 import { AuthService } from '../services/enforcementpro/auth.service';
 import htmlToImage from 'html-to-image';
@@ -52,7 +53,7 @@ export class TicketService {
             height: 50,               // Bar height in pixels
             margin: 0,                // No margin
         });
-        
+
         const barcodeBase64 = barcodeCanvas.toDataURL('image/png'); // Get Base64 representation          
 
         let site: Site = this.data.getSelectedSite();
@@ -72,74 +73,119 @@ export class TicketService {
         // Extract Base64 Data from the Canvas
         const qrCodeBase64 = qrCodeCanvas.toDataURL('image/png');
 
-
         let url_suffix = this.data.getUrl();
 
         let url: string = url_suffix + '/' + site.logo;
 
+
+        console.log(user);
+
         // HTML Template Generation
         const ticketHTML = `
             <div style="text-align: center;">
-            <p>
-                <img style="width:100%" src="${url}" alt="Site"/>
-            </p>
-            <p>${site.name}</p>
-            <div>
-                <div>Fixed Penalty Notice</div>
-                <div>Penalty Amount <strong>&pound;${selected_site_offence?.charge_amount_reduced}</strong></div>
-            </div>
-            <div>
-                <div>Protect</div>
-                <div>${offence?.engLegislation?.legislation || ''}</div>
-                <h4>Ref No: ${fpn_number}</h4>
-                <div>Name: <strong>${enviro_post.first_name} ${enviro_post.last_name}</strong></div>
-                <div>DOB: <strong>${enviro_post.date_of_birth}</strong></div>
-                <div>Address: <strong>${enviro_post.address}</strong></div>
-                <div>I, officer ${user.operator_number}, as an authorized officer of ${site.name}, have reason to believe that on ${enviro_post.offence_datetime}, you committed an offence as detailed below within the area of ${site.name}.</div>
-                <div>Location: <strong>${enviro_post.offence_location}</strong></div>
-                <div>Offence: <strong>${offence?.name}</strong></div>
-                <div>Particulars of the offence: ${offence?.description}</div>
-                <div>This notice offers you the opportunity to discharge any liability to conviction for the above offence by payment of this Fixed Penalty Notice of <strong>&pound;${selected_site_offence?.charge_amount_reduced}</strong> within <strong>${selected_site_offence?.charge_days_reduced} days</strong> of the date on the notice.</div>
-                <div>If you fail to make the payment within the <strong>${selected_site_offence?.charge_days_reduced} days</strong>, you may be summoned to court for the offence described above.</div>
-            </div>
-            <div>
-                <h5>How To Pay</h5>
-                <p>By Internet (Debit Card): Visit <a href="https://paymyfpn.co.uk/fpn/${site.slug}" target="_blank">www.paymyfpn.co.uk/fpn/${site.slug}</a></p>
-                <p>Scan the QR code below:</p>
-                <div style="display: flex; justify-content: center; align-items: center; with:50%;">
-                    <img src="${qrCodeBase64}" alt="QR Code" style="margin: auto;" />
+                <p>
+                    <img style="width:100%" src="${url}" alt="Site"/>
+                </p>
+                <p>${site.name}</p>
+                <div>
+                    <div>Fixed Penalty Notice</div>
+                    <div>Penalty Amount <strong>&pound;${selected_site_offence?.charge_amount_reduced}</strong></div>
                 </div>
-                <p>By Telephone: Call 0330 314 9705</p>
-                <p>By Cash: Pay at any Post Office Outlet with the barcode below:</p>
-                <div style="display: flex; justify-content: center; align-items: center; with:70%;">
-                    <img src="${barcodeBase64}" alt="Barcode" />
+                <div>
+                    <div>Protect</div>
+                    <div>${offence?.engLegislation?.legislation || ''}</div>
+                    <h4>Ref No: ${fpn_number}</h4>
+                    <div>Name: <strong>${enviro_post.first_name} ${enviro_post.last_name}</strong></div>
+                    <div>DOB: <strong>${enviro_post.date_of_birth}</strong></div>
+                    <div>Address: <strong>${enviro_post.address}</strong></div>
+                    <div>I, officer ${user?.name}, as an authorized officer of ${site.name}, have reason to believe that on ${enviro_post.offence_datetime}, you committed an offence as detailed below within the area of ${site.name}.</div>
+                    <div>Location: <strong>${enviro_post.offence_location}</strong></div>
+                    <div>Offence: <strong>${offence?.name}</strong></div>
+                    <div>Particulars of the offence: ${offence?.description}</div>
+                    <div>This notice offers you the opportunity to discharge any liability to conviction for the above offence by payment of this Fixed Penalty Notice of <strong>&pound;${selected_site_offence?.charge_amount_reduced}</strong> within <strong>${selected_site_offence?.charge_days_reduced} days</strong> of the date on the notice.</div>
+                    <div>If you fail to make the payment within the <strong>${selected_site_offence?.charge_days_reduced} days</strong>, you may be summoned to court for the offence described above.</div>
+                </div>
+                <div>
+                    <h5>How To Pay</h5>
+                    <p>By Internet (Debit Card): Visit <a href="https://paymyfpn.co.uk/fpn/${site.slug}" target="_blank">www.paymyfpn.co.uk/fpn/${site.slug}</a></p>
+                    <p>Scan the QR code below:</p>
+                    <div style="display: flex; justify-content: center; align-items: center; with:50%;">
+                        <img src="${qrCodeBase64}" alt="QR Code" style="margin: auto;" />
+                    </div>
+                    <p>By Telephone: Call 0330 314 9705</p>
+                    <p>By Cash: Pay at any Post Office Outlet with the barcode below:</p>
+                    <div style="display: flex; justify-content: center; align-items: center; with:70%;">
+                        <img src="${barcodeBase64}" alt="Barcode" />
+                    </div>
+                </div>
+
+                <div>
+                    You have the right not to pay a Fixed Penalty Notice and defend (appeal) against your prosecution in a Magistrates Court.
+                </div>
+                
+                
+                <div>
+                    All representations relating to the issue of this Fixed Penalty Notice must be submitted in writing either by post to Environmental Enforcement National Enforcement Solutions, PO Box 250 DEESIDE CH5 9FL
+                </div>
+            
+            
+                <div>
+                <a href="https://paymyfpn.co.uk/FPNRep/${site.slug}/">https://paymyfpn.co.uk/FPNRep</a>
+                </div>
+                
+                <div><a href="https://paymyfpn.co.uk/FPNRep/${site.slug}">${site.slug}</a></div>
+                
+                <div>&nbsp;</div>
+                
+                <div>
+                    Please note that we are required to process your personal data in order to verify your identity and enforce this FPN       
+                    <br/>
+                    Please see our full privacy notice at 
+                        <a href="https://nationalenforcementsolutions.co.uk/privacy-policy/"  rel="noopener">www.nationalenforcementsolut</a>
+                </div>
+                            
+                <div>
+                    <a href="https://nationalenforcementsolutions.co.uk/privacy-policy/"  rel="noopener">ions.co.uk/privacy-policy</a> 
+                    for information on how we use your data
+                </div>
+
+                <div>
+                    <img src="${enviro_post.signature}" style="width:60%;"
+                </div>
+
+
+                <div style="margin-top: 10px;">
+                    <div>
+                        <div style="text-align: right;">Officer Sign.</div>
+                        <iv style="text-align: right;">${new Date().toLocaleDateString()}</div>
+                    </div>
                 </div>
             </div>
-            <div style="margin-top: 10px;">
-                <table style="width: 100%; border-top: 1px solid black; padding-top: 5px;">
-                <tr>
-                    <td>Officer Sign.</td>
-                    <td style="text-align: right;">${new Date().toLocaleDateString()}</td>
-                </tr>
-                </table>
-            </div>
-            </div>
+
         `;
 
         // Parse Ticket Template
         const parsedHTML = this.parseTicketTemplate(ticketHTML);
 
         // Convert Parsed HTML to Image Blob
-        const container = document.createElement('div');
+        // const container = document.createElement('div');
         // container.innerHTML = parsedHTML;
 
-        container.innerHTML = parsedHTML;
-        const blob = new Blob([parsedHTML], { type: 'image/png' });
-        const base64Image: any = this.convertBlobToBase64(blob);
+        // container.innerHTML = parsedHTML;
 
-        console.log(blob,parsedHTML);
+        // const dataUrl = toPng(container, {
+        //     backgroundColor: 'white',
+            // pixelRatio: 4,
+            // width: 595,
+            // height: 842,
+        // });
 
-        return base64Image as string;
+        // const blob = new Blob([parsedHTML], { type: 'image/png' });
+        // const base64Image: any = this.convertBlobToBase64(blob);
+
+        // console.log(44,container,parsedHTML,dataUrl);
+
+        return parsedHTML;
 
     }
 
@@ -160,19 +206,18 @@ export class TicketService {
         });
     }
       
-
     // Generate Luhn Digit Function
     private generateLuhnDigit(iin: string): number {
         let sum = 0;
         let alternate = false;
         for (let i = iin.length - 1; i >= 0; i--) {
-        let digit = parseInt(iin.charAt(i), 10);
-        if (alternate) {
-            digit *= 2;
-            if (digit > 9) digit -= 9;
-        }
-        sum += digit;
-        alternate = !alternate;
+            let digit = parseInt(iin.charAt(i), 10);
+            if (alternate) {
+                digit *= 2;
+                if (digit > 9) digit -= 9;
+            }
+            sum += digit;
+            alternate = !alternate;
         }
         return (10 - (sum % 10)) % 10;
     }

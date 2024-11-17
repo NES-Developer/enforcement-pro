@@ -29,18 +29,44 @@
 
     <ion-list [inset]="true">
 
-        <ion-item [button]="true" *ngFor="let enviro_post of enviro_que">
-            <ion-icon color="tertiary" slot="start" name="refresh-circle" size="large" (click)="submitFPN(enviro_post)"></ion-icon>
-            <ion-label>Offender Name: {{ enviro_post.first_name }} {{ enviro_post.last_name }}</ion-label>
-            <!-- <ion-label>Witness Name: {{ enviro_post.witness_name }}</ion-label> -->
-            <ion-icon color="tertiary" slot="start" name="create" size="large" (click)="editFPN(enviro_post)"></ion-icon>
-            <ion-button class="bg-primary" (click)="copyTicketClipboard(enviro_post)">
-                Print Offline
-            </ion-button>
-            <ion-note slot="end">
-                <img [src]="enviro_post.offence_images[1]" style="height: 80px; border-radius: 5px;" />
-            </ion-note>
-        </ion-item>
+        <div *ngFor="let enviro_post of enviro_que_addition">
+
+            <ion-item [button]="true">
+                <ion-icon color="success" slot="start" name="refresh-circle" size="large" (click)="submitFPN(enviro_post)"></ion-icon>
+                <ion-label>Offender Name: {{ enviro_post.first_name }} {{ enviro_post.last_name }}</ion-label>
+                <!-- <ion-label>Witness Name: {{ enviro_post.witness_name }}</ion-label> -->
+                <ion-icon color="danger" slot="start" name="create" size="large" (click)="editFPN(enviro_post)"></ion-icon>
+                
+    
+                <!-- <div id="domEl" ref={domEl} dangerouslySetInnerHTML={{ __html: data }} /> -->
+    
+                <ion-note slot="end">
+                    <ion-button class="bg-primary" (click)="previewTicket(enviro_post)">
+                        Ticket
+                    </ion-button>
+                    <!-- <img [src]="enviro_post.offence_images[1]" style="height: 80px; border-radius: 5px;" /> -->
+                </ion-note>
+            </ion-item>
+
+
+            <div *ngIf="enviro_post.html_bool">
+
+                <ion-item>
+                    <ion-button (click)="enviro_post.html_bool = false">x</ion-button>
+                    <ion-button (click)="copyTicketToClipboard(enviro_post)">Copy Ticket</ion-button>
+                </ion-item>
+
+                <ion-item>
+                    <div id="html_ticket" [innerHTML]="enviro_post.html_string">
+                    </div>
+                </ion-item>
+                
+            </div>
+
+            <br/>
+
+        </div>
+        
     </ion-list>
 
 </ion-content>
