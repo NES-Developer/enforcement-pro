@@ -41,24 +41,30 @@
                 <!-- <div id="domEl" ref={domEl} dangerouslySetInnerHTML={{ __html: data }} /> -->
     
                 <ion-note slot="end">
-                    <ion-button class="bg-primary" (click)="previewTicket(enviro_post)">
-                        Ticket
-                    </ion-button>
-                    <!-- <img [src]="enviro_post.offence_images[1]" style="height: 80px; border-radius: 5px;" /> -->
+                   
                 </ion-note>
             </ion-item>
 
 
-            <div *ngIf="enviro_post.html_bool">
+            <div >
 
                 <ion-item>
-                    <ion-button (click)="enviro_post.html_bool = false">x</ion-button>
-                    <ion-button (click)="copyTicketToClipboard(enviro_post)">Copy Ticket</ion-button>
+                    <ion-button *ngIf="!enviro_post.html_bool" color="sucess" (click)="generateTicket(enviro_post)">
+                        Generate Ticket
+                    </ion-button>
+                    <ion-button *ngIf="enviro_post.html_bool" color="danger" (click)="enviro_post.html_bool = false">
+                        x
+                    </ion-button>
+                    <ion-button *ngIf="enviro_post.html_bool" color="black" (click)="copyTicketToClipboard(enviro_post)">
+                        Print
+                    </ion-button>
                 </ion-item>
 
                 <ion-item>
-                    <div id="html_ticket" [innerHTML]="enviro_post.html_string">
-                    </div>
+                    <div *ngIf="enviro_post.html_bool" id="html_ticket" [innerHTML]="enviro_post.html_string"></div>
+
+                    <!-- <div id="html_ticket" [innerHTML]="enviro_post.html_string"> -->
+                    <!-- </div> -->
                 </ion-item>
                 
             </div>

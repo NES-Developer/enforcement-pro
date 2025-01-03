@@ -6,6 +6,7 @@ import { DataService } from '../../services/enforcementpro/data.service';
 import { IDShown } from '../../models/id-shown';
 import { EnviroPost } from '../../models/enviro';
 import { UpperCaseWords } from 'src/app/helpers/utils'
+import { FPNPage } from '../fpn.page';
 
 @Component({
   selector: 'app-step3',
@@ -22,8 +23,14 @@ export class Step3Component  implements OnInit {
 
     constructor(
         private api: ApiService,
-        private data:DataService
-    ) {}
+        private data: DataService,
+        private fpnPage: FPNPage
+    ) {
+        if (!this.data.checkFPNData()){
+            this.fpnPage.getFPNData();
+        }
+        this.loadData();
+    }
 
     ngOnInit() {
         this.loadData();

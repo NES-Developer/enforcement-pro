@@ -31,14 +31,14 @@ export class Step1Component  implements OnInit {
         private data:DataService,
         private fpnPage: FPNPage,
     ) {
-        
-    }
-
-    ngOnInit(): void {
         if (!this.data.checkFPNData()){
             this.fpnPage.getFPNData();
         }
         this.loadData();
+    }
+
+    ngOnInit(): void {
+        
     }
 
     loadData() {
@@ -58,6 +58,8 @@ export class Step1Component  implements OnInit {
         }    
 
         this.getOffenceById(this.enviro_post.offence_id);
+        console.log(0);
+
     }
 
     filterOffences() {

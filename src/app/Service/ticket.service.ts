@@ -45,9 +45,12 @@ export class TicketService {
             enviro_post.fpn_number = this.generateFpnNumber(last_enviro_id);
         }
 
-        const barcode = this.generateBarcodeNumber(enviro_post.fpn_number);
 
-        
+        let barcode = '';
+        if (enviro_post.barcode == '') {
+            enviro_post.barcode = this.generateBarcodeNumber(enviro_post.fpn_number);
+        }
+        barcode = enviro_post.barcode
 
         const barcodeCanvas = document.createElement('canvas');
 
@@ -87,7 +90,7 @@ export class TicketService {
 
         // HTML Template Generation
         const ticketHTML = `
-            <div style="text-align: center;">
+            <div class="text-center">
                 <p>
                     <img style="width:100%" src="${url}" alt="Site"/>
                 </p>
@@ -96,7 +99,7 @@ export class TicketService {
                     <div>Fixed Penalty Notice</div>
                     <div>Penalty Amount <strong>&pound;${selected_site_offence?.charge_amount_reduced}</strong></div>
                 </div>
-                <div>
+                <div class="text-center">
                     <div>Protect</div>
                     <div>${offence?.engLegislation?.legislation || ''}</div>
                     <h4>Ref No: ${enviro_post.fpn_number}</h4>
@@ -124,32 +127,32 @@ export class TicketService {
                     </div>
                 </div>
 
-                <div>
+                <div class="mt-2">
                     You have the right not to pay a Fixed Penalty Notice and defend (appeal) against your prosecution in a Magistrates Court.
                 </div>
                 
                 
-                <div>
+                <div style="text-align: center;">
                     All representations relating to the issue of this Fixed Penalty Notice must be submitted in writing either by post to Environmental Enforcement National Enforcement Solutions, PO Box 250 DEESIDE CH5 9FL
                 </div>
             
             
-                <div>
+                <div style="text-align: center;">
                 <a href="https://paymyfpn.co.uk/FPNRep/${site.slug}/">https://paymyfpn.co.uk/FPNRep</a>
                 </div>
                 
-                <div><a href="https://paymyfpn.co.uk/FPNRep/${site.slug}">${site.slug}</a></div>
+                <div style="text-align: center;"><a href="https://paymyfpn.co.uk/FPNRep/${site.slug}">${site.slug}</a></div>
                 
                 <div>&nbsp;</div>
                 
-                <div>
+                <div style="text-align: center;">
                     Please note that we are required to process your personal data in order to verify your identity and enforce this FPN       
                     <br/>
                     Please see our full privacy notice at 
                         <a href="https://nationalenforcementsolutions.co.uk/privacy-policy/"  rel="noopener">www.nationalenforcementsolut</a>
                 </div>
                             
-                <div>
+                <div style="text-align: center;">
                     <a href="https://nationalenforcementsolutions.co.uk/privacy-policy/"  rel="noopener">ions.co.uk/privacy-policy</a> 
                     for information on how we use your data
                 </div>
@@ -175,12 +178,10 @@ export class TicketService {
         let enviro_que = this.data.getEnviroQue();
         for (let x = 0; x < enviro_que.length; x++) {
             if (enviro_que[x].signature == enviro_post.signature) {
-                this.data.addFpnNumberQue(enviro_post.fpn_number, x);
+                this.data.addFpnNumberAndBarcodeQue(enviro_post.fpn_number, enviro_post.barcode, x);
             }
         }
-
         return parsedHTML;
-
     }
 
     // Generate Barcode Number Function

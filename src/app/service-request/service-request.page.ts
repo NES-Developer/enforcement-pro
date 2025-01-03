@@ -107,6 +107,7 @@ export class ServiceRequestPage implements OnInit {
 
         this.auth.login(login.id, login.pin).subscribe(
             (response) => {
+                console.log(1,response)
                 if(response.error_code) {
                     let message: string = response.message;
                     this.presentAlert("Login Attempt Failed", "Please Logout and Login again.")

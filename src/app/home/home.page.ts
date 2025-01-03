@@ -12,6 +12,12 @@ import { isEmpty } from 'rxjs';
 
 import { AppLauncher } from '@capacitor/app-launcher';
 import { LoadingService } from '../services/loading.service';
+import { User } from '../models/user';
+
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
+
+
 
 @Component({
   selector: 'app-home',
@@ -26,7 +32,7 @@ export class HomePage implements OnInit {
 
     recent_fpns: any [] = [];
 
-    user: any = null;
+    user: User;
     selected_site: any; // Variable to hold selected site
 
     sites: any[] = [];
@@ -41,16 +47,33 @@ export class HomePage implements OnInit {
         private alertController: AlertController,
         private loading:LoadingService,
     ) {
-        this.app_log = new AppLog()
+        let user = this.auth.getUser();
+        console.log(11,user)
+
+        if (user) 
+        {
+            this.user = user;
+        } else {
+            this.user = new User();
+        }
+        console.log(this.user)
+        this.app_log = new AppLog();
+
+
     }
 
     ngOnInit(): void {
+        let user = this.auth.getUser();
+        if (user) 
+        {
+            this.user = user;
+        }
         this.init();
     }
 
     init() {
         this.auth.checkLoggedIn();
-        this.user = this.auth.getUser();
+        // console.log(this.user);
 
         if (this.data.checkSelectedSite() === false) {
             this.navigate('site');
@@ -66,6 +89,7 @@ export class HomePage implements OnInit {
 
     loadData() {
         this.app_log = this.data.getAppLog();
+        // this.user = this.data.getuser
 
         if(this.data.checkAppLog()) {
             this.ping();
@@ -180,25 +204,52 @@ export class HomePage implements OnInit {
         this.presentAlert('Successful', 'Copied FPN Number to Clipboard')
     }
 
+    // async openOtherApp() {
+    //     try {
+            
+    //       const canOpen = await AppLauncher.canOpenUrl({
+    //         url: 'com.enforcementpro.printer'
+    //       });
+    
+    //       if (canOpen.value) {
+    //         await AppLauncher.openUrl({
+    //           url: 'com.enforcementpro.printer'
+    //         });
+    //       } else {
+    //         console.log('Cannot open app');
+    //         this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+    //       }
+    //     } catch (error) {
+    //       console.error('Error launching app:', error);
+    //       this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+    //     }
+    // }
+
+
     async openOtherApp() {
         try {
-          const canOpen = await AppLauncher.canOpenUrl({
-            url: 'com.example.enforcementproprinter'
-          });
-    
-          if (canOpen.value) {
-            await AppLauncher.openUrl({
-              url: 'com.example.enforcementproprinter'
+            // Ensure only the package name is used
+            const canOpen = await AppLauncher.canOpenUrl({
+                url: 'com.enforcementpro.printer'
             });
-          } else {
-            console.log('Cannot open app');
-            this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-          }
+    
+            if (canOpen.value) {
+                await AppLauncher.openUrl({
+                    url: 'com.enforcementpro.printer://action?message=HelloPrinterApp'
+                });
+            } else {
+                console.log('Cannot open app');
+                this.presentAlert('Error', 'Cannot find printer app. Navigate manually');
+            }
         } catch (error) {
-          console.error('Error launching app:', error);
-          this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+            console.error('Error launching app:', error);
+            this.presentAlert('Error', 'Cannot find printer app. Navigate manually');
         }
     }
+    
+    
+    
+    
 
     async presentAlert(header: string, message: string) {
   

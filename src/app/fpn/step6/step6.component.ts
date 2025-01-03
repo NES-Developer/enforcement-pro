@@ -9,6 +9,7 @@ import { OffenceGroup } from '../../models/offence-group';
 import { Offence } from '../../models/offence';
 import { SiteOffence } from 'src/app/models/site-offence';
 import { UpperCaseWords } from 'src/app/helpers/utils'
+import { FPNPage } from '../fpn.page';
 
 @Component({
   selector: 'app-step6',
@@ -27,10 +28,15 @@ export class Step6Component implements OnInit, AfterViewInit {
 
     constructor(
         private data: DataService,
-    ) { }
+        private fpnPage: FPNPage
+    ) { 
+        if (!this.data.checkFPNData()){
+            this.fpnPage.getFPNData();
+        }
+        this.loadData();
+    }
 
     ngOnInit() {
-        this.loadData();
     }
 
     ngAfterViewInit() {

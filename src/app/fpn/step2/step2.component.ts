@@ -57,17 +57,18 @@ export class Step2Component implements OnInit {
     constructor(
         private api: ApiService,
         private data:DataService,
-        private fpnComponent: FPNPage,
+        private fpnPage: FPNPage,
         private validatePerson:ValidatePersonService,
         private alertController: AlertController
     ) {
+        if (!this.data.checkFPNData()){
+            this.fpnPage.getFPNData();
+        }
+        this.loadData();
     }
 
     ngOnInit(): void {
-        if (!this.data.checkFPNData()){
-            this.fpnComponent.getFPNData();
-        }
-        this.loadData();
+        
     }
     
     filterOffences() {

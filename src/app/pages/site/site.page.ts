@@ -4,7 +4,13 @@ import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
-import { LoadingService } from 'src/app/services/loading.service';
+import { LoadingService } from '../../services/loading.service';
+import { Offence } from '../../models/offence';
+import { OffenceGroup } from '../../models/offence-group';
+import { POIPrefix } from '../../models/poi-prefix';
+import { SiteOffence } from '../../models/site-offence';
+import { Visibility } from '../../models/visibility';
+import { Weather } from '../../models/weather';
 
 @Component({
   selector: 'app-site',
@@ -87,12 +93,86 @@ export class SitePage implements OnInit {
 
     setSite(site_id: any) {
         this.selected_site = this.sites.find((site) => site.id === site_id);
-        // console.log(this.selected_site);
 
         // console.log(site);
         this.data.setSelectedSite(this.selected_site);
-        this.router.navigate(['']);
+        this.getFPNData();
     }
+
+    getFPNData(): void {
+        
+        let site: any = this.data.getSelectedSite();
+        let site_id: number = site.id;
+        this.api.getFPNData(site_id).subscribe({
+            next: (data) => {
+                
+                let salutations = data.data.salutations;
+                this.data.setSalutations(salutations);
+
+                let builds = data.data.builds;
+                console.log(data);
+                this.data.setBuilds(builds);
+
+                let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
+                this.data.setHairColors(hair_colours);
+
+                let zones = data.data.zones;
+                this.data.setZones(zones);
+
+                let offence_how = data.data.offence_how;
+                this.data.setOffenceHow(offence_how);
+
+                let offence_location_suffix = data.data.offence_location_suffix;
+                this.data.setOffenceLocationSuffix(offence_location_suffix);
+
+                let address_verified_by = data.data.address_verified_via;
+                this.data.setAddressVerifiedBy(address_verified_by);
+
+                let ethnicities = data.data.ethnicities;
+                this.data.setEthnicities(ethnicities);
+
+                let id_shown = data.data.id_shown;
+                this.data.setIdShown(id_shown);
+
+                let weather: Weather[] = data.data.weathers;
+                this.data.setWeather(weather);
+
+                let visibility: Visibility[] = data.data.visibility;
+                this.data.setVisibility(visibility);
+
+                let poi_prefix: POIPrefix[] = data.data.poi_prefix;
+                this.data.setPOIPrefix(poi_prefix);
+
+                let site_offence = data.data.site_offences;
+                this.data.setSiteOffences(site_offence);
+
+                let offences = this.extractOffence(site_offence);
+                this.data.setOffences(offences);
+
+                let offenceGroups = this.extractOffenceGroups(offences);
+                this.data.setOffenceGroups(offenceGroups);
+
+                this.router.navigate(['']);
+
+            },
+            error: (error) => {
+                console.error('Error fetching FPN Data:', error);
+            }
+        });
+    }
+
+    extractOffence(site_offences: SiteOffence[]): Offence[] {
+        const groups = site_offences.map(site_offence => site_offence.offences);
+        return Array.from(new Set(groups.map(group => group.id)))
+          .map(id => groups.find(group => group.id === id) as Offence);
+    }
+
+    extractOffenceGroups(offences: Offence[]): OffenceGroup[] {
+        const groups = offences.map(offence => offence.offenceGroup);
+        return Array.from(new Set(groups.map(group => group.id)))
+          .map(id => groups.find(group => group.id === id) as OffenceGroup);
+    }
+
 
     navigate(route: string){
         this.router.navigate([route]);

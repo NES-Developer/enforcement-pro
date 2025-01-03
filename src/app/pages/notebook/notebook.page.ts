@@ -52,6 +52,12 @@ export class NotebookPage implements OnInit {
     {
         this.id = this.route2.snapshot.paramMap.get('id');
 
+        if (!this.data.checkFPNData()){
+            this.getFPNData();
+        }
+
+        this.loadData();
+
         if (this.id == 0)
         {
             let enviro_post = this.data.getEnviroPost();
@@ -97,15 +103,7 @@ export class NotebookPage implements OnInit {
 
      ngOnInit(): void {
 
-        if (!this.data.checkFPNData()){
-            this.getFPNData();
-        }
-
-        if(!this.data.checkNoteBookEntriesData()) {
-            this.getFPNData();
-        }
-
-        this.loadData();
+        
     }
 
     ping() {
@@ -124,7 +122,6 @@ export class NotebookPage implements OnInit {
 
     loadData() {
         this.app_log = this.data.getAppLog();
-
         this.builds = this.data.getBuilds();
         this.hair_colours = this.data.getHairColours();
         this.enviro_post =  this.data.getEnviroPost();

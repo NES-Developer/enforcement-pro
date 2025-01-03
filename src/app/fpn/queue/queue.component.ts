@@ -13,6 +13,9 @@ import { AuthService } from '../../services/enforcementpro/auth.service';
 import { TicketService } from 'src/app/Service/ticket.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas';
+
+import { Http } from '@capacitor/http';
 
 // import * as htmlToImage from 'html-to-image';
 
@@ -20,7 +23,7 @@ import { toPng } from 'html-to-image';
 @Component({
   selector: 'app-queue',
   templateUrl: './queue.component.html',
-  styleUrls: ['./queue.component.scss'],
+  styleUrls: ['./queue.component.scss'], 
 })
 export class QueueComponent  implements OnInit {
 
@@ -151,16 +154,16 @@ export class QueueComponent  implements OnInit {
     // }
 
     // Helper function to convert blob to base64
-    convertBlobToBase64(blob: Blob) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onerror = reject;
-          reader.onload = () => {
-            resolve(reader.result);
-          };
-          reader.readAsDataURL(blob);
-        });
-    }
+    // convertBlobToBase64(blob: Blob) {
+    //     return new Promise((resolve, reject) => {
+    //       const reader = new FileReader();
+    //       reader.onerror = reject;
+    //       reader.onload = () => {
+    //         resolve(reader.result);
+    //       };
+    //       reader.readAsDataURL(blob);
+    //     });
+    // }
 
     ping() {
         this.api.postTrack(this.app_log).subscribe({
@@ -194,36 +197,110 @@ export class QueueComponent  implements OnInit {
         await alert.present();
     }
 
-    previewTicket(enviro_post: EnviroPost) {
+    generateTicket(enviro_post: EnviroPost) {
+        console.log(1);
+
         let ticket = this.ticket.generateWelcomeTicket(enviro_post);
+        console.log(1);
+
+        // let index = 0;
 
         for (let x = 0; x<this.enviro_que_addition.length; x++) {
             if (this.enviro_que_addition[x] == enviro_post) {
                 this.enviro_que_addition[x].html_bool = true;
                 this.enviro_que_addition[x].html_string = ticket;
+                // index = x;
+            }
+            else {
+                this.enviro_que_addition[x].html_bool = false;
             }
         }
     }
 
     copyTicketToClipboard(enviro_post: any) {
+
+        this.isSubmitting = true;
+        this.loading.showLoading();
+
         const element = document.getElementById('html_ticket');
+
         if (element) {
           toPng(element)
             .then((dataUrl) => {
-                // console.log(dataUrl);
+                console.log(dataUrl.toString());
                 Clipboard.write({
-                    string: dataUrl
+                    string: dataUrl.toString()
                 });
-                this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
+
+                // for (let x = 0; x<this.enviro_que_addition.length; x++) { nemo
+                //     this.enviro_que_addition[x].html_bool = false;
+                // }
+
+                this.isSubmitting = false;
+                this.loading.hideLoading();
+                this.saveBase64Image(dataUrl, 'ticket_offline.png');
+                // this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
+
+                // this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
             //   enviro_post.html_string = dataUrl; // Set base64 image as the new html_string
             })
             .catch((error) => {
-                console.error('Error generating image:', error);
+
+                //Backup
+                html2canvas(element).then((canvas) => {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    console.log('Generated Image URL:', dataUrl);
+
+                    Clipboard.write({
+                        string: dataUrl.toString()
+                    });
+
+                    this.isSubmitting = false;
+                    this.loading.hideLoading();
+                    this.saveBase64Image(dataUrl, 'ticket_offline.png');
+
+                    // this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
+                    // Add your clipboard or saving logic here
+                }).catch((error2) => {
+                    this.isSubmitting = false;
+                    this.loading.hideLoading();
+                    console.log(error, error2, error.message, error2.message);
+                    this.presentAlert('Error', '2 Error generating image:' + error2.message);
+                });
+                
+
+                // console.error('Error generating image:', error);
             });
         } else {
-            console.error('Element with id "html_ticket" not found.');
+
+            this.isSubmitting = false;
+            this.loading.hideLoading();
+            this.presentAlert('Error', 'Error element not found');
+
         }
-      }
+    }
+
+    async saveBase64Image(base64Data: string, fileName: string) {
+        try {
+          const savedFile = await Filesystem.writeFile({
+            path: `Download/${fileName}`, // Path and file name
+            data: base64Data, // Base64 string
+            directory: Directory.External, // Save to external storage
+          });
+      
+          console.log('File saved:', savedFile.uri);
+        //   alert('Image saved at: ' + savedFile.uri);
+          this.presentAlert('Success', 'Image saved at: ' + savedFile.uri);
+
+          return savedFile.uri; // Return the file URI if needed
+        } catch (error) {
+          console.error('Error saving file:', error);
+          alert('Failed to save image');
+          this.presentAlert('Error', 'Failed to save: ' + error);
+
+          throw error; // Re-throw error if further handling is required
+        }
+    }
 
     editFPN(enviro_post: EnviroPost) {
         this.data.setEnviroPost(enviro_post);

@@ -44,6 +44,7 @@ export class AuthService {
     
     handleLoginResponse(response: any): void {
         this.storeToken(response.access_token);
+        console.log(11, response.user, this.user);
         this.storeUser(response.user);
 
         this.router.navigateByUrl('').then(() => {
@@ -56,8 +57,15 @@ export class AuthService {
         localStorage.setItem('token', this.token);
     }
 
-    storeUser(user: User) {
-        this.user = user;
+    storeUser(user: any) {
+        this.user = new User();
+        this.user.id = user.id;
+        this.user.name = user.name;
+        this.user.first_name = user.first_name;
+        this.user.last_name = user.last_name;
+        this.user.operator_number = user.operator_number;
+        this.user.role = user.role;
+        // console.log(111, this.user);
         localStorage.setItem('user', JSON.stringify(this.user));
     }
 
@@ -73,7 +81,7 @@ export class AuthService {
     }
 
     getUser(): User | null {
-        if (!this.user) {
+        if (this.user.id == 0) {
             let userJson = localStorage.getItem('user');
             if (userJson) {
                 this.user = JSON.parse(userJson); // Convert JSON string to object

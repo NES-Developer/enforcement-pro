@@ -15,6 +15,8 @@
         </ion-toolbar>
     </ion-header>
 
+   
+
     <ion-item lines="none">
         <ion-grid>
           <ion-row>
@@ -66,7 +68,9 @@
         <ion-input type="text" [(ngModel)]="device_id" (ionChange)="storeAppLog()"></ion-input>
     </ion-item>
     <ion-item>
-        <ion-button expand="block" shape="full" (click)="deviceValidation()">Verify Device</ion-button>
+        <ion-label>
+            <ion-button color="success" expand="block" shape="full" (click)="deviceValidation()">Verify Device</ion-button>
+        </ion-label>
     </ion-item>
 
     <!-- Site Select -->
@@ -86,18 +90,16 @@
         <ion-label>Zones</ion-label>
     </ion-item>
     <ion-item>
-        <ion-button expand="block" shape="full" (click)="ZoneDetection()">Find your Zone</ion-button>
-    </ion-item>
-    <ion-item>
         <ion-select multiple="false" [(ngModel)]="zone_id" (ionChange)="storeAppLog()">
             <ion-select-option *ngFor="let zone of zones" [value]="zone.id"> 
                 {{ zone.name }}     
             </ion-select-option>
         </ion-select>
     </ion-item>
-
     <ion-item>
-        <ion-label>Zones</ion-label>
+        <ion-label>
+            <ion-button expand="block" shape="full" (click)="ZoneDetection()">Find your Zone</ion-button>
+        </ion-label>
     </ion-item>
 
     <ion-item>
@@ -118,15 +120,23 @@
         <ion-input [disabled]="true" type="text" [(ngModel)]="position_lat" (ionChange)="storeAppLog()"></ion-input>
     </ion-item>
 
-
-
     <ion-item>
-        <ion-button expand="block" shape="full" (click)="autoLogin()">Auto Login</ion-button>
+        <ion-label>
+            <ion-button color="light" expand="block" shape="full" (click)="autoLogin()">
+                <ion-icon name="key-outline"></ion-icon>
+                Auto Login
+            </ion-button>
+        </ion-label>
     </ion-item>
 
     <ion-item>
-        <ion-button expand="block" shape="full" (click)="ping()">Ping</ion-button>
+        <ion-label>
+            <ion-button expand="block" shape="full" (click)="ping()">Ping</ion-button>
+
+        </ion-label>
     </ion-item>
+
+
 
     <!-- {{ this.currentStep }}
 

@@ -5,6 +5,7 @@ import moment from 'moment';  // Import moment.js for date formatting
 export class EnviroPost {
 
    fpn_number: string = '';
+   barcode: string = '';
 
    salutation: string = '';
    first_name: string = '';

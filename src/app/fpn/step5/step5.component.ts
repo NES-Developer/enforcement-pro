@@ -12,6 +12,7 @@ import { GeocodingService } from '../../services/geocoding.service';
 import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
 import { UpperCaseWords } from 'src/app/helpers/utils'
+import { FPNPage } from '../fpn.page';
 
 
 
@@ -49,20 +50,20 @@ export class Step5Component  implements OnInit, AfterViewInit {
         private geocodingService: GeocodingService,
         private elementRef: ElementRef,
         private http: HttpClient,
-        private alertController: AlertController
+        private alertController: AlertController,
+        private fpnPage: FPNPage
 
     ) {
-        const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
-        this.enviro_post.offence_datetime = defaultDate;
-        this.enviro_post.issue_datetime = defaultDate;
-        console.log(this.enviro_post.offence_datetime, this.enviro_post.issue_datetime);
+        if (!this.data.checkFPNData()){
+            this.fpnPage.getFPNData();
+        }
+        this.loadData();
     }
     
     ngOnInit() {
-        this.loadData();
         setTimeout(() => {
             this.firstInput.setFocus();
-          }, 300); // Add a small delay to ensure the view is fully loaded
+        }, 300); // Add a small delay to ensure the view is fully loaded
     }
 
     ngAfterViewInit(): void {
@@ -71,8 +72,7 @@ export class Step5Component  implements OnInit, AfterViewInit {
 
 
     loadData() {
-        // this.weather = this.data.getWeather();
-        // this.visibility = this.data.getVisibility();
+        
         this.poi_prefix = this.data.getPOIPrefix();
         let enviro_post =  this.data.getEnviroPost();
         if (enviro_post !== null) {
@@ -84,6 +84,11 @@ export class Step5Component  implements OnInit, AfterViewInit {
             this.enviro_post.lat = position.latitude;
             this.enviro_post.lng = position.longitude;
         });
+
+        const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
+        this.enviro_post.offence_datetime = defaultDate;
+        this.enviro_post.issue_datetime = defaultDate;
+        console.log(this.enviro_post.offence_datetime, this.enviro_post.issue_datetime);
     }
 
     onInputChange(){

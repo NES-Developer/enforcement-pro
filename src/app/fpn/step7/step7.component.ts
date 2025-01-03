@@ -9,6 +9,7 @@ import { UpperCaseWords } from 'src/app/helpers/utils'
 import { Ethnicity } from 'src/app/models/ethnicity';
 import { Weather } from '../../models/weather';
 import { Visibility } from '../../models/visibility';
+import { FPNPage } from '../fpn.page';
 
 @Component({
   selector: 'app-step7',
@@ -28,14 +29,22 @@ export class Step7Component  implements OnInit {
 
     constructor(
         private data: DataService,
+        private fpnPage: FPNPage
     ) {
+        
+        if (!this.data.checkFPNData()){
+            this.fpnPage.getFPNData();
+        }
+        this.loadData();
+
         this.enviro_post = new EnviroPost();
+        this.enviro_post.notebook_entries = new NotebookEntry();
+
         let enviro_post =  this.data.getEnviroPost();
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
 
-        this.enviro_post.notebook_entries = new NotebookEntry();
      }
 
     ngOnInit() {

@@ -15,6 +15,10 @@ import { AppLog } from '../models/app-log';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingService } from '../services/loading.service';
+// import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+
+
 
 @Component({
   selector: 'app-fpn',
@@ -44,6 +48,10 @@ export class FPNPage implements OnInit {
     ) {
         this.auth.checkLoggedIn();
 
+        if (this.data.checkSelectedSite() === false) {
+            this.navigate('site');
+        } 
+
         if (!this.data.checkFPNData()){
             this.getFPNData();
         }
@@ -72,12 +80,18 @@ export class FPNPage implements OnInit {
         this.app_log = new AppLog();
     }
 
-    route(route: string) {
-        this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
-    }
+
 
     ngOnInit() {
         this.loadData();
+    }
+
+    navigate(route: string){
+        this.router.navigate([route]);
+    }
+
+    route(route: string) {
+        this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
     }
 
     loadData() {
@@ -140,7 +154,6 @@ export class FPNPage implements OnInit {
 
                 let offenceGroups = this.extractOffenceGroups(offences);
                 this.data.setOffenceGroups(offenceGroups);
-
             },
             error: (error) => {
                 console.error('Error fetching SR Data:', error);
@@ -461,14 +474,23 @@ export class FPNPage implements OnInit {
     }
 
     async openOtherApp() {
+
         try {
+            // Emit a custom event to trigger the native activity
+            // if (Capacitor.getPlatform() === 'android') {
+            //     (window as any).Capacitor.Plugins.App.fireNativeEvent({
+            //         action: 'OPEN_NATIVE_ACTIVITY',
+            //     });
+            // } else {
+            //     console.error('This action is only available on Android.');
+            // }
             const canOpen = await AppLauncher.canOpenUrl({
-                url: 'com.example.enforcementproprinter'
+                url: 'com.enforcementpro.printer'
             });
         
             if (canOpen.value) {
                 await AppLauncher.openUrl({
-                url: 'com.example.enforcementproprinter'
+                    url: 'com.enforcementpro.printer'
                 });
             } else {
                 this.presentAlert('Error', 'Cannot find printer app. Navigate manually')

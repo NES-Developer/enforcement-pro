@@ -5,6 +5,7 @@ import { OffenceLocationSuffix } from '../../models/offence-location-suffix';
 import { OffenceHow } from '../../models/offence-how';
 import { EnviroPost } from 'src/app/models/enviro';
 import { UpperCaseWords } from 'src/app/helpers/utils'
+import { FPNPage } from '../fpn.page';
 
 @Component({
   selector: 'app-step4',
@@ -21,23 +22,26 @@ export class Step4Component  implements OnInit {
 
     constructor(
         private api: ApiService,
-        private data: DataService
-    ) {}
-
-    ngOnInit() {
+        private data: DataService,
+        private fpnPage: FPNPage
+    ) {
+        if (!this.data.checkFPNData()){
+            this.fpnPage.getFPNData();
+        }
         this.loadData();
     }
 
+    ngOnInit() {
+
+    }
+
     loadData() {
-        // this.ethnicities = this.data.getEthnicities();
-        // this.address_verified_by = this.data.getAddressVerifiedBy();
         this.offence_location_suffix = this.data.getOffenceLocationSuffix();
         this.offence_how = this.data.getOffenceHow();
         let enviro_post =  this.data.getEnviroPost();
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
-        // this.enviro_post.language = "English";
     }
 
     onInputChange(){

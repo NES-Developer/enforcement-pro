@@ -340,8 +340,9 @@ export class DataService {
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
 
-    addFpnNumberQue(fpn_number: string, index: number): void {
+    addFpnNumberAndBarcodeQue(fpn_number: string, barcode: string, index: number): void {
         this.enviro_que[index].fpn_number = fpn_number;
+        this.enviro_que[index].barcode = barcode;
     }
 
     checkApiAppVersion(): boolean {
@@ -554,6 +555,9 @@ export class DataService {
         this.salutations = [];
         this.builds = [];
         this.hair_colours = [];
+
+        this.zones = [];
+
         // Clear localStorage
         localStorage.removeItem('selected_site')
         localStorage.removeItem('login')
@@ -577,7 +581,7 @@ export class DataService {
         localStorage.removeItem('enviro_post');
         localStorage.removeItem('app_log');
         localStorage.removeItem('enviro_que');
-
+        localStorage.removeItem('zones');
         
     }
 }
