@@ -94,7 +94,8 @@ export class SitePage implements OnInit {
     setSite(site_id: any) {
         this.selected_site = this.sites.find((site) => site.id === site_id);
 
-        // console.log(site);
+
+
         this.data.setSelectedSite(this.selected_site);
         this.getFPNData();
     }
@@ -105,6 +106,8 @@ export class SitePage implements OnInit {
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
+
+                this.data.removeEnviroLookUps();
                 
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);

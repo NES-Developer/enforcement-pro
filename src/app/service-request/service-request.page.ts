@@ -151,7 +151,8 @@ export class ServiceRequestPage implements OnInit {
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
-                console.log(data);
+                this.data.removeEnviroLookUps()
+
 
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);

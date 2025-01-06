@@ -529,6 +529,46 @@ export class DataService {
         return this.site_offences.find(z => z.offence_id === offence_id);
     }
 
+    removeEnviroLookUps(): void {
+
+        this.salutations = []; 
+        this.builds = []; 
+        this.hair_colours = []; 
+        this.zones = []; 
+        this.offence_how = []; 
+        this.offence_location_suffix = []; 
+        this.address_verifed_by = []; 
+        this.ethnicities = []; 
+        this.id_shown = []; 
+        this.weather = []; 
+        this.visibility = []; 
+        this.poi_prefix = []; 
+        this.site_offences = []; 
+        this.offences = []; 
+        this.offence_groups = []; 
+        this.offences = [];
+        this.zones = [];
+
+        localStorage.removeItem('salutations');
+        localStorage.removeItem('builds');
+        localStorage.removeItem('hair_colours');
+        localStorage.removeItem('zones');
+        localStorage.removeItem('offence_how');
+        localStorage.removeItem('offence_location_suffix');
+        localStorage.removeItem('address_verifed_by');
+        localStorage.removeItem('ethnicities');
+        localStorage.removeItem('id_shown');
+        localStorage.removeItem('weather');
+        localStorage.removeItem('visibility');
+        localStorage.removeItem('poi_prefix');
+        localStorage.removeItem('site_offences');
+        localStorage.removeItem('offences');
+        localStorage.removeItem('offence_groups');
+        localStorage.removeItem('offences');
+        localStorage.removeItem('zones');
+
+    }
+
     removeAllData(): void {
         // Clear all private arrays
         this.selected_site = null,

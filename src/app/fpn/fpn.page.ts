@@ -109,6 +109,8 @@ export class FPNPage implements OnInit {
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
                 
+                this.data.removeEnviroLookUps();
+
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
 
@@ -420,7 +422,9 @@ export class FPNPage implements OnInit {
 
     refresh() {
         this.loading.showLoading();
+
         this.getFPNData();
+
         this.loading.hideLoading();
         window.location.reload();
     }

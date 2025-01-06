@@ -324,6 +324,8 @@ export class NotebookPage implements OnInit {
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
+                this.data.removeEnviroLookUps()
+
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
 

@@ -17,8 +17,6 @@ import html2canvas from 'html2canvas';
 
 import { Http } from '@capacitor/http';
 
-// import * as htmlToImage from 'html-to-image';
-
 
 @Component({
   selector: 'app-queue',
@@ -146,24 +144,6 @@ export class QueueComponent  implements OnInit {
             }
         });
     }
-
-
-    // assignOfficerId(enviro_post: EnviroPost) {
-    //     let user = this.auth.getUser();
-    //     enviro_post.officer_id = user.id;
-    // }
-
-    // Helper function to convert blob to base64
-    // convertBlobToBase64(blob: Blob) {
-    //     return new Promise((resolve, reject) => {
-    //       const reader = new FileReader();
-    //       reader.onerror = reject;
-    //       reader.onload = () => {
-    //         resolve(reader.result);
-    //       };
-    //       reader.readAsDataURL(blob);
-    //     });
-    // }
 
     ping() {
         this.api.postTrack(this.app_log).subscribe({
