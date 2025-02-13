@@ -33,10 +33,8 @@ export class Step3Component  implements OnInit {
     }
 
     ngOnInit() {
-        this.loadData();
-    }
 
-    
+    }
 
     loadData() {
         this.address_verified_by = this.data.getAddressVerifiedBy();

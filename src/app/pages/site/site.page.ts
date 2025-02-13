@@ -11,6 +11,7 @@ import { POIPrefix } from '../../models/poi-prefix';
 import { SiteOffence } from '../../models/site-offence';
 import { Visibility } from '../../models/visibility';
 import { Weather } from '../../models/weather';
+import { EnviroPost } from 'src/app/models/enviro';
 
 @Component({
   selector: 'app-site',
@@ -65,6 +66,10 @@ export class SitePage implements OnInit {
         this.loadData();
     }
 
+    refresh() {
+        window.location.reload();
+    }
+
     getSites(): void {
         this.api.getSites().subscribe({
             next: (data) => {
@@ -92,8 +97,11 @@ export class SitePage implements OnInit {
     }
 
     setSite(site_id: any) {
-        this.selected_site = this.sites.find((site) => site.id === site_id);
 
+        let enviro_post = new EnviroPost();
+        this.data.setEnviroPost(enviro_post);
+
+        this.selected_site = this.sites.find((site) => site.id === site_id);
 
 
         this.data.setSelectedSite(this.selected_site);
@@ -101,7 +109,8 @@ export class SitePage implements OnInit {
     }
 
     getFPNData(): void {
-        
+        this.loading.showLoading();
+
         let site: any = this.data.getSelectedSite();
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
@@ -155,11 +164,16 @@ export class SitePage implements OnInit {
                 let offenceGroups = this.extractOffenceGroups(offences);
                 this.data.setOffenceGroups(offenceGroups);
 
+                this.loading.hideLoading();
+
                 this.router.navigate(['']);
 
             },
             error: (error) => {
-                console.error('Error fetching FPN Data:', error);
+                this.loading.hideLoading();
+
+                this.presentAlert('Error', error.message);
+                console.error('Error 1:', error);
             }
         });
     }
@@ -189,9 +203,12 @@ export class SitePage implements OnInit {
 
     async presentAlert(header: string, message: string) {
         let button_title: string = 'Ok';
+        let button_retry: string = '';
         let message_display: string = 'Please Click Okay.';
         if (header == "Error") {
             message_display = message + ". Please attempt to logout and log back in.";
+            button_retry = 'Retry';
+
         }
         const alert = await this.alertController.create({
             header: header,
@@ -199,6 +216,14 @@ export class SitePage implements OnInit {
             buttons: [
                 {
                     text: button_title
+                },
+                {
+                    text: button_retry,
+                    handler: () => {
+                        if (header == "Error") {
+                            this.getFPNData();
+                        }
+                    }
                 }
             ],
         });

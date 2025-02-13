@@ -12,7 +12,7 @@ import { Visibility } from '../models/visibility';
 import { Offence } from '../models/offence';
 import { OffenceGroup } from '../models/offence-group';
 import { SiteOffence } from '../models/site-offence';
-import { Observable, Subscriber } from 'rxjs';
+import { Observable, Subscriber, interval } from 'rxjs';
 import { AlertController } from '@ionic/angular';
 import { Login } from '../models/login';
 import { ZoneDetection } from '../models/zone-detection';
@@ -33,6 +33,7 @@ export class ServiceRequestPage implements OnInit {
 
     map: any;
     selected_site!: Site;
+    selected_zone!: Zone;
 
     zones: Zone[] = [];
     sites: Site[] = [];
@@ -42,7 +43,7 @@ export class ServiceRequestPage implements OnInit {
 
     device_id: string = "0";
     site_id: number = 0;
-    zone_id: string = '0';
+    // zone_id: string = '0';
 
     app_log: AppLog;
     app_version: string = '';
@@ -127,9 +128,14 @@ export class ServiceRequestPage implements OnInit {
     }
 
     storeAppLog() {
+
         this.app_log.device_id = this.device_id;
         this.app_log.site_id = this.site_id.toString();
-        this.app_log.zone_id = this.zone_id;
+
+        this.data.setSelectedZone(this.selected_zone);
+        this.app_log.zone_id = this.selected_zone.id.toString();
+
+
         let user: User | null = this.auth.getUser();
         if (user) {
             this.app_log.user_id = user.id.toString();
@@ -221,6 +227,7 @@ export class ServiceRequestPage implements OnInit {
 
     loadData() {
         this.selected_site = this.data.getSelectedSite();
+        this.selected_zone = this.data.getSelectedZone();
         this.site_id = this.selected_site.id;
 
         this.api_app_version = this.data.getApiAppVersion();
@@ -233,13 +240,11 @@ export class ServiceRequestPage implements OnInit {
         // console.log(this.app_log.device_id );
         if (this.data.checkAppLog()) {
             this.app_log = this.data.getAppLog();
-            this.app_log.device_id = this.device_id;
-            this.app_log.zone_id = this.zone_id;
-            
-        } else {
             this.device_id = this.app_log.device_id;
-            this.zone_id = this.app_log.zone_id;
-        }
+            this.selected_zone.id = parseInt(this.app_log.zone_id);
+            
+        } 
+
         let user = this.auth.getUser();
         if (user) {
             this.app_log.user_id = user.id.toString();
@@ -325,7 +330,9 @@ export class ServiceRequestPage implements OnInit {
                     this.presentAlert('Error', response.msg);
 
                 } else {
-                    this.presentAlert('Success', message);
+                    this.storeAppLog();
+                    
+                    this.presentAlert('Success', response.msg);
                 }
             },
             error: (error) => {
@@ -347,8 +354,15 @@ export class ServiceRequestPage implements OnInit {
                     if (response.success === false){
                         this.presentAlert('Error', response.message);
                     } else {
-                        this.app_log.zone_id = response.id;
+                        this.selected_zone = response;
+                        this.storeAppLog();
+                        this.data.setSelectedZone(this.selected_zone);
+
+
                         this.presentAlert('Success', 'You are at ' + response.name);
+
+                        this.ping();
+
                     }
                 },
                 error: (error) => {

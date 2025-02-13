@@ -33,6 +33,8 @@ export class Step2Component implements OnInit {
     birthMonth: number = 1;
     birthDay: number = 1;
 
+    validation_message: string = 'Please provide information and validate details';
+
     // ethnicities: Ethnicity[] = [];
     offence_how: OffenceHow[] = [];
     offence_location_suffix: OffenceLocationSuffix[] = [];
@@ -140,7 +142,7 @@ export class Step2Component implements OnInit {
         var offenderData = {
             "forename": this.enviro_post.first_name,
             "surname": this.enviro_post.last_name,
-            // "dob": this.formatDateForRequest(this.enviro_post.date_of_birth),
+            "dob": this.formatDateForRequest(this.enviro_post.date_of_birth),
             "address1": this.enviro_post.address,
             "address2": this.enviro_post.town,
             "postcode": this.enviro_post.post_code
@@ -150,33 +152,49 @@ export class Step2Component implements OnInit {
             .subscribe(data => {
                 console.log(data);
 
-                if (data?.Summary.Status) {
-                    this.alertHeader = 'Success';
-                    this.alertSubHeader = 'Information Validated';
-                    this.alertMessage = 'Offenders Information Has Been Validated';
+                if (data?.Summary?.ResultText == "PASS")
+                {
+                    if (data?.Address) {
+                        if (data.Address.DOB !== "0000-00-00" || data.Address.DOB !== null)
+                        {
+                            this.enviro_post.date_of_birth = data.Address.DOB ? this.formatDateForDisplay(data.Address.DOB) : '';
+                            this.populateDateOfBirth();
 
-                    const forename = this.capitalizeSentence(data.Address.Forename || '');
-                    const middleName = this.capitalizeSentence(data.Address.MiddleName || '');
-                    this.enviro_post.first_name = `${forename} ${middleName}`.trim();
-                    this.enviro_post.last_name = this.capitalizeSentence(data.Address.Surname || '');
+                            this.alertHeader = 'Success';
+                            this.alertSubHeader = 'Information Validated';
+                            this.alertMessage = 'Offenders Information Has Been Validated';
 
-                    // if (data.Address.DOB !== "0000-00-00" || data.Address.DOB !== null)
-                    // {
-                    //     this.enviro_post.date_of_birth = data.Address.DOB ? this.formatDateForDisplay(data.Address.DOB) : '';
-                    //     this.populateDateOfBirth();
-                    // }
+                            const forename = this.capitalizeSentence(data.Address.Forename || '');
+                            const middleName = this.capitalizeSentence(data.Address.MiddleName || '');
+                            this.enviro_post.first_name = `${forename} ${middleName}`.trim();
+                            this.enviro_post.last_name = this.capitalizeSentence(data.Address.Surname || '');
 
-
-                    if (data.Address.AddressFound && data.Address.CleanedAddress) {
-                        const address1 = this.capitalizeSentence(data.Address.CleanedAddress.Address1 || '');
-                        const address2 = this.capitalizeSentence(data.Address.CleanedAddress.Address2 || '');
-                        this.enviro_post.address = `${address1}, ${address2}`.trim();
-                        this.enviro_post.post_code = data.Address.CleanedAddress.Postcode || '';
+                            if (data.Address.AddressFound && data.Address.CleanedAddress) {
+                                const address1 = this.capitalizeSentence(data.Address.CleanedAddress.Address1 || '');
+                                const address2 = this.capitalizeSentence(data.Address.CleanedAddress.Address2 || '');
+                                this.validation_message = 'Validated Address: ' + address1 + ', ' + address2 + ', ' + data.Address.CleanedAddress.Postcode;
+                            }
+                             else {
+                                this.alertHeader = 'Invalid';
+                                this.alertSubHeader = 'Information Incorrect';
+                                this.alertMessage = 'Offenders Information Has Been Found False, Please request correct details.';
+                            }
+                        }
+                        else {
+                            this.alertHeader = 'Invalid';
+                            this.alertSubHeader = 'Date of Birth Incorrect';
+                            this.alertMessage = 'Offenders Date of Birth Has Been Found False, Please request correct details. ';
+                        }
+                    } else {
+                        this.alertHeader = 'Invalid';
+                    this.alertSubHeader = 'Address Incorrect';
+                    this.alertMessage = 'Offenders Address Has Been Found False, Please request correct details.';
                     }
+                        
                 } else {
                     this.alertHeader = 'Invalid';
                     this.alertSubHeader = 'Information Incorrect';
-                    this.alertMessage = 'Offenders Information Has Been Found False, Please request correct details.';
+                    this.alertMessage = 'Offenders Information Has Been Found False, Please request correct details. Some information were found Incorrect';
                 }
 
                 this.showAlert();

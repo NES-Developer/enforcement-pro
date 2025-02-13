@@ -17,6 +17,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingService } from '../services/loading.service';
 // import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { User } from '../models/user';
 
 
 
@@ -108,7 +109,7 @@ export class FPNPage implements OnInit {
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
-                
+
                 this.data.removeEnviroLookUps();
 
                 let salutations = data.data.salutations;
@@ -125,6 +126,7 @@ export class FPNPage implements OnInit {
                 this.data.setZones(zones);
 
                 let offence_how = data.data.offence_how;
+                console.log(offence_how);
                 this.data.setOffenceHow(offence_how);
 
                 let offence_location_suffix = data.data.offence_location_suffix;
@@ -158,7 +160,7 @@ export class FPNPage implements OnInit {
                 this.data.setOffenceGroups(offenceGroups);
             },
             error: (error) => {
-                console.error('Error fetching SR Data:', error);
+                this.presentAlert('Error', 'Error refreshing data. Attempt to Auto-Login, if fails please try again later.')
             }
         });
     }
@@ -192,7 +194,7 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 2:
-                console.log(this.enviro_post);
+                //console.log(this.enviro_post);
                 if (this.enviro_post.is_bwc_active == '') {
                     this.presentAlert('Wait!', 'Please provide BWC.');
                     return false;
@@ -227,6 +229,18 @@ export class FPNPage implements OnInit {
                 }
                 if (this.enviro_post.town == '') {
                     this.presentAlert('Wait!', 'Please provide offender Town.');
+                    return false;
+                }
+                break;
+            case 3:
+                if (this.enviro_post.proof_of_address == '')
+                {
+                    this.presentAlert('Wait!', 'Please provide Proof of Address');
+                    return false;
+                }
+                if (this.enviro_post.proof_of_id == '')
+                {
+                    this.presentAlert('Wait!', 'Please provide Proof of ID');
                     return false;
                 }
                 break;
@@ -389,18 +403,18 @@ export class FPNPage implements OnInit {
                     this.isSubmitting = false;
                     this.loading.hideLoading();
 
-                    if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK ")
+                    if (error.status == 401)
                     {
                         this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
                     }
-                    else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 500 OK ")
+                    else if (error.status == 500)
                     {
                         this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
                     } 
-                    else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
-                    {
-                        this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
-                    } 
+                    // else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
+                    // {
+                    //     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
+                    // } 
                     else 
                     {
                         this.presentAlert('Error', error.message);
@@ -423,10 +437,14 @@ export class FPNPage implements OnInit {
     refresh() {
         this.loading.showLoading();
 
+        this.enviro_post = this.data.getEnviroPost();
+
         this.getFPNData();
 
         this.loading.hideLoading();
-        window.location.reload();
+
+
+        // this.ping();
     }
 
     async presentAlert(header: string, message: string) {
@@ -463,8 +481,21 @@ export class FPNPage implements OnInit {
         await alert.present();
     }
 
+    cancel() {
+        this.enviro_post = new EnviroPost();
+        this.data.setEnviroPost(this.enviro_post);
+        this.currentStep = 1;
+        window.location.reload();
+    }
+
     ping() {
         if (this.data.checkAppLog()) {
+
+            let user: User | null = this.auth.getUser();
+            if (user) {
+                this.app_log.user_id = user.id.toString();
+            }            
+            
             this.api.postTrack(this.app_log).subscribe({
                 next: (response) => {
                     console.log('Response:', response);
@@ -480,28 +511,25 @@ export class FPNPage implements OnInit {
     async openOtherApp() {
 
         try {
-            // Emit a custom event to trigger the native activity
-            // if (Capacitor.getPlatform() === 'android') {
-            //     (window as any).Capacitor.Plugins.App.fireNativeEvent({
-            //         action: 'OPEN_NATIVE_ACTIVITY',
-            //     });
-            // } else {
-            //     console.error('This action is only available on Android.');
-            // }
-            const canOpen = await AppLauncher.canOpenUrl({
-                url: 'com.enforcementpro.printer'
-            });
-        
-            if (canOpen.value) {
-                await AppLauncher.openUrl({
-                    url: 'com.enforcementpro.printer'
-                });
-            } else {
-                this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-                console.log('Cannot open app');
+            // Define app URLs
+            const apps = [
+                'com.enforcementpro.printer',
+                'com.ahmedelsayed.sunmiprinterapp'
+            ];
+    
+            for (const app of apps) {
+                const canOpen = await AppLauncher.canOpenUrl({ url: app });
+                if (canOpen.value) {
+                    await AppLauncher.openUrl({ url: app });
+                    return; // Exit function once an app is successfully opened
+                }
             }
+            
+            // If none of the apps are available
+            this.presentAlert('Error', 'Cannot find any printer app. Navigate manually');
+            console.log('Cannot open any printer app');
         } catch (error) {
-            this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+            this.presentAlert('Error', 'Cannot find any printer app. Navigate manually');
             console.error('Error launching app:', error);
         }
     }

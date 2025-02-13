@@ -16,7 +16,8 @@ import { POIPrefix } from '../../models/poi-prefix';
 import { Offence } from '../../models/offence';
 import { OffenceGroup } from '../../models/offence-group';
 import { SiteOffence } from '../../models/site-offence';
-import { Ethnicity } from 'src/app/models/ethnicity';
+import { Ethnicity } from '../../models/ethnicity';
+import { LoadingService } from '../../services/loading.service';
 
 
 @Component({
@@ -48,6 +49,7 @@ export class NotebookPage implements OnInit {
         private alertController: AlertController,
         private route2: ActivatedRoute,
         private router: Router,
+        private loading: LoadingService,
     ) 
     {
         this.id = this.route2.snapshot.paramMap.get('id');
@@ -313,10 +315,10 @@ export class NotebookPage implements OnInit {
     }
 
     refresh() {
-        // this.loading.showLoading();
+        this.loading.showLoading();
         this.getFPNData();
-        // this.loading.hideLoading();
-        window.location.reload();
+        this.loading.hideLoading();
+        // window.location.reload();
     }
 
     getFPNData(): void {

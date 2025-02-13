@@ -9,12 +9,15 @@
                     <ion-icon name="refresh"></ion-icon>
                 </ion-button>
             </ion-col>
-            <ion-col>
+            <!-- <ion-col>
                 <ion-title>
                     FPN
                 </ion-title>
-            </ion-col>
+            </ion-col> -->
             <ion-col>
+                <ion-button (click)="cancel()">
+                    <ion-icon name="close"></ion-icon>
+                </ion-button>
                 <ion-button (click)="route('/fpn/photo')">
                     <ion-icon name="camera"></ion-icon>
                     <ion-badge color="white">

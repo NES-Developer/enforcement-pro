@@ -90,8 +90,8 @@
         <ion-label>Zones</ion-label>
     </ion-item>
     <ion-item>
-        <ion-select multiple="false" [(ngModel)]="zone_id" (ionChange)="storeAppLog()">
-            <ion-select-option *ngFor="let zone of zones" [value]="zone.id"> 
+        <ion-select multiple="false" [(ngModel)]="selected_zone" (ionChange)="storeAppLog()">
+            <ion-select-option *ngFor="let zone of zones" [value]="zone"> 
                 {{ zone.name }}     
             </ion-select-option>
         </ion-select>

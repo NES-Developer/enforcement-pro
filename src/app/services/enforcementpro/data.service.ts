@@ -43,6 +43,7 @@ export class DataService {
     private app_log: AppLog;
     private login: Login;
     private selected_site: any;
+    private selected_zone: any;
 
     private enviro_que: EnviroPost[] = [];
     private site_offences: SiteOffence[] = [];
@@ -105,6 +106,7 @@ export class DataService {
         this.offence_types = this.loadArrayFromLocalStorage('offence_types')
 
         this.selected_site = this.loadObjectFromLocalStorage('selected_site');
+        this.selected_zone = this.loadObjectFromLocalStorage('selected_zone');
         this.login = this.loadObjectFromLocalStorage('login');
         this.service_request = this.loadObjectFromLocalStorage('service_request');
         this.dynamic_feilds_data = this.loadObjectFromLocalStorage('dynamic_feilds_data')
@@ -191,6 +193,11 @@ export class DataService {
     setSelectedSite(selected_site: any): void {
         this.selected_site = selected_site;
         this.saveObjectToLocalStorage('selected_site', this.selected_site);
+    }
+
+    setSelectedZone(selected_zone: any): void {
+        this.selected_zone = selected_zone;
+        this.saveObjectToLocalStorage('selected_zone', this.selected_zone);
     }
 
     setLogin(login: any): void {
@@ -357,6 +364,10 @@ export class DataService {
         return this.selected_site !== null;
     }
 
+    checkSelectedZone(): boolean {
+        return this.selected_zone !== null;
+    }
+
     checkLogin(): boolean {
         return this.login !== null;
     }
@@ -427,6 +438,10 @@ export class DataService {
 
     getSelectedSite(): Site {
         return this.selected_site;
+    }
+
+    getSelectedZone(): Zone {
+        return this.selected_zone;
     }
 
     getLogin(): Login {
@@ -571,7 +586,8 @@ export class DataService {
 
     removeAllData(): void {
         // Clear all private arrays
-        this.selected_site = null,
+        this.selected_site = null;
+        this.selected_zone = null;
 
         this.dynamic_feilds = [];
         this.ethnicities = [];

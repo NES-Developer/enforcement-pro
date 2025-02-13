@@ -15,7 +15,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
 
-import { Http } from '@capacitor/http';
+// import { Http } from '@capacitor/http';
 
 
 @Component({

@@ -204,52 +204,30 @@ export class HomePage implements OnInit {
         this.presentAlert('Successful', 'Copied FPN Number to Clipboard')
     }
 
-    // async openOtherApp() {
-    //     try {
-            
-    //       const canOpen = await AppLauncher.canOpenUrl({
-    //         url: 'com.enforcementpro.printer'
-    //       });
-    
-    //       if (canOpen.value) {
-    //         await AppLauncher.openUrl({
-    //           url: 'com.enforcementpro.printer'
-    //         });
-    //       } else {
-    //         console.log('Cannot open app');
-    //         this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-    //       }
-    //     } catch (error) {
-    //       console.error('Error launching app:', error);
-    //       this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-    //     }
-    // }
-
-
     async openOtherApp() {
         try {
-            // Ensure only the package name is used
-            const canOpen = await AppLauncher.canOpenUrl({
-                url: 'com.enforcementpro.printer'
-            });
+            // Define app URLs
+            const apps = [
+                'com.enforcementpro.printer',
+                'com.ahmedelsayed.sunmiprinterapp'
+            ];
     
-            if (canOpen.value) {
-                await AppLauncher.openUrl({
-                    url: 'com.enforcementpro.printer://action?message=HelloPrinterApp'
-                });
-            } else {
-                console.log('Cannot open app');
-                this.presentAlert('Error', 'Cannot find printer app. Navigate manually');
+            for (const app of apps) {
+                const canOpen = await AppLauncher.canOpenUrl({ url: app });
+                if (canOpen.value) {
+                    await AppLauncher.openUrl({ url: app });
+                    return; // Exit function once an app is successfully opened
+                }
             }
+            
+            // If none of the apps are available
+            this.presentAlert('Error', 'Cannot find any printer app. Navigate manually');
+            console.log('Cannot open any printer app');
         } catch (error) {
+            this.presentAlert('Error', 'Cannot find any printer app. Navigate manually');
             console.error('Error launching app:', error);
-            this.presentAlert('Error', 'Cannot find printer app. Navigate manually');
         }
     }
-    
-    
-    
-    
 
     async presentAlert(header: string, message: string) {
   

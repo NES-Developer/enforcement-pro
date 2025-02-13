@@ -7,6 +7,7 @@ import { ApiService } from '../../services/enforcementpro/api.service';
 import { FPNPage } from '../fpn.page';
 import { OffenceGroup } from '../../models/offence-group';
 import { Site } from '../../models/site';
+import { ZoneDetection } from '../../models/zone-detection';
 
 @Component({
   selector: 'app-step1',
@@ -18,6 +19,8 @@ export class Step1Component  implements OnInit {
     offences: Offence[] = [];
     filteredOffences: Offence[] = [];
     offenceGroups: OffenceGroup[] = [];
+
+    selected_zone: any;
 
     zones: Zone[] = [];
     sites: Site[] = [];
@@ -41,12 +44,46 @@ export class Step1Component  implements OnInit {
         
     }
 
+    ZoneDetection() {
+        let app_log = this.data.getAppLog();
+        if (this.data.checkAppLog() ) {
+
+            let zone_detection = new ZoneDetection();
+            zone_detection.lat = app_log.lat;
+            zone_detection.lng = app_log.lng;
+            zone_detection.site_id = app_log.site_id;
+            
+            this.api.zoneDetection(zone_detection).subscribe({
+                next: (response) => {
+                    if (response.success === false){
+
+                        this.fpnPage.presentAlert('Error', response.message);
+                    } else {
+
+                        app_log.zone_id = response.id;
+                        this.selected_zone = response;
+                        this.data.setSelectedZone(this.selected_zone);
+                        this.fpnPage.presentAlert('Yay', 'We found your zone, device settings have been altered.');
+                        this.fpnPage.ping();
+                    }
+                },
+            });
+        }
+        else {
+
+            this.fpnPage.presentAlert('Error', 'App cannot find your location, try again later.');
+        }
+    }
+
     loadData() {
         let enviro_post =  this.data.getEnviroPost();
+        this.selected_zone = this.data.getSelectedZone();
+
         this.offenceGroups = this.data.getOffenceGroup();
         this.offences = this.data.getOffence();
         this.zones = this.data.getZones();
         this.sites = this.data.getSites();
+
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
@@ -62,9 +99,21 @@ export class Step1Component  implements OnInit {
 
     }
 
+    // zoneChange()
+    // {
+    //     //Nemo
+    //     if (this.selected_zone)
+    //     {
+    //         this.enviro_post.zone_id = this.selected_zone.id;
+    //         this.saveEnviroData();
+    //         this.data.setSelectedZone(this.selected_zone);
+    //     }
+    // }
+
     filterOffences() {
         this.filteredOffences = this.offences.filter(offence => offence.group === this.enviro_post.offence_type_id);
         this.getOffenceById(this.enviro_post.offence_id);
+        // this.saveEnviroData();
     }
 
     resetOffenceAndFilter() {
