@@ -236,12 +236,13 @@ export class NotebookPage implements OnInit {
                         Clipboard.write({
                             string: fpn.ticket
                         });
-                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
                         
                         this.data.spliceEnviroQue(this.enviro_post);
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
                         this.isSubmitting = false;
+                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
+
                         this.route('/tabs/fpn');
                     }
                 }
@@ -271,11 +272,9 @@ export class NotebookPage implements OnInit {
                         this.isSubmitting = false;
                         this.presentAlert('Error', message);
                     } else {
-                        this.presentAlert('Success', 'Notebook entry captured');
                         this.isSubmitting = false;
-                        this.router.navigateByUrl('').then(() => {
-                            window.location.reload();
-                        });
+                        this.presentAlert('Success', 'Notebook entry captured');
+                        this.route('');
                         
                     }
                 }
@@ -300,16 +299,7 @@ export class NotebookPage implements OnInit {
         const alert = await this.alertController.create({
             header: header,
             message: message,
-            buttons: [
-                {
-                    text: button_title,
-                    handler: () => {
-                        if (header == "Success") {
-                            // this.router.navigate(['/tabs/fpn']);
-                        }
-                    }
-                }
-            ],
+            
         });
         await alert.present();
     }
