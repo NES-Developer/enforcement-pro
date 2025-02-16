@@ -447,7 +447,6 @@ export class FPNPage implements OnInit {
 
         this.loading.hideLoading();
 
-
         // this.ping();
     }
 

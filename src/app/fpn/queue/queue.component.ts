@@ -160,7 +160,12 @@ export class QueueComponent  implements OnInit {
     route (route: string) {
         if (route == "/tabs/fpn")
         {
-            this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
+            if (this.currentStep ) {
+                this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
+
+            } else {
+                this.router.navigate(['']);
+            }
         } 
         else
         {

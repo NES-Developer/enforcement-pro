@@ -164,10 +164,16 @@ export class SitePage implements OnInit {
                 let offenceGroups = this.extractOffenceGroups(offences);
                 this.data.setOffenceGroups(offenceGroups);
 
+                let enviro_post = new EnviroPost();
+                enviro_post.site_id = site_id;
+                this.data.setEnviroPost(enviro_post);
+
                 this.loading.hideLoading();
 
-                this.router.navigate(['']);
-
+                this.router.navigate(['']).then(() => {
+                    window.location.reload();
+                });
+                
             },
             error: (error) => {
                 this.loading.hideLoading();
@@ -195,7 +201,7 @@ export class SitePage implements OnInit {
         this.router.navigate([route]);
     }
 
-    filterSites() {
+    filterSites () {
         this.filteredSites = this.sites.filter(site => {
             return site.name.toLowerCase().includes(this.searchQuery.toLowerCase());
         });

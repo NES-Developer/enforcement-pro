@@ -2,6 +2,9 @@
     <ion-toolbar>
         <ion-row>
             <ion-col>
+                <ion-button (click)="route('/fpn/queue')">
+                    <ion-icon name="time"></ion-icon>
+                </ion-button>
                 <ion-button (click)="init()">
                     <ion-icon name="refresh"></ion-icon>
                 </ion-button>
@@ -58,7 +61,7 @@
     <ion-item>
         <ion-row>
             <ion-col>
-                <button type="button" (click)="navigate('site')" class="mt-4 btn btn-info">
+                <button type="button" (click)="navigate('site')" class="mt-4 btn btn-info block">
                     <ion-icon name="pencil"></ion-icon> Change
                 </button> 
             </ion-col>
@@ -75,24 +78,30 @@
         <div>
             <ion-item *ngFor="let fpn of recent_fpns">
                 <ion-grid>
-                <ion-row>
-                    <ion-col size="3">
-                        <ion-label>{{ fpn.fpn_number }}</ion-label>
-                    </ion-col>
-                    <ion-col size="4">
-                        <ion-label>{{ fpn.offender?.first_name }} {{ fpn.offender?.last_name }}</ion-label>
-                    </ion-col>
-                    <ion-col size="3">
-                        <!-- <div>
-                            {{ fpn.notebook_entry?.enviro_id?.toString() }}
-                        </div> -->
-                        <ion-badge *ngIf="!notebookEntryIsEmpty(fpn)" color="primary">Notebook Found</ion-badge>
-                        <ion-button *ngIf="notebookEntryIsEmpty(fpn)" (click)="notebookEntry(fpn)" color="dark">NoteBook Entry</ion-button>
-                    </ion-col>
-                    <ion-col size="2">
-                        <ion-button (click)="copyFPNNumber(fpn.fpn_number)" color="dark">Copy</ion-button>
-                    </ion-col>
-                </ion-row>
+                    <ion-row>
+                        <ion-col size="6">
+                            <ion-item>
+                                <ion-label>FPN Number: {{ fpn.fpn_number }}</ion-label>
+                            </ion-item>
+                        </ion-col>
+                    
+                        <ion-col size="6">
+                            <ion-item>
+                                <ion-label>Offender: {{ fpn.offender?.first_name }} {{ fpn.offender?.last_name }}</ion-label>
+                            </ion-item>
+                        </ion-col>
+                    </ion-row>
+                    
+                    <ion-row>
+                        <ion-col size="12">
+                            <ion-item>
+                                <ion-badge *ngIf="!notebookEntryIsEmpty(fpn)" color="primary">Notebook Found</ion-badge>
+                                <ion-button *ngIf="notebookEntryIsEmpty(fpn)" (click)="notebookEntry(fpn)" color="dark">NoteBook Entry</ion-button>
+                                <ion-button (click)="copyFPNNumber(fpn.fpn_number)" color="dark">Copy</ion-button>
+                            </ion-item>
+                        </ion-col>
+                    </ion-row>
+                    
                 </ion-grid>
             </ion-item>
         </div>

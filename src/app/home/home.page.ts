@@ -73,13 +73,20 @@ export class HomePage implements OnInit {
 
     init() {
         this.auth.checkLoggedIn();
-        // console.log(this.user);
 
         if (this.data.checkSelectedSite() === false) {
             this.navigate('site');
         } 
         
         this.loadData();
+    }
+
+    refresh () {
+        if (this.data.checkSelectedSite() === false) {
+            this.navigate('site');
+        } 
+
+        window.location.reload();
     }
 
     getImageUrl(prefix: string) { 
@@ -170,6 +177,10 @@ export class HomePage implements OnInit {
     }
 
     navigate(route: string){
+        this.router.navigate([route]);
+    }
+
+    route(route: string) {
         this.router.navigate([route]);
     }
 
