@@ -206,26 +206,21 @@ export class HomePage implements OnInit {
 
     async openOtherApp() {
         try {
-            // Define app URLs
-            const apps = [
-                'com.enforcementpro.printer',
-                'com.ahmedelsayed.sunmiprinterapp'
-            ];
+          const canOpen = await AppLauncher.canOpenUrl({
+            url: 'com.example.enforcementproprinter'
+          });
     
-            for (const app of apps) {
-                const canOpen = await AppLauncher.canOpenUrl({ url: app });
-                if (canOpen.value) {
-                    await AppLauncher.openUrl({ url: app });
-                    return; // Exit function once an app is successfully opened
-                }
-            }
-            
-            // If none of the apps are available
-            this.presentAlert('Error', 'Cannot find any printer app. Navigate manually');
-            console.log('Cannot open any printer app');
+          if (canOpen.value) {
+            await AppLauncher.openUrl({
+              url: 'com.example.enforcementproprinter'
+            });
+          } else {
+            console.log('Cannot open app');
+            this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+          }
         } catch (error) {
-            this.presentAlert('Error', 'Cannot find any printer app. Navigate manually');
-            console.error('Error launching app:', error);
+          console.error('Error launching app:', error);
+          this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
         }
     }
 
