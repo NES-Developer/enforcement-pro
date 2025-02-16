@@ -9,7 +9,7 @@
     <ion-label>Title *</ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
+    <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
         <ion-select-option *ngFor="let salutation of salutations"> 
             {{ salutation.title }}     
         </ion-select-option>
@@ -129,7 +129,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="enviro_post.is_bwc_active">
+    <ion-select  interface="action-sheet" interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="enviro_post.is_bwc_active">
         <ion-select-option>Yes</ion-select-option>
         <ion-select-option>No</ion-select-option>
     </ion-select>

@@ -55,7 +55,7 @@
         </ion-label>
     </ion-item>
     <ion-item>
-        <ion-select interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_fpn_advised" >
+        <ion-select  interface="action-sheet" interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_fpn_advised" >
             <ion-select-option>yes</ion-select-option>
             <ion-select-option>no</ion-select-option>
         </ion-select>
@@ -68,7 +68,7 @@
         </ion-label>
     </ion-item>
     <ion-item>
-        <ion-select interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_fpn_handed" >
+        <ion-select  interface="action-sheet" interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_fpn_handed" >
             <ion-select-option>yes</ion-select-option>
             <ion-select-option>no</ion-select-option>
         </ion-select>
@@ -101,7 +101,7 @@
         </ion-label>
     </ion-item>
     <ion-item>
-        <ion-select multiple="false" [(ngModel)]="notebook_entries.build" (ionChange)="saveEnviroData()" >
+        <ion-select  interface="action-sheet" multiple="false" [(ngModel)]="notebook_entries.build" (ionChange)="saveEnviroData()" >
             <ion-select-option *ngFor="let group of builds" [value]="group.id">
                 {{ group.textOnMachine }}
             </ion-select-option>
@@ -115,7 +115,7 @@
         </ion-label>
     </ion-item>
     <ion-item>
-        <ion-select multiple="false" [(ngModel)]="notebook_entries.hair" (ionChange)="saveEnviroData()">
+        <ion-select  interface="action-sheet" multiple="false" [(ngModel)]="notebook_entries.hair" (ionChange)="saveEnviroData()">
             <ion-select-option *ngFor="let group of hair_colours" [value]="group.id">
                 {{ group.textOnMachine }}
             </ion-select-option>
@@ -159,7 +159,7 @@
         </ion-label>
     </ion-item>
     <ion-item>
-        <ion-select interface="action-sheet" multiple="false" [(ngModel)]="notebook_entries.were" (ionChange)="saveEnviroData()">
+        <ion-select  interface="action-sheet" interface="action-sheet" multiple="false" [(ngModel)]="notebook_entries.were" (ionChange)="saveEnviroData()">
             <ion-select-option>yes</ion-select-option>
             <ion-select-option>no</ion-select-option>
         </ion-select>
@@ -172,7 +172,7 @@
         </ion-label>
     </ion-item>
     <ion-item>
-        <ion-select interface="action-sheet" multiple="false" [(ngModel)]="notebook_entries.did" (ionChange)="saveEnviroData()">
+        <ion-select  interface="action-sheet" interface="action-sheet" multiple="false" [(ngModel)]="notebook_entries.did" (ionChange)="saveEnviroData()">
             <ion-select-option>yes</ion-select-option>
             <ion-select-option>no</ion-select-option>
         </ion-select>
@@ -224,7 +224,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="notebook_entries.gender">
+    <ion-select  interface="action-sheet" interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="notebook_entries.gender">
         <ion-select-option>Male</ion-select-option>
         <ion-select-option>Female</ion-select-option>
         <ion-select-option>Other</ion-select-option>
@@ -238,7 +238,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-<ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.ethnicity_id">
+<ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.ethnicity_id">
     <ion-select-option *ngFor="let group of ethnicities" [value]="group.id">
         {{ group.textOnMachine }}
     </ion-select-option>
@@ -266,7 +266,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.visibility_id">
+    <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.visibility_id">
         <ion-select-option *ngFor="let group of visibility" [value]="group.id">
             {{ group.visibility }}
         </ion-select-option>
@@ -280,7 +280,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.weather_id">
+    <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.weather_id">
         <ion-select-option *ngFor="let group of weather" [value]="group.id">
             {{ group.textOnMachine }}
         </ion-select-option>
@@ -292,7 +292,7 @@
     <ion-label>Is witness available?</ion-label>  
   </ion-item>
   <ion-item>
-      <ion-select interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_witness_available">
+      <ion-select  interface="action-sheet" interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_witness_available">
           <ion-select-option>Yes</ion-select-option>
           <ion-select-option>No</ion-select-option>
       </ion-select>

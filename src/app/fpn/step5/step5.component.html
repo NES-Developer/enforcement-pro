@@ -34,7 +34,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.land_type_id">
+    <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.land_type_id">
         <ion-select-option [value]="1">
             Public
         </ion-select-option>
@@ -59,7 +59,7 @@
     <ion-label>FPN issued on the spot</ion-label>  
 </ion-item>
 <ion-item>
-    <ion-select interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.enviro_issued_onspot">
+    <ion-select  interface="action-sheet" interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.enviro_issued_onspot">
         <ion-select-option>Yes</ion-select-option>
         <ion-select-option>No</ion-select-option>
     </ion-select>
@@ -82,7 +82,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi_prefix_id">
+    <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi_prefix_id">
         <ion-select-option *ngFor="let group of poi_prefix" [value]="group.id">
             {{ group.textOnMachine }}
         </ion-select-option>
