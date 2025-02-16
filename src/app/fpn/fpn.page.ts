@@ -280,6 +280,10 @@ export class FPNPage implements OnInit {
                     this.presentAlert('Wait!', 'Please provide Issue timestamp.');
                     return false;
                 }
+                if (!this.enviro_post.enviro_issued_onspot) {
+                    this.presentAlert('Wait!', 'Please provide informantion of issue onspot');
+                    return false;
+                }
                 break;
             case 6:
                 if (this.enviro_post.signature == '') {

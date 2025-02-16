@@ -47,7 +47,7 @@ export class EnviroPost {
    // weather_id: number = 0;
    offence_datetime: string = moment().format('YYYY-MM-DDTHH:mm:ss');
    issue_datetime: string = moment().format('YYYY-MM-DDTHH:mm:ss');
-   enviro_issued_onspot: string = '';
+   enviro_issued_onspot: string = 'yes';
    is_id_verified: string = '';
    is_address_verified: string = '';
    lat: string = '0';
