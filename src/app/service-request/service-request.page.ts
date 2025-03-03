@@ -19,6 +19,7 @@ import { ZoneDetection } from '../models/zone-detection';
 //import * as L from 'leaflet';
 import { ConstantsService } from '../services/constants.service';
 import { User } from '../models/user';
+import { App } from '@capacitor/app';
 
 
 @Component({
@@ -340,6 +341,11 @@ export class ServiceRequestPage implements OnInit {
                 this.presentAlert('Error', 'Server Error: ' + error.message );
             }
         });
+    }
+
+
+    forceCloseApp() {
+        App.exitApp(); // Force closes the app
     }
 
     ZoneDetection() {
