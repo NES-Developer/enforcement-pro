@@ -514,12 +514,12 @@ export class FPNPage implements OnInit {
     async openOtherApp() {
         try {
           const canOpen = await AppLauncher.canOpenUrl({
-            url: 'com.example.enforcementproprinter'
+            url: 'com.ahmedelsayed.sunmiprinterapp'
           });
     
           if (canOpen.value) {
             await AppLauncher.openUrl({
-              url: 'com.example.enforcementproprinter'
+              url: 'com.ahmedelsayed.sunmiprinterapp'
             });
           } else {
             console.log('Cannot open app');
@@ -540,23 +540,21 @@ export class FPNPage implements OnInit {
 
         if (checker) {
             this.loading.showLoading();
-            this.offenceSwitcherForserver();
-            this.assignOfficerId();
+            //this.assignOfficerId();
             let queue = this.data.getEnviroQue();
 
-            if (queue.length < 9) {
+            if (queue.length < 9) {            
+                this.offenceSwitcherForserver();
                 this.assignOfficerId();
                 this.data.pushEnviroQue();
                 this.enviro_post = new EnviroPost();
                 this.currentStep = 1;
                 this.loading.hideLoading();
-
             } else {
                 this.loading.hideLoading();
                 this.presentAlert('Error', 'Queue has exceeded 9, please submit. Submit some FPNs on queue to increase space.')
             }
         }
-        
     }
 
     
