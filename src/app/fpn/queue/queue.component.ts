@@ -27,7 +27,7 @@ export class QueueComponent  implements OnInit {
 
     currentStep: number = 1;
     enviro_que: EnviroPost[] = [];
-    enviro_que_addition: any[] = [];
+    // enviro_que_addition: any[] = [];
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
     app_log: AppLog;
     isSubmitting: boolean = false;
@@ -67,15 +67,17 @@ export class QueueComponent  implements OnInit {
 
     loadData() {
         this.enviro_que =  this.data.getEnviroQue();
-        this.enviro_que_addition = this.enviro_que;
-        for (let x=0; x<this.enviro_que.length; x++) {
-            const rawHtml = `` // Assuming the raw HTML exists in ``
-            this.enviro_que_addition[x] = {
-                ...this.enviro_que_addition[x], // Retain existing properties
-                html_bool: false, // Add html_bool
-                html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
-            };
-        }
+
+        //This code below is intended to support Generating of tickets
+        // this.enviro_que_addition = this.enviro_que;
+        // for (let x=0; x<this.enviro_que.length; x++) {
+        //     const rawHtml = `` // Assuming the raw HTML exists in ``
+        //     this.enviro_que_addition[x] = {
+        //         ...this.enviro_que_addition[x], // Retain existing properties
+        //         html_bool: false, // Add html_bool
+        //         html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
+        //     };
+        // }
 
         this.ping();
         setInterval(() => {
@@ -94,6 +96,9 @@ export class QueueComponent  implements OnInit {
 
         this.api.postFPN(enviro_post).subscribe({
             next: (response) => {
+
+                console.log(1, response);
+
                 // Handle the response here
                 if(response.success === false) 
                 {
@@ -103,6 +108,7 @@ export class QueueComponent  implements OnInit {
                     this.loading.hideLoading();
 
                     this.presentAlert('Error', message);
+
                 } else {
                     let fpn_number = response.data.fpn_number;
                     this.presentAlert('Success', fpn_number);
@@ -122,6 +128,8 @@ export class QueueComponent  implements OnInit {
                 }
             },
             error: (error) => {
+                console.log(2, error);
+
                 this.isSubmitting = false;
                 this.loading.hideLoading();
 
@@ -182,25 +190,25 @@ export class QueueComponent  implements OnInit {
         await alert.present();
     }
 
-    generateTicket(enviro_post: EnviroPost) {
-        console.log(1);
+    // generateTicket(enviro_post: EnviroPost) {
+    //     console.log(1);
 
-        let ticket = this.ticket.generateWelcomeTicket(enviro_post);
-        console.log(1);
+    //     let ticket = this.ticket.generateWelcomeTicket(enviro_post);
+    //     console.log(1);
 
-        // let index = 0;
+    //     // let index = 0;
 
-        for (let x = 0; x<this.enviro_que_addition.length; x++) {
-            if (this.enviro_que_addition[x] == enviro_post) {
-                this.enviro_que_addition[x].html_bool = true;
-                this.enviro_que_addition[x].html_string = ticket;
-                // index = x;
-            }
-            else {
-                this.enviro_que_addition[x].html_bool = false;
-            }
-        }
-    }
+    //     for (let x = 0; x<this.enviro_que_addition.length; x++) {
+    //         if (this.enviro_que_addition[x] == enviro_post) {
+    //             this.enviro_que_addition[x].html_bool = true;
+    //             this.enviro_que_addition[x].html_string = ticket;
+    //             // index = x;
+    //         }
+    //         else {
+    //             this.enviro_que_addition[x].html_bool = false;
+    //         }
+    //     }
+    // }
 
     copyTicketToClipboard(enviro_post: any) {
 

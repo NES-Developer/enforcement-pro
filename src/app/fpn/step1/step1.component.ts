@@ -79,6 +79,8 @@ export class Step1Component  implements OnInit {
         let enviro_post =  this.data.getEnviroPost();
         this.selected_zone = this.data.getSelectedZone();
 
+        // this.enviro_post
+
         this.offenceGroups = this.data.getOffenceGroup();
         this.offences = this.data.getOffence();
         this.zones = this.data.getZones();
@@ -87,12 +89,15 @@ export class Step1Component  implements OnInit {
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
+
         let selected_site: Site = this.data.getSelectedSite();
         this.enviro_post.site_id = selected_site.id;
 
         if (this.offences && this.enviro_post && this.enviro_post.offence_type_id) {
             this.filterOffences();
         }    
+
+        // if (this.enviro_post.)
 
         this.getOffenceById(this.enviro_post.offence_id);
         console.log(0);
@@ -105,7 +110,7 @@ export class Step1Component  implements OnInit {
     //     if (this.selected_zone)
     //     {
     //         this.enviro_post.zone_id = this.selected_zone.id;
-    //         this.saveEnviroData();
+            // this.saveEnviroData();
     //         this.data.setSelectedZone(this.selected_zone);
     //     }
     // }

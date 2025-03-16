@@ -29,7 +29,7 @@
 
     <ion-list [inset]="true">
 
-        <div *ngFor="let enviro_post of enviro_que_addition">
+        <div *ngFor="let enviro_post of enviro_que">
 
             <ion-item [button]="true">
                 <ion-icon color="success" slot="start" name="refresh-circle" size="large" (click)="submitFPN(enviro_post)"></ion-icon>
@@ -46,9 +46,9 @@
             </ion-item>
 
 
-            <div >
-
-                <ion-item>
+            <!-- The code below is intended to support Generate Ticket -->
+            <!-- <div> -->
+                <!-- <ion-item>
                     <ion-button *ngIf="!enviro_post.html_bool" color="sucess" (click)="generateTicket(enviro_post)">
                         Generate Ticket
                     </ion-button>
@@ -58,16 +58,13 @@
                     <ion-button *ngIf="enviro_post.html_bool" color="black" (click)="copyTicketToClipboard(enviro_post)">
                         Print
                     </ion-button>
-                </ion-item>
+                </ion-item> -->
 
-                <ion-item>
+                <!-- <ion-item>
                     <div *ngIf="enviro_post.html_bool" id="html_ticket" [innerHTML]="enviro_post.html_string"></div>
-
-                    <!-- <div id="html_ticket" [innerHTML]="enviro_post.html_string"> -->
-                    <!-- </div> -->
-                </ion-item>
+                </ion-item> -->
                 
-            </div>
+            <!-- </div> -->
 
             <br/>
 
