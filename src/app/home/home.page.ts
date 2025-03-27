@@ -14,9 +14,15 @@ import { AppLauncher } from '@capacitor/app-launcher';
 import { LoadingService } from '../services/loading.service';
 import { User } from '../models/user';
 
-import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 
+//test
+import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+
+
+import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
 
 
 @Component({
@@ -48,7 +54,6 @@ export class HomePage implements OnInit {
         private loading:LoadingService,
     ) {
         let user = this.auth.getUser();
-        console.log(11,user)
 
         if (user) 
         {
@@ -58,8 +63,6 @@ export class HomePage implements OnInit {
         }
         console.log(this.user)
         this.app_log = new AppLog();
-
-
     }
 
     ngOnInit(): void {
@@ -69,6 +72,7 @@ export class HomePage implements OnInit {
             this.user = user;
         }
         this.init();
+
     }
 
     init() {
@@ -88,6 +92,7 @@ export class HomePage implements OnInit {
 
         window.location.reload();
     }
+      
 
     getImageUrl(prefix: string) { 
         let url: string = this.url + '/' + prefix;

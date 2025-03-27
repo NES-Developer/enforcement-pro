@@ -32,7 +32,7 @@ export class TicketService {
         
     }
 
-     generateWelcomeTicket(enviro_post: EnviroPost) {
+    generateWelcomeTicket(enviro_post: EnviroPost) {
         // Ensure the necessary data exists
         if (!enviro_post) {
             throw new Error('Enviro data is missing');

@@ -14,6 +14,9 @@ import { TicketService } from 'src/app/Service/ticket.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import { FilesystemDirectory } from '@capacitor/filesystem';
 
 // import { Http } from '@capacitor/http';
 
@@ -27,13 +30,13 @@ export class QueueComponent  implements OnInit {
 
     currentStep: number = 1;
     enviro_que: EnviroPost[] = [];
-    // enviro_que_addition: any[] = [];
+    enviro_que_addition: any[] = [];//xx
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
     app_log: AppLog;
     isSubmitting: boolean = false;
 
-    // html_bool: boolean = fals;
-    // html_string: SafeHtml = "";
+    html_bool: boolean = false;//xx
+    html_string: SafeHtml = "";//xx
 
     constructor(
         private api: ApiService,
@@ -65,19 +68,57 @@ export class QueueComponent  implements OnInit {
         this.loadData();
     }
 
+    async saveDataAsJson() {
+        if (!Capacitor.isNativePlatform()) {
+            //   console.warn('Run this on a real device.');
+            const jsonData = JSON.stringify(this.enviro_que, null, 2);
+            const fileName = `enviro_que_${new Date().toISOString()}.json`;
+
+            this.downloadFileWeb(jsonData, fileName);
+            this.presentAlert('Success', 'Successfully captured que, please print and navigate to installer.');
+
+            return;
+        }
+      
+        const data = this.enviro_que;
+      
+        const now = new Date();
+        const timestamp = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
+        
+        const fileName = `enviro_que_${timestamp}.json`;
+
+        try {
+            await Filesystem.writeFile({
+                path: fileName,
+                data: JSON.stringify(data),
+                directory: Directory.Documents, // Or Directory.External for Android
+                encoding: Encoding.UTF8
+            });
+
+            this.presentAlert('Success', 'Successfully captured que, please print and navigate to installer.');
+
+      
+        //   console.log(`✅ File saved to Documents/${fileName}`);
+        } catch (error) {
+            this.presentAlert('Error', 'Failed to capture image');
+
+        //   console.error('❌ Failed to write file:', error);
+        }
+    }
+
     loadData() {
         this.enviro_que =  this.data.getEnviroQue();
 
         //This code below is intended to support Generating of tickets
-        // this.enviro_que_addition = this.enviro_que;
-        // for (let x=0; x<this.enviro_que.length; x++) {
-        //     const rawHtml = `` // Assuming the raw HTML exists in ``
-        //     this.enviro_que_addition[x] = {
-        //         ...this.enviro_que_addition[x], // Retain existing properties
-        //         html_bool: false, // Add html_bool
-        //         html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
-        //     };
-        // }
+        this.enviro_que_addition = this.enviro_que;
+        for (let x=0; x<this.enviro_que.length; x++) {
+            const rawHtml = `` // Assuming the raw HTML exists in ``
+            this.enviro_que_addition[x] = {
+                ...this.enviro_que_addition[x], // Retain existing properties
+                html_bool: false, // Add html_bool
+                html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
+            };
+        }
 
         this.ping();
         setInterval(() => {
@@ -85,14 +126,67 @@ export class QueueComponent  implements OnInit {
         }, 120000); // 2 minutes in milliseconds
     }
 
+    
+    async exportEnviroQue() {
+        try {
+            const jsonData = JSON.stringify(this.enviro_que, null, 2);
+            const fileName = `enviro_que_${new Date().toISOString()}.json`;
+    
+            if (Capacitor.getPlatform() === 'android') {
+                // ✅ Save directly in the Downloads folder
+                const fullPath = `Download/${fileName}`;
+    
+                const result = await Filesystem.writeFile({
+                    path: fullPath,
+                    data: jsonData,
+                    directory: Directory.ExternalStorage, // ✅ Uses external storage (Downloads)
+                    encoding: Encoding.UTF8,
+                });
+    
+                console.log('✅ File saved:', result.uri);
+                // alert('File exported successfully! Check your Downloads folder.');
+            } else if (Capacitor.getPlatform() === 'web') {
+                // ✅ Trigger browser download
+                this.downloadFileWeb(jsonData, fileName);
+                return;
+            }
+    
+        } catch (error) {
+            console.error('❌ Error saving file:', error);
+        }
+    }
+
+    refresh() {
+        window.location.reload();
+    }
+    
+
+    // Web: Trigger file download in the browser
+    downloadFileWeb(data: string, fileName: string) {
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
     submitFPN(enviro_post: any) {
         if (this.isSubmitting) {
             return;
         }
-        
 
         this.isSubmitting = true;
         this.loading.showLoading();
+
+        enviro_post = enviro_post.map((item: any) => {
+            const cleaned = { ...item };
+            delete cleaned.html_bool;
+            delete cleaned.html_string;
+            return cleaned;
+        });
 
         this.api.postFPN(enviro_post).subscribe({
             next: (response) => {
@@ -123,6 +217,7 @@ export class QueueComponent  implements OnInit {
                     this.loading.hideLoading();
 
                     this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
+                    //nemo
                     this.data.spliceEnviroQue(enviro_post);
                     this.enviro_que = this.data.getEnviroQue();
                 }
@@ -190,25 +285,21 @@ export class QueueComponent  implements OnInit {
         await alert.present();
     }
 
-    // generateTicket(enviro_post: EnviroPost) {
-    //     console.log(1);
+    generateTicket(enviro_post: EnviroPost) {
 
-    //     let ticket = this.ticket.generateWelcomeTicket(enviro_post);
-    //     console.log(1);
+        let ticket = this.ticket.generateWelcomeTicket(enviro_post);
 
-    //     // let index = 0;
-
-    //     for (let x = 0; x<this.enviro_que_addition.length; x++) {
-    //         if (this.enviro_que_addition[x] == enviro_post) {
-    //             this.enviro_que_addition[x].html_bool = true;
-    //             this.enviro_que_addition[x].html_string = ticket;
-    //             // index = x;
-    //         }
-    //         else {
-    //             this.enviro_que_addition[x].html_bool = false;
-    //         }
-    //     }
-    // }
+        for (let x = 0; x<this.enviro_que_addition.length; x++) {
+            if (this.enviro_que_addition[x] == enviro_post) {
+                this.enviro_que_addition[x].html_bool = true;
+                this.enviro_que_addition[x].html_string = ticket;
+                // index = x;
+            }
+            else {
+                this.enviro_que_addition[x].html_bool = false;
+            }
+        }
+    }
 
     copyTicketToClipboard(enviro_post: any) {
 
@@ -225,14 +316,20 @@ export class QueueComponent  implements OnInit {
                     string: dataUrl.toString()
                 });
 
-                // for (let x = 0; x<this.enviro_que_addition.length; x++) { nemo
-                //     this.enviro_que_addition[x].html_bool = false;
-                // }
+
+                for (let x = 0; x<this.enviro_que_addition.length; x++) { 
+                    if (this.enviro_que_addition[x] == enviro_post) 
+                    {
+                        this.enviro_que_addition[x].html_string = dataUrl.toString();
+
+                    }
+                    this.enviro_que_addition[x].html_bool = false;
+                }
 
                 this.isSubmitting = false;
                 this.loading.hideLoading();
                 this.saveBase64Image(dataUrl, 'ticket_offline.png');
-                // this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
+                this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
 
                 // this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
             //   enviro_post.html_string = dataUrl; // Set base64 image as the new html_string

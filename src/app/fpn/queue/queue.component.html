@@ -5,10 +5,13 @@
                 <ion-button (click)="route('/tabs/fpn')">
                     <ion-icon name="arrow-back"></ion-icon>
                 </ion-button>
+                <ion-button (click)="refresh()">
+                    <ion-icon name="refresh"></ion-icon>
+                </ion-button>
             </ion-col>
             <ion-col>
                 <ion-title>
-                    FPN Queue
+                    Queue
                 </ion-title>
             </ion-col>
             <ion-col>
@@ -27,9 +30,19 @@
         </ion-toolbar>
     </ion-header>
 
+    <ion-item>
+        <ion-icon 
+            color="primary" 
+            slot="end" 
+            name="download-outline" 
+            size="large" 
+            (click)="saveDataAsJson()">
+        </ion-icon>
+    </ion-item>
+
     <ion-list [inset]="true">
 
-        <div *ngFor="let enviro_post of enviro_que">
+        <div *ngFor="let enviro_post of enviro_que_addition">
 
             <ion-item [button]="true">
                 <ion-icon color="success" slot="start" name="refresh-circle" size="large" (click)="submitFPN(enviro_post)"></ion-icon>
@@ -47,10 +60,10 @@
 
 
             <!-- The code below is intended to support Generate Ticket -->
-            <!-- <div> -->
-                <!-- <ion-item>
+            <div> 
+                <ion-item>
                     <ion-button *ngIf="!enviro_post.html_bool" color="sucess" (click)="generateTicket(enviro_post)">
-                        Generate Ticket
+                        Preview Ticket
                     </ion-button>
                     <ion-button *ngIf="enviro_post.html_bool" color="danger" (click)="enviro_post.html_bool = false">
                         x
@@ -58,13 +71,13 @@
                     <ion-button *ngIf="enviro_post.html_bool" color="black" (click)="copyTicketToClipboard(enviro_post)">
                         Print
                     </ion-button>
-                </ion-item> -->
+                </ion-item>
 
-                <!-- <ion-item>
+                <ion-item>
                     <div *ngIf="enviro_post.html_bool" id="html_ticket" [innerHTML]="enviro_post.html_string"></div>
-                </ion-item> -->
+                </ion-item>
                 
-            <!-- </div> -->
+             </div>
 
             <br/>
 
