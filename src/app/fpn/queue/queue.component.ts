@@ -68,43 +68,43 @@ export class QueueComponent  implements OnInit {
         this.loadData();
     }
 
-    async saveDataAsJson() {
-        if (!Capacitor.isNativePlatform()) {
-            //   console.warn('Run this on a real device.');
-            const jsonData = JSON.stringify(this.enviro_que, null, 2);
-            const fileName = `enviro_que_${new Date().toISOString()}.json`;
+    // async saveDataAsJson() {
+    //     if (!Capacitor.isNativePlatform()) {
+    //         //   console.warn('Run this on a real device.');
+    //         const jsonData = JSON.stringify(this.enviro_que, null, 2);
+    //         const fileName = `enviro_que_${new Date().toISOString()}.json`;
 
-            this.downloadFileWeb(jsonData, fileName);
-            this.presentAlert('Success', 'Successfully captured que, please print and navigate to installer.');
+    //         this.downloadFileWeb(jsonData, fileName);
+    //         this.presentAlert('Success', 'Successfully captured que, please print and navigate to installer.');
 
-            return;
-        }
+    //         return;
+    //     }
       
-        const data = this.enviro_que;
+    //     const data = this.enviro_que;
       
-        const now = new Date();
-        const timestamp = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
+    //     const now = new Date();
+    //     const timestamp = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
         
-        const fileName = `enviro_que_${timestamp}.json`;
+    //     const fileName = `enviro_que_${timestamp}.json`;
 
-        try {
-            await Filesystem.writeFile({
-                path: fileName,
-                data: JSON.stringify(data),
-                directory: Directory.Documents, // Or Directory.External for Android
-                encoding: Encoding.UTF8
-            });
+    //     try {
+    //         await Filesystem.writeFile({
+    //             path: fileName,
+    //             data: JSON.stringify(data),
+    //             directory: Directory.Documents, // Or Directory.External for Android
+    //             encoding: Encoding.UTF8
+    //         });
 
-            this.presentAlert('Success', 'Successfully captured que, please print and navigate to installer.');
+    //         this.presentAlert('Success', 'Successfully captured que, please print and navigate to installer.');
 
       
-        //   console.log(`✅ File saved to Documents/${fileName}`);
-        } catch (error) {
-            this.presentAlert('Error', 'Failed to capture image');
+    //     //   console.log(`✅ File saved to Documents/${fileName}`);
+    //     } catch (error) {
+    //         this.presentAlert('Error', 'Failed to capture image');
 
-        //   console.error('❌ Failed to write file:', error);
-        }
-    }
+    //     //   console.error('❌ Failed to write file:', error);
+    //     }
+    // }
 
     loadData() {
         this.enviro_que =  this.data.getEnviroQue();
@@ -126,41 +126,70 @@ export class QueueComponent  implements OnInit {
         }, 120000); // 2 minutes in milliseconds
     }
 
-    
-    async exportEnviroQue() {
+    async exportEnviroQue(enviro_post: any) {
         try {
-            const jsonData = JSON.stringify(this.enviro_que, null, 2);
-            const fileName = `enviro_que_${new Date().toISOString()}.json`;
-    
-            if (Capacitor.getPlatform() === 'android') {
-                // ✅ Save directly in the Downloads folder
-                const fullPath = `Download/${fileName}`;
-    
-                const result = await Filesystem.writeFile({
-                    path: fullPath,
-                    data: jsonData,
-                    directory: Directory.ExternalStorage, // ✅ Uses external storage (Downloads)
-                    encoding: Encoding.UTF8,
-                });
-    
-                console.log('✅ File saved:', result.uri);
-                // alert('File exported successfully! Check your Downloads folder.');
-            } else if (Capacitor.getPlatform() === 'web') {
-                // ✅ Trigger browser download
-                this.downloadFileWeb(jsonData, fileName);
-                return;
+          const jsonData = JSON.stringify(enviro_post, null, 2);
+      
+          // 📆 Timestamp for filename
+          const now = new Date();
+          const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
+            .toString()
+            .padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}_${now
+            .getHours()
+            .toString()
+            .padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
+      
+          // 👤 Use first_name + last_name in filename
+          const safeFirstName = (enviro_post.first_name || 'unknown').replace(/\s+/g, '_');
+          const safeLastName = (enviro_post.last_name || 'user').replace(/\s+/g, '_');
+          const fileName = `${safeFirstName}_${safeLastName}_${timestamp}.json`;
+      
+          const folderName = 'FPNs';
+          const fullPath = `${folderName}/${fileName}`;
+      
+          // ✅ Check if FPNs folder exists
+          try {
+            await Filesystem.stat({
+              path: folderName,
+              directory: Directory.Documents,
+            });
+            console.log('📁 FPNs folder exists');
+          } catch (folderErr: any) {
+            if (folderErr.message?.includes('does not exist')) {
+              console.log('📁 Creating FPNs folder...');
+              await Filesystem.mkdir({
+                path: folderName,
+                directory: Directory.Documents,
+                recursive: true,
+              });
+            } else {
+              throw folderErr; // rethrow unexpected errors
             }
-    
+          }
+      
+          // ✅ Write or overwrite the file
+          const result = await Filesystem.writeFile({
+            path: fullPath,
+            data: jsonData,
+            directory: Directory.Documents,
+            encoding: Encoding.UTF8,
+          });
+      
+          console.log('✅ File saved:', result.uri);
+          this.presentAlert('Success', `Saved to Documents/${folderName}`);
+          console.log(enviro_post);
+      
         } catch (error) {
-            console.error('❌ Error saving file:', error);
+          console.error('❌ Error saving file:', error);
+          this.presentAlert('Error', 'Failed to export file: ' + error);
         }
     }
+      
 
     refresh() {
         window.location.reload();
     }
     
-
     // Web: Trigger file download in the browser
     downloadFileWeb(data: string, fileName: string) {
         const blob = new Blob([data], { type: 'application/json' });
@@ -191,9 +220,6 @@ export class QueueComponent  implements OnInit {
         this.api.postFPN(enviro_post).subscribe({
             next: (response) => {
 
-                console.log(1, response);
-
-                // Handle the response here
                 if(response.success === false) 
                 {
                     let message = response.message + " (Please Edit)";
@@ -217,7 +243,7 @@ export class QueueComponent  implements OnInit {
                     this.loading.hideLoading();
 
                     this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
-                    //nemo
+
                     this.data.spliceEnviroQue(enviro_post);
                     this.enviro_que = this.data.getEnviroQue();
                 }
