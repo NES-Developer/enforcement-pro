@@ -25,8 +25,8 @@ NotebookEntry {
    distinguishing_features: string = '';
    have_reason: string = '';
    nearest_bin: string = '';
-   were: string = '';
-   did: string = '';
+   were: string = 'no';
+   did: string = 'no';
    police_comments: string = '';
    offender_comments: string = '';
    bwv_assest: string = '';

@@ -308,14 +308,14 @@ export class FPNPage implements OnInit {
                     this.presentAlert('Wait!', 'Please provide hair details.');
                     return false;
                 }
-                if (this.enviro_post.notebook_entries.were == '') {
-                    this.presentAlert('Wait!', 'Please provide were details.');
-                    return false;
-                }
-                if (this.enviro_post.notebook_entries.did == '') {
-                    this.presentAlert('Wait!', 'Please provide did details.');
-                    return false;
-                }
+                // if (this.enviro_post.notebook_entries.were == '') {
+                //     this.presentAlert('Wait!', 'Please provide were details.');
+                //     return false;
+                // }
+                // if (this.enviro_post.notebook_entries.did == '') {
+                //     this.presentAlert('Wait!', 'Please provide did details.');
+                //     return false;
+                // }
                 if (this.enviro_post.notebook_entries.gender == '') {
                     this.presentAlert('Wait!', 'Please provide offender Gender.');
                     return false;

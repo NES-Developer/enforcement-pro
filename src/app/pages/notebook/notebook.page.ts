@@ -150,14 +150,14 @@ export class NotebookPage implements OnInit {
             this.presentAlert('Wait!', 'Please provide hair details.');
             return false;
         }
-        if (this.notebook_entries.were == '') {
-            this.presentAlert('Wait!', 'Please provide were details.');
-            return false;
-        }
-        if (this.notebook_entries.did == '') {
-            this.presentAlert('Wait!', 'Please provide did details.');
-            return false;
-        }
+        // if (this.notebook_entries.were == '') {
+        //     this.presentAlert('Wait!', 'Please provide were details.');
+        //     return false;
+        // }
+        // if (this.notebook_entries.did == '') {
+        //     this.presentAlert('Wait!', 'Please provide did details.');
+        //     return false;
+        // }
         if (this.notebook_entries.gender == '') {
             this.presentAlert('Wait!', 'Please provide offender Gender.');
             return false;
@@ -199,7 +199,7 @@ export class NotebookPage implements OnInit {
     saveEnviroData() {
         if (this.id == 0) 
         {
-            if (this.enviro_post.notebook_entries.hair !== 0 && this.enviro_post.notebook_entries.did !== ''  && this.enviro_post.notebook_entries.were !== '' && this.enviro_post.notebook_entries.is_fpn_advised !== '' && this.enviro_post.notebook_entries.is_fpn_handed !== '')
+            if (this.enviro_post.notebook_entries.hair !== 0 && this.enviro_post.notebook_entries.is_fpn_advised !== '' && this.enviro_post.notebook_entries.is_fpn_handed !== '')
             {
                 this.enviro_post.notebook_entries = this.notebook_entries;
                 this.data.setEnviroPost(this.enviro_post);

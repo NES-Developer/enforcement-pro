@@ -313,7 +313,7 @@ export class QueueComponent  implements OnInit {
 
     generateTicket(enviro_post: EnviroPost) {
 
-        let ticket = this.ticket.generateWelcomeTicket(enviro_post);
+        let ticket = this.ticket.generateWelcomeTicket(enviro_post);//Nemo
 
         for (let x = 0; x<this.enviro_que_addition.length; x++) {
             if (this.enviro_que_addition[x] == enviro_post) {
@@ -325,6 +325,10 @@ export class QueueComponent  implements OnInit {
                 this.enviro_que_addition[x].html_bool = false;
             }
         }
+
+        Clipboard.write({
+            string: ticket
+        });
     }
 
     copyTicketToClipboard(enviro_post: any) {
