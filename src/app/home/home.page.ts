@@ -141,6 +141,10 @@ export class HomePage implements OnInit {
                     this.loading.hideLoading();
                 },
                 error: (error) => {
+                    if (error.status == 401)
+                    {
+                        this.presentAlert('Error When Collecting Recent FPNs', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
+                    }
                     console.error('Error:', error);
                     this.loading.hideLoading();
                 }
