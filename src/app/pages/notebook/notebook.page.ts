@@ -52,6 +52,9 @@ export class NotebookPage implements OnInit {
         private loading: LoadingService,
     ) 
     {
+        this.notebook_entries = new NotebookEntry();
+        this.enviro_post = new EnviroPost();
+
         this.id = this.route2.snapshot.paramMap.get('id');
 
         if (!this.data.checkFPNData()){
@@ -72,14 +75,12 @@ export class NotebookPage implements OnInit {
                 this.enviro_post = new EnviroPost();
             }
 
-            if (this.enviro_post.notebook_entries == undefined || this.enviro_post.notebook_entries == null) 
+            if (this.enviro_post.hair > 0 && this.enviro_post.is_fpn_advised !== '' && this.enviro_post.is_fpn_handed !== '' && this.enviro_post.gender !== '' && this.enviro_post.ethnicity_id > 0)
             {
-                this.enviro_post.notebook_entries = new NotebookEntry();
-                this.notebook_entries = new NotebookEntry();
+                this.dettachNotebook(0);
             }
-            else
-            {
-                this.notebook_entries = this.enviro_post.notebook_entries;
+            else{
+                
             }
 
             this.route2.queryParams.subscribe(params => {
@@ -89,15 +90,13 @@ export class NotebookPage implements OnInit {
 
         } else
         {
-            this.notebook_entries = new NotebookEntry();
-            this.enviro_post = new EnviroPost();
+            // this.notebook_entries = new NotebookEntry();
+            // this.enviro_post = new EnviroPost();
 
             this.route2.queryParams.subscribe(params => {
                 this.fpn_number = params['fpn_number']; // Fallback to null if not present
             });
         }
-
-        // this.loadData();
         
         this.app_log = new AppLog();
 
@@ -120,6 +119,73 @@ export class NotebookPage implements OnInit {
                 }
             });
         }
+    }
+
+    dettachNotebook(index: number) {
+        switch (index) {
+            case 0:
+                //Inital load enviro data in the notebook entry data
+                this.notebook_entries.is_fpn_advised = this.enviro_post.is_fpn_advised;
+                this.notebook_entries.is_fpn_handed = this.enviro_post.is_fpn_handed;
+                this.notebook_entries.height_in_feet = this.enviro_post.height_in_feet;
+                this.notebook_entries.height_in_inch = this.enviro_post.height_in_inch;
+                this.notebook_entries.gender = this.enviro_post.gender;
+                this.notebook_entries.ethnicity_id = this.enviro_post.ethnicity_id;
+                this.notebook_entries.caution = this.enviro_post.caution;
+                this.notebook_entries.second_caution = this.enviro_post.second_caution;
+                this.notebook_entries.visibility_id = this.enviro_post.visibility_id;;
+                this.notebook_entries.weather_id = this.enviro_post.weather_id;;
+                this.notebook_entries.witness_name = this.enviro_post.witness_name;
+                this.notebook_entries.witness_phone = this.enviro_post.witness_phone;
+                this.notebook_entries.witness_address = this.enviro_post.witness_address;
+                this.notebook_entries.witness_statement = this.enviro_post.witness_statement;
+                this.notebook_entries.officer_statement = this.enviro_post.officer_statement;
+                this.notebook_entries.is_witness_available = this.enviro_post.is_witness_available;
+                this.notebook_entries.build = this.enviro_post.build;
+                this.notebook_entries.hair = this.enviro_post.hair;;
+                this.notebook_entries.distance_from_offender = this.enviro_post.distance_from_offender;
+                this.notebook_entries.distinguishing_features = this.enviro_post.distinguishing_features;
+                this.notebook_entries.have_reason = this.enviro_post.have_reason;
+                this.notebook_entries.nearest_bin = this.enviro_post.nearest_bin;
+                this.notebook_entries.were = this.enviro_post.were;
+                this.notebook_entries.did = this.enviro_post.did;
+                this.notebook_entries.police_comments = this.enviro_post.police_comments;
+                this.notebook_entries.offender_comments = this.enviro_post.offender_comments;
+                this.notebook_entries.bwv_assest = this.enviro_post.bwv_assest;
+                break;
+            case 1:
+                //Move the notebook entry back enviro when its time to submit, Enviro Post only
+                this.enviro_post.is_fpn_advised = this.notebook_entries.is_fpn_advised;
+                this.enviro_post.is_fpn_handed = this.notebook_entries.is_fpn_handed;
+                this.enviro_post.height_in_feet = this.notebook_entries.height_in_feet;
+                this.enviro_post.height_in_inch = this.notebook_entries.height_in_inch;
+                this.enviro_post.gender = this.notebook_entries.gender;
+                this.enviro_post.ethnicity_id = this.notebook_entries.ethnicity_id;
+                this.enviro_post.caution = this.notebook_entries.caution;
+                this.enviro_post.second_caution = this.notebook_entries.second_caution;
+                this.enviro_post.visibility_id = this.notebook_entries.visibility_id;;
+                this.enviro_post.weather_id = this.notebook_entries.weather_id;;
+                this.enviro_post.witness_name = this.notebook_entries.witness_name;
+                this.enviro_post.witness_phone = this.notebook_entries.witness_phone;
+                this.enviro_post.witness_address = this.notebook_entries.witness_address;
+                this.enviro_post.witness_statement = this.notebook_entries.witness_statement;
+                this.enviro_post.officer_statement = this.notebook_entries.officer_statement;
+                this.enviro_post.is_witness_available = this.notebook_entries.is_witness_available;
+                this.enviro_post.build = this.notebook_entries.build;
+                this.enviro_post.hair = this.notebook_entries.hair;;
+                this.enviro_post.distance_from_offender = this.notebook_entries.distance_from_offender;
+                this.enviro_post.distinguishing_features = this.notebook_entries.distinguishing_features;
+                this.enviro_post.have_reason = this.notebook_entries.have_reason;
+                this.enviro_post.nearest_bin = this.notebook_entries.nearest_bin;
+                this.enviro_post.were = this.notebook_entries.were;
+                this.enviro_post.did = this.notebook_entries.did;
+                this.enviro_post.police_comments = this.notebook_entries.police_comments;
+                this.enviro_post.offender_comments = this.notebook_entries.offender_comments;
+                this.enviro_post.bwv_assest = this.notebook_entries.bwv_assest;
+                break;
+
+        }
+        
     }
 
     loadData() {
@@ -150,14 +216,6 @@ export class NotebookPage implements OnInit {
             this.presentAlert('Wait!', 'Please provide hair details.');
             return false;
         }
-        // if (this.notebook_entries.were == '') {
-        //     this.presentAlert('Wait!', 'Please provide were details.');
-        //     return false;
-        // }
-        // if (this.notebook_entries.did == '') {
-        //     this.presentAlert('Wait!', 'Please provide did details.');
-        //     return false;
-        // }
         if (this.notebook_entries.gender == '') {
             this.presentAlert('Wait!', 'Please provide offender Gender.');
             return false;
@@ -175,7 +233,7 @@ export class NotebookPage implements OnInit {
             return false;
         }
         
-        console.log(this.enviro_post.notebook_entries);
+        // console.log(this.enviro_post.notebook_entries);
         return true;
     }
 
@@ -199,9 +257,9 @@ export class NotebookPage implements OnInit {
     saveEnviroData() {
         if (this.id == 0) 
         {
-            if (this.enviro_post.notebook_entries.hair !== 0 && this.enviro_post.notebook_entries.is_fpn_advised !== '' && this.enviro_post.notebook_entries.is_fpn_handed !== '')
+            if (this.notebook_entries.hair > 0 && this.notebook_entries.is_fpn_advised !== '' && this.notebook_entries.is_fpn_handed !== '' && this.notebook_entries.gender !== '' && this.notebook_entries.ethnicity_id > 0)
             {
-                this.enviro_post.notebook_entries = this.notebook_entries;
+                this.dettachNotebook(1);
                 this.data.setEnviroPost(this.enviro_post);
             }
         }
@@ -216,7 +274,11 @@ export class NotebookPage implements OnInit {
 
         if (checker) {
 
-            this.offenceSwitcherForserver(this.enviro_post);
+            this.loading.showLoading();
+
+            this.dettachNotebook(1);
+
+            console.log(this.enviro_post, this.notebook_entries);
 
             this.isSubmitting = true;
 
@@ -229,19 +291,24 @@ export class NotebookPage implements OnInit {
                         this.offenceSwitcherForserver(this.enviro_post);
                         let message = response.message + " (Please Edit)";
                         this.isSubmitting = false;
+                        this.loading.hideLoading();
+
                         this.presentAlert('Error', message);
                     } else {                        
                         let fpn = response.data;    
 
                         Clipboard.write({
-                            string: fpn.ticket
+                            string: fpn.fpn_number
                         });
                         
                         this.data.spliceEnviroQue(this.enviro_post);
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
                         this.isSubmitting = false;
-                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
+                        
+                        this.loading.hideLoading();
+
+                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
 
                         this.route('/tabs/fpn');
                     }
@@ -261,6 +328,8 @@ export class NotebookPage implements OnInit {
         {
             this.isSubmitting = true;
 
+            this.loading.showLoading();
+
             this.notebook_entries.enviro_id = this.id;
             this.api.postNoteBook(this.notebook_entries).subscribe({
                 next: (response) => {
@@ -270,11 +339,14 @@ export class NotebookPage implements OnInit {
                     {
                         let message = response.message + " (Please Edit)";
                         this.isSubmitting = false;
+                        this.loading.hideLoading();
+
                         this.presentAlert('Error', message);
                     } else {
                         this.isSubmitting = false;
+                        this.loading.hideLoading();
                         this.presentAlert('Success', 'Notebook entry captured');
-                        this.route('');
+                        this.route('/tabs/fpn');
                         
                     }
                 }
@@ -304,11 +376,11 @@ export class NotebookPage implements OnInit {
         await alert.present();
     }
 
-    refresh() {
+    async refresh() {
         this.loading.showLoading();
         this.getFPNData();
         this.loading.hideLoading();
-        // window.location.reload();
+        window.location.reload();
     }
 
     getFPNData(): void {
