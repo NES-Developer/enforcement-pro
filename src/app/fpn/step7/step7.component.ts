@@ -38,7 +38,7 @@ export class Step7Component  implements OnInit {
         this.loadData();
 
         this.enviro_post = new EnviroPost();
-        this.enviro_post.notebook_entries = new NotebookEntry();
+        // this.enviro_post.notebook_entries = new NotebookEntry();
 
         let enviro_post =  this.data.getEnviroPost();
         if (enviro_post !== null) {
@@ -66,7 +66,7 @@ export class Step7Component  implements OnInit {
 
     saveEnviroData() {
         this.onInputChange();
-        if (this.enviro_post.notebook_entries.hair !== 0 && this.enviro_post.notebook_entries.were !== '' && this.enviro_post.notebook_entries.did !== '' && this.enviro_post.notebook_entries.is_fpn_advised !== '' && this.enviro_post.notebook_entries.is_fpn_handed !== '')
+        if (this.enviro_post.hair !== 0 && this.enviro_post.is_fpn_advised !== '' && this.enviro_post.is_fpn_handed !== '' && this.enviro_post.gender !== '' && this.enviro_post.ethnicity_id > 0)
         {
             this.data.setEnviroPost(this.enviro_post);
         }

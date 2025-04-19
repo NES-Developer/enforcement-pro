@@ -30,8 +30,8 @@ export class DataService {
 
     private last_fpn_id: number = 0;
 
-    private live_url: string = 'https://app.enforcementpro.co.uk';
-    private dev_url: string = 'https://app.enforcementpro.co.uk';
+    private live_url: string = 'https://uat.enforcementpro.co.uk';
+    private dev_url: string = 'https://uat.enforcementpro.co.uk';
     private google_key: string = 'AIzaSyAfk02RCKQgVc4__wbyFgnpraBOhMeK6K4';
     private api_app_version: string = '';
     private api_app_url: string = 'https://drive.google.com/file/d/15KLQYvY5-qyyTNBI4WlGiDpPZ6m9yLns/view';

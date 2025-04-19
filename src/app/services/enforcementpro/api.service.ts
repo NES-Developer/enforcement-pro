@@ -17,7 +17,7 @@ import { NotebookEntry } from '../../models/notebook-entry';
 })
 export class ApiService {
 
-    private baseUrl: string = 'https://app.enforcementpro.co.uk/api/app';
+    private baseUrl: string = 'https://uat.enforcementpro.co.uk/api/app';
 
     holder: any;
 

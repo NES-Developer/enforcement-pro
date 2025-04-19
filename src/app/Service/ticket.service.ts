@@ -93,10 +93,9 @@ export class TicketService {
         const ticketHTML = `
      
                         <div>
-
-                            
-                                <!-- <img style="width:100%" src="${url}" alt="Site"/> -->
-                                <h3>${site.name}</h3>
+                        
+                            <!-- <img style="width:100%" src="${url}" alt="Site"/> -->
+                            <h3>${site.name}</h3>
                             <br/>
                             <!-- <p>${site.name}</p> -->
                             

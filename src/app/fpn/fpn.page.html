@@ -4,16 +4,12 @@
             <ion-col>
                 <ion-button (click)="route('/fpn/queue')">
                     <ion-icon name="time"></ion-icon>
+                    {{enviro_que.length !== null ? enviro_que.length : 0}}
                 </ion-button>
                 <ion-button (click)="refresh()">
                     <ion-icon name="refresh"></ion-icon>
                 </ion-button>
             </ion-col>
-            <!-- <ion-col>
-                <ion-title>
-                    FPN
-                </ion-title>
-            </ion-col> -->
             <ion-col>
                 <ion-button (click)="cancel()">
                     <ion-icon name="close"></ion-icon>

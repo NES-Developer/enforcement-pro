@@ -1,7 +1,4 @@
-
-
-export class 
-NotebookEntry {
+export class NotebookEntry {
    enviro_id: number = 0;
    is_fpn_advised: string = '';
    is_fpn_handed: string = '';

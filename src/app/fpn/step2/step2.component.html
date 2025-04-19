@@ -10,9 +10,7 @@
 </ion-item>
 <ion-item>
     <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.salutation">
-        <ion-select-option *ngFor="let salutation of salutations"> 
-            {{ salutation.title }}     
-        </ion-select-option>
+        <ion-select-option *ngFor="let salutation of salutations">{{ salutation.title }}</ion-select-option>
     </ion-select>
 </ion-item>
 

@@ -16,10 +16,8 @@ import { AppLauncher } from '@capacitor/app-launcher';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingService } from '../services/loading.service';
 // import { App } from '@capacitor/app';
-import { Capacitor } from '@capacitor/core';
+// import { Capacitor } from '@capacitor/core';
 import { User } from '../models/user';
-
-
 
 @Component({
   selector: 'app-fpn',
@@ -32,8 +30,9 @@ export class FPNPage implements OnInit {
     map: any;
     currentStep: number = 1;
     enviro_post: EnviroPost;
+    enviro_que: EnviroPost[] = [];
     fpn: any;
-    baseUrl: string = 'https://app.enforcementpro.co.uk/';
+    baseUrl: string = 'https://uat.enforcementpro.co.uk/';
     id: any;
     isSubmitting: boolean = false;
 
@@ -45,7 +44,6 @@ export class FPNPage implements OnInit {
         private route2: ActivatedRoute,
         private router: Router,
         private loading:LoadingService,
-
     ) {
         this.auth.checkLoggedIn();
 
@@ -97,6 +95,7 @@ export class FPNPage implements OnInit {
 
     loadData() {
         this.app_log = this.data.getAppLog();
+        this.enviro_que = this.data.getEnviroQue();
 
         this.ping();
         setInterval(() => {
@@ -296,15 +295,15 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 7:
-                if (!this.enviro_post.notebook_entries.is_fpn_advised) {
+                if (!this.enviro_post.is_fpn_advised) {
                     this.presentAlert('Wait!', 'Please provide if FPN is adviced.');
                     return false;
                 }
-                if (!this.enviro_post.notebook_entries.is_fpn_handed) {
+                if (!this.enviro_post.is_fpn_handed) {
                     this.presentAlert('Wait!', 'Please provide if FPN is handed.');
                     return false;
                 }
-                if (this.enviro_post.notebook_entries.hair == 0) {
+                if (this.enviro_post.hair == 0) {
                     this.presentAlert('Wait!', 'Please provide hair details.');
                     return false;
                 }
@@ -316,19 +315,19 @@ export class FPNPage implements OnInit {
                 //     this.presentAlert('Wait!', 'Please provide did details.');
                 //     return false;
                 // }
-                if (this.enviro_post.notebook_entries.gender == '') {
+                if (this.enviro_post.gender == '') {
                     this.presentAlert('Wait!', 'Please provide offender Gender.');
                     return false;
                 }
-                if (this.enviro_post.notebook_entries.visibility_id <= 0) {
+                if (this.enviro_post.visibility_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide Visibility.');
                     return false;
                 }
-                if (this.enviro_post.notebook_entries.weather_id <= 0) {
+                if (this.enviro_post.weather_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide Weather.');
                     return false;
                 }
-                if (this.enviro_post.notebook_entries.ethnicity_id <= 0) {
+                if (this.enviro_post.ethnicity_id <= 0) {
                     this.presentAlert('Wait!', 'Please provide offender Ethnicity.');
                     return false;
                 }
@@ -415,7 +414,7 @@ export class FPNPage implements OnInit {
                     {
                         this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
                     } 
-                    // else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
+                    // else if (error.message == "Http failure response for https//uat.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
                     // {
                     //     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
                     // } 

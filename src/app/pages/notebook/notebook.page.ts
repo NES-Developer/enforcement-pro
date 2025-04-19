@@ -52,6 +52,7 @@ export class NotebookPage implements OnInit {
         private loading: LoadingService,
     ) 
     {
+
         this.notebook_entries = new NotebookEntry();
         this.enviro_post = new EnviroPost();
 
@@ -189,6 +190,8 @@ export class NotebookPage implements OnInit {
     }
 
     loadData() {
+        this.loading.showLoading();
+
         this.app_log = this.data.getAppLog();
         this.builds = this.data.getBuilds();
         this.hair_colours = this.data.getHairColours();
@@ -201,6 +204,8 @@ export class NotebookPage implements OnInit {
         setInterval(() => {
             this.ping();
         }, 120000); // 2 minutes in milliseconds
+
+        this.loading.hideLoading();
     }
 
     validator(): boolean {
@@ -305,7 +310,7 @@ export class NotebookPage implements OnInit {
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
                         this.isSubmitting = false;
-                        
+
                         this.loading.hideLoading();
 
                         this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
@@ -384,6 +389,8 @@ export class NotebookPage implements OnInit {
     }
 
     getFPNData(): void {
+        this.loading.showLoading();
+
         let site: any = this.data.getSelectedSite();
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
@@ -435,9 +442,14 @@ export class NotebookPage implements OnInit {
                 let offenceGroups = this.extractOffenceGroups(offences);
                 this.data.setOffenceGroups(offenceGroups);
 
+                this.loading.hideLoading();
+
+
             },
             error: (error) => {
                 this.loadData();
+
+                this.loading.hideLoading();
 
                 console.error('Error fetching FPN Data:', error + '. Try see if the backup loader worked.');
             }

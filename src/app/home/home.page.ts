@@ -23,6 +23,7 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 
 
 import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
+import { EnviroPost } from '../models/enviro';
 
 
 @Component({
@@ -42,6 +43,8 @@ export class HomePage implements OnInit {
     selected_site: any; // Variable to hold selected site
 
     sites: any[] = [];
+
+    enviro_que: EnviroPost[] = [];
 
 
     constructor(
@@ -101,6 +104,7 @@ export class HomePage implements OnInit {
 
     loadData() {
         this.app_log = this.data.getAppLog();
+        this.enviro_que = this.data.getEnviroQue();
         // this.user = this.data.getuser
 
         if(this.data.checkAppLog()) {
@@ -166,7 +170,7 @@ export class HomePage implements OnInit {
     }
 
     getRequestTicket(randomValue: number, fpn_number: string) {
-        const url = `https://app.enforcementpro.co.uk/uploads/tickets/EP${randomValue}_${fpn_number}_PRINT_1_fpn.png`;
+        const url = `https://uat.enforcementpro.co.uk/uploads/tickets/EP${randomValue}_${fpn_number}_PRINT_1_fpn.png`;
         // let user_id = this.auth.getUser().id;
         this.http.get(url, { responseType: 'blob' }).subscribe({
             next: (response) => {

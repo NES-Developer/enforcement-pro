@@ -4,16 +4,19 @@
             <ion-col>
                 <ion-button (click)="route('/fpn/queue')">
                     <ion-icon name="time"></ion-icon>
+                    <ion-badge color="white">
+                        {{enviro_que.length !== null ? enviro_que.length : 0}}
+                    </ion-badge>
                 </ion-button>
                 <ion-button (click)="init()">
                     <ion-icon name="refresh"></ion-icon>
                 </ion-button>
             </ion-col>
-            <ion-col>
+            <!-- <ion-col>
                 <ion-title>
                     Home
                 </ion-title>
-            </ion-col>
+            </ion-col> -->
             <ion-col>
                 <ion-button (click)="logout()">
                     <ion-icon name="log-out"></ion-icon>
