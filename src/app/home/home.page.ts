@@ -262,12 +262,12 @@ export class HomePage implements OnInit {
             case 1: 
             try {
                 const canOpen = await AppLauncher.canOpenUrl({
-                  url: 'com.ahmedelsayed.sunmiprinterapp'
+                  url: 'com.ahmedelsayed.sunmiprinterutill'
                 });
           
                 if (canOpen.value) {
                   await AppLauncher.openUrl({
-                    url: 'com.ahmedelsayed.sunmiprinterapp'
+                    url: 'com.ahmedelsayed.sunmiprinterutill'
                   });
                 } else {
                   console.log('Cannot open app');
