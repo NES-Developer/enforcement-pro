@@ -141,6 +141,16 @@ export class HomePage implements OnInit {
             this.api.getRecentFPNs(user.id).subscribe({
                 next: (response) => {
                     this.recent_fpns = response.data;
+                    // Sort the array by created_at in descending order (newest first)
+                    this.recent_fpns.sort((a, b) => {
+                        // Convert the created_at strings to Date objects for comparison
+                        const dateA = new Date(a.created_at);
+                        const dateB = new Date(b.created_at);
+
+                        // Subtracting dates gives a timestamp difference.
+                        // For descending order (newest first), subtract dateA from dateB.
+                        return dateB.getTime() - dateA.getTime();
+                    });
                     console.log('Response:', response);
                     this.loading.hideLoading();
                 },

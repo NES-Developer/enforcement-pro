@@ -180,6 +180,7 @@ export class FPNPage implements OnInit {
         switch (this.currentStep) {
             case 1:
                 if (this.enviro_post.zone_id <= 0) {
+                    console.log(this.enviro_post);
                     this.presentAlert('Wait!', 'Please provide your Zone.');
                     return false;
                 }
@@ -412,6 +413,7 @@ export class FPNPage implements OnInit {
                     }
                     else if (error.status == 500)
                     {
+                        console.log(error);
                         this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
                     } 
                     // else if (error.message == "Http failure response for https//uat.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
