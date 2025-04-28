@@ -352,7 +352,7 @@ export class NotebookPage implements OnInit {
                         this.loading.hideLoading();
                         this.presentAlert('Success', 'Notebook entry captured');
                         this.route('/tabs/fpn');
-                        
+                        window.location.reload();
                     }
                 }
             });
