@@ -180,7 +180,7 @@ export class HomePage implements OnInit {
     }
 
     getRequestTicket(randomValue: number, fpn_number: string) {
-        const url = `https://uat.enforcementpro.co.uk/uploads/tickets/EP${randomValue}_${fpn_number}_PRINT_1_fpn.png`;
+        const url = `https://app.enforcementpro.co.uk/uploads/tickets/EP${randomValue}_${fpn_number}_PRINT_1_fpn.png`;
         // let user_id = this.auth.getUser().id;
         this.http.get(url, { responseType: 'blob' }).subscribe({
             next: (response) => {

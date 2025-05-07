@@ -8,7 +8,7 @@ import { map } from 'rxjs/operators';
 })
 export class ValidatePersonService {
 
-    private baseUrl: string = 'https://uat.enforcementpro.co.uk/api/verify/idu';
+    private baseUrl: string = 'https://app.enforcementpro.co.uk/api/verify/idu';
 
     // private apiUrl = 'https://ws-idu.tracesmart.co.uk/v5.8';
     // private clientId = 'ff8d43cba2ebb1a99fb0cf5f485818221eca6ee4';

@@ -31,7 +31,7 @@ export class QueueComponent  implements OnInit {
     currentStep: number = 1;
     enviro_que: EnviroPost[] = [];
     enviro_que_addition: any[] = [];//xx
-    baseUrl: string = 'https://uat.enforcementpro.co.uk/';
+    baseUrl: string = 'https://app.enforcementpro.co.uk/';
     app_log: AppLog;
     isSubmitting: boolean = false;
 
@@ -254,15 +254,15 @@ export class QueueComponent  implements OnInit {
                 this.isSubmitting = false;
                 this.loading.hideLoading();
 
-                if (error.message == "Http failure response for https//uat.enforcementpro.co.uk/api/app/enviro1: 401 OK")
+                if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
                 {
                     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
                 }
-                else if (error.message == "Http failure response for https//uat.enforcementpro.co.uk/api/app/enviro1: 500 OK")
+                else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 500 OK")
                 {
                     this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
                 } 
-                else if (error.message == "Http failure response for https//uat.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
+                else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
                 {
                     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
                 } 
