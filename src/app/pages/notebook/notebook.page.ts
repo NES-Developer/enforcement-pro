@@ -94,6 +94,12 @@ export class NotebookPage implements OnInit {
             // this.notebook_entries = new NotebookEntry();
             // this.enviro_post = new EnviroPost();
 
+            // console.log(this.id);
+
+            // this.notebook_entries.enviro_id = this.id;
+            this.notebook_entries.enviro_id = parseInt(this.id);
+
+
             this.route2.queryParams.subscribe(params => {
                 this.fpn_number = params['fpn_number']; // Fallback to null if not present
             });
@@ -101,9 +107,9 @@ export class NotebookPage implements OnInit {
         
         this.app_log = new AppLog();
 
-     }
+    }
 
-     ngOnInit(): void {
+    ngOnInit(): void {
 
         
     }
@@ -325,7 +331,7 @@ export class NotebookPage implements OnInit {
     submitForm () {
         if (this.isSubmitting) {
             return;
-        }
+        }//Nemo
 
         let checker = this.validator();
 
@@ -350,8 +356,11 @@ export class NotebookPage implements OnInit {
                     } else {
                         this.isSubmitting = false;
                         this.loading.hideLoading();
+                        this.route('');
+                        // this.router.navigate(['']);
+
+
                         this.presentAlert('Success', 'Notebook entry captured');
-                        this.route('/tabs/fpn');
                         window.location.reload();
                     }
                 }

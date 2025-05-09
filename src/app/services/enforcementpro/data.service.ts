@@ -389,7 +389,7 @@ export class DataService {
     }
 
     checkAppLog(): boolean {
-        return this.app_log !== null && this.app_log.device_id !== null && this.app_log.lat !== null && this.app_log.lng !== null;
+        return this.app_log !== null && this.app_log.lat !== null && this.app_log.lng !== null;
     }
 
     getLastFpnId(): number {

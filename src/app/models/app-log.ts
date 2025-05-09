@@ -1,6 +1,6 @@
 export class AppLog {
     type: string = "ping";
-    device_id: string = "0";
+    // device_id: string = "0";
     user_id: string = "0";
     site_id: string = "0";
     zone_id: string = "0";

@@ -42,7 +42,7 @@ export class ServiceRequestPage implements OnInit {
     position_lng: string = "0";
     position_lat: string = "0";
 
-    device_id: string = "0";
+    // device_id: string = "0";
     site_id: number = 0;
     // zone_id: string = '0';
 
@@ -130,7 +130,7 @@ export class ServiceRequestPage implements OnInit {
 
     storeAppLog() {
 
-        this.app_log.device_id = this.device_id;
+        // this.app_log.device_id = this.device_id;
         this.app_log.site_id = this.site_id.toString();
 
         this.data.setSelectedZone(this.selected_zone);
@@ -241,7 +241,7 @@ export class ServiceRequestPage implements OnInit {
         // console.log(this.app_log.device_id );
         if (this.data.checkAppLog()) {
             this.app_log = this.data.getAppLog();
-            this.device_id = this.app_log.device_id;
+            // this.device_id = this.app_log.device_id;
             this.selected_zone.id = parseInt(this.app_log.zone_id);
             
         } 
@@ -301,6 +301,7 @@ export class ServiceRequestPage implements OnInit {
     }
 
     ping() {
+        
         this.api.postTrack(this.app_log).subscribe({
             next: (response) => {
                 // console.log('Response:', response);
@@ -320,28 +321,28 @@ export class ServiceRequestPage implements OnInit {
         });
     }
 
-    deviceValidation() {
-        this.api.deviceValidation(this.app_log.device_id).subscribe({
-            next: (response) => {
-                // console.log('Response:', response);
-                // Handle the response here
-                let message = response.message;
-                if(response.success === false) 
-                {
-                    this.presentAlert('Error', response.msg);
+    // deviceValidation() {
+    //     this.api.deviceValidation(this.app_log.device_id).subscribe({
+    //         next: (response) => {
+    //             // console.log('Response:', response);
+    //             // Handle the response here
+    //             let message = response.message;
+    //             if(response.success === false) 
+    //             {
+    //                 this.presentAlert('Error', response.msg);
 
-                } else {
-                    this.storeAppLog();
+    //             } else {
+    //                 this.storeAppLog();
                     
-                    this.presentAlert('Success', response.msg);
-                }
-            },
-            error: (error) => {
-                console.error('Error:', error);
-                this.presentAlert('Error', 'Server Error: ' + error.message );
-            }
-        });
-    }
+    //                 this.presentAlert('Success', response.msg);
+    //             }
+    //         },
+    //         error: (error) => {
+    //             console.error('Error:', error);
+    //             this.presentAlert('Error', 'Server Error: ' + error.message );
+    //         }
+    //     });
+    // }
 
 
     forceCloseApp() {

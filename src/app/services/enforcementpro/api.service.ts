@@ -56,14 +56,14 @@ export class ApiService {
         return this.http.post(url, data, { headers: this.getHeaders() });
     }
 
-    deviceValidation(data: string): Observable<any> {
-        let object = {
-            device_id: data
-        };
-        const url = `${this.baseUrl}/device/verify`;
-        console.log(url, object, this.http.post(url, object))
-        return this.http.post(url, object);
-    }
+    // deviceValidation(data: string): Observable<any> {
+    //     let object = {
+    //         device_id: data
+    //     };
+    //     const url = `${this.baseUrl}/device/verify`;
+    //     console.log(url, object, this.http.post(url, object))
+    //     return this.http.post(url, object);
+    // }
 
     getSRData(): Observable<any> {
         const url = `${this.baseUrl}/sr/data`;
