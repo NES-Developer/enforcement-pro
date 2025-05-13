@@ -202,77 +202,77 @@ export class QueueComponent  implements OnInit {
         document.body.removeChild(a);
     }
 
-    submitFPN(enviro_post: any) {
-        if (this.isSubmitting) {
-            return;
-        }
+    // submitFPN(enviro_post: any) {
+    //     if (this.isSubmitting) {
+    //         return;
+    //     }
 
-        this.isSubmitting = true;
-        this.loading.showLoading();
+    //     this.isSubmitting = true;
+    //     this.loading.showLoading();
 
-        enviro_post = enviro_post.map((item: any) => {
-            const cleaned = { ...item };
-            delete cleaned.html_bool;
-            delete cleaned.html_string;
-            return cleaned;
-        });
+    //     enviro_post = enviro_post.map((item: any) => {
+    //         const cleaned = { ...item };
+    //         delete cleaned.html_bool;
+    //         delete cleaned.html_string;
+    //         return cleaned;
+    //     });
 
-        this.api.postFPN(enviro_post).subscribe({
-            next: (response) => {
+    //     this.api.postFPN(enviro_post).subscribe({
+    //         next: (response) => {
 
-                if(response.success === false) 
-                {
-                    let message = response.message + " (Please Edit)";
+    //             if(response.success === false) 
+    //             {
+    //                 let message = response.message + " (Please Edit)";
                     
-                    this.isSubmitting = false;
-                    this.loading.hideLoading();
+    //                 this.isSubmitting = false;
+    //                 this.loading.hideLoading();
 
-                    this.presentAlert('Error', message);
+    //                 this.presentAlert('Error', message);
 
-                } else {
-                    let fpn_number = response.data.fpn_number;
-                    this.presentAlert('Success', fpn_number);
+    //             } else {
+    //                 let fpn_number = response.data.fpn_number;
+    //                 this.presentAlert('Success', fpn_number);
 
-                    let fpn = response.data;
+    //                 let fpn = response.data;
 
-                    Clipboard.write({
-                        string: fpn.fpn_number
-                    });
+    //                 Clipboard.write({
+    //                     string: fpn.fpn_number
+    //                 });
 
-                    this.isSubmitting = false;
-                    this.loading.hideLoading();
+    //                 this.isSubmitting = false;
+    //                 this.loading.hideLoading();
 
-                    this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
+    //                 this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
 
-                    this.data.spliceEnviroQue(enviro_post);
-                    this.enviro_que = this.data.getEnviroQue();
-                }
-            },
-            error: (error) => {
-                // console.log(2, error);
+    //                 this.data.spliceEnviroQue(enviro_post);
+    //                 this.enviro_que = this.data.getEnviroQue();
+    //             }
+    //         },
+    //         error: (error) => {
+    //             // console.log(2, error);
 
-                this.isSubmitting = false;
-                this.loading.hideLoading();
+    //             this.isSubmitting = false;
+    //             this.loading.hideLoading();
 
-                if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
-                {
-                    this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
-                }
-                else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 500 OK")
-                {
-                    this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
-                } 
-                else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
-                {
-                    this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
-                } 
-                else 
-                {
-                    this.presentAlert('Error', error.message);
-                }   
-            }
-        });
-    }
+    //             if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
+    //             {
+    //                 this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
+    //             }
+    //             else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 500 OK")
+    //             {
+    //                 this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
+    //             } 
+    //             else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
+    //             {
+    //                 this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
+    //             } 
+    //             else 
+    //             {
+    //                 this.presentAlert('Error', error.message);
+    //             }   
+    //         }
+    //     });
+    // }
 
     ping() {
         this.api.postTrack(this.app_log).subscribe({
@@ -314,6 +314,11 @@ export class QueueComponent  implements OnInit {
     generateTicket(enviro_post: EnviroPost) {
 
         let ticket = this.ticket.generateWelcomeTicket(enviro_post);//Nemo
+         
+        if (ticket == "refresh") {
+            this.presentAlert('Error', 'Please find Netwrok and get latest data. To regenerate new FPN Numbers');
+            return;
+        }
 
         for (let x = 0; x<this.enviro_que_addition.length; x++) {
             if (this.enviro_que_addition[x] == enviro_post) {

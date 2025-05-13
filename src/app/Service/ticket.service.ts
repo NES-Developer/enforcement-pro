@@ -23,6 +23,7 @@ import moment from 'moment';  // Import moment.js for date formatting
   })
 export class TicketService {
     // enviro_post: EnviroPost;
+    enviro_que: EnviroPost[] = [];
     url: string = '';
 
     constructor (
@@ -38,19 +39,24 @@ export class TicketService {
             throw new Error('Enviro data is missing');
         }
 
-        if (enviro_post.fpn_number == '') {
-            // Generate FPN Number and Barcode
-            let last_enviro_id: number = this.data.getLastFpnId(); // Fetch the last environment ID
-            last_enviro_id = last_enviro_id ? 0 : 25000;
-            enviro_post.fpn_number = this.generateFpnNumber(last_enviro_id);
+        let fpn_numbers_and_barcode = this.data.getFPNNumberOfflinePrinter();
+
+        if(fpn_numbers_and_barcode.isEmpty())
+        {
+            return 'refresh';
         }
 
+        this.enviro_que = this.data.getEnviroQue();
+        const index = this.enviro_que.indexOf(enviro_post);
 
-        let barcode = '';
-        if (enviro_post.barcode == '') {
-            enviro_post.barcode = this.generateBarcodeNumber(enviro_post.fpn_number);
-        }
-        barcode = enviro_post.barcode
+        // Generate FPN Number and Barcode
+        
+
+        enviro_post.fpn_number = fpn_numbers_and_barcode[index].fpn_number;
+        enviro_post.barcode = fpn_numbers_and_barcode[index].barcode;  
+        
+
+        let barcode = enviro_post.barcode
 
         const barcodeCanvas = document.createElement('canvas');
 
@@ -190,39 +196,7 @@ export class TicketService {
         }
         return parsedHTML;
     }
-
-    // Generate Barcode Number Function
-    private generateBarcodeNumber(fpn_number: string): string {
-        const iin = `982651900${fpn_number}`;
-        const luhn = this.generateLuhnDigit(iin);
-        return `${iin}${luhn}`;
-    }
-
-    // Helper function to convert blob to base64
-    private async convertBlobToBase64(blob: Blob): Promise<string> {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onerror = reject;
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob); // Ensure `blob` is valid before calling this
-        });
-    }
-      
-    // Generate Luhn Digit Function
-    private generateLuhnDigit(iin: string): number {
-        let sum = 0;
-        let alternate = false;
-        for (let i = iin.length - 1; i >= 0; i--) {
-            let digit = parseInt(iin.charAt(i), 10);
-            if (alternate) {
-                digit *= 2;
-                if (digit > 9) digit -= 9;
-            }
-            sum += digit;
-            alternate = !alternate;
-        }
-        return (10 - (sum % 10)) % 10;
-    }
+   
 
     // Parse Ticket Template Function
     private parseTicketTemplate(html: string): string {

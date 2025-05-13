@@ -8,6 +8,8 @@ import { FPNPage } from '../fpn.page';
 import { OffenceGroup } from '../../models/offence-group';
 import { Site } from '../../models/site';
 import { ZoneDetection } from '../../models/zone-detection';
+import { Observable, Subscriber, interval } from 'rxjs';
+import { AppLog } from 'src/app/models/app-log';
 
 @Component({
   selector: 'app-step1',
@@ -19,6 +21,8 @@ export class Step1Component  implements OnInit {
     offences: Offence[] = [];
     filteredOffences: Offence[] = [];
     offenceGroups: OffenceGroup[] = [];
+
+    app_log: AppLog = new AppLog();
 
     selected_zone: any;
 
@@ -44,14 +48,38 @@ export class Step1Component  implements OnInit {
         
     }
 
+    private getCurrentPosition(): any {
+        return new Observable((observer: Subscriber<any>) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position: any) => {
+            observer.next({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            });
+            observer.complete();
+            });
+        } else {
+            observer.error();
+        }
+        });
+    }
+
     ZoneDetection() {
-        let app_log = this.data.getAppLog();
+        this.app_log = this.data.getAppLog();
         if (this.data.checkAppLog() ) {
 
             let zone_detection = new ZoneDetection();
-            zone_detection.lat = app_log.lat;
-            zone_detection.lng = app_log.lng;
-            zone_detection.site_id = app_log.site_id;
+
+            this.getCurrentPosition()
+            .subscribe((position: any) => {
+                this.app_log.lat = position.latitude;
+                this.app_log.lng = position.longitude;
+            });
+            zone_detection.lat = this.app_log.lat;
+            zone_detection.lng = this.app_log.lng;
+            this.app_log.site_id = this.enviro_post.site_id.toString();
+            // this.enviro_post.site_id = this.app
+            zone_detection.site_id = this.app_log.site_id;
             
             this.api.zoneDetection(zone_detection).subscribe({
                 next: (response) => {
@@ -60,11 +88,17 @@ export class Step1Component  implements OnInit {
                         this.fpnPage.presentAlert('Error', response.message);
                     } else {
 
-                        app_log.zone_id = response.id;
+                        this.app_log.zone_id = response.id;
+                        this.data.setAppLog(this.app_log);
+
+                        this.enviro_post.zone_id = parseInt(this.app_log.zone_id);
+                        this.saveEnviroData();
+
                         this.selected_zone = response;
                         this.data.setSelectedZone(this.selected_zone);
+
                         this.fpnPage.presentAlert('Yay', 'We found your zone, device settings have been altered.');
-                        this.fpnPage.ping();
+                        // this.fpnPage.ping();
                     }
                 },
             });

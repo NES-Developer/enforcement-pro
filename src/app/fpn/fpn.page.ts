@@ -18,6 +18,7 @@ import { LoadingService } from '../services/loading.service';
 // import { App } from '@capacitor/app';
 // import { Capacitor } from '@capacitor/core';
 import { User } from '../models/user';
+import { Observable, Subscriber } from 'rxjs';
 
 @Component({
   selector: 'app-fpn',
@@ -108,6 +109,8 @@ export class FPNPage implements OnInit {
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
+
+                console.log(data);
 
                 this.data.removeEnviroLookUps();
 
@@ -371,6 +374,18 @@ export class FPNPage implements OnInit {
             this.loading.showLoading();
             this.offenceSwitcherForserver();
             this.assignOfficerId();
+
+            this.app_log = this.data.getAppLog();
+            this.getCurrentPosition()
+            .subscribe((position: any) => {
+                this.app_log.lat = position.latitude;
+                this.app_log.lng = position.longitude;
+            });
+            this.enviro_post.lat = this.app_log.lat;
+            this.enviro_post.lng = this.app_log.lng;
+            this.data.setEnviroPost(this.enviro_post);
+            this.data.setAppLog(this.app_log);
+
             this.api.postFPN(this.enviro_post).subscribe({
                 next: (response) => {
                     this.loading.hideLoading();
@@ -495,21 +510,46 @@ export class FPNPage implements OnInit {
     ping() {
         if (this.data.checkAppLog()) {
 
+            this.app_log = this.data.getAppLog();
+
             let user: User | null = this.auth.getUser();
             if (user) {
                 this.app_log.user_id = user.id.toString();
-            }            
+            }     
+            
+            this.getCurrentPosition()
+            .subscribe((position: any) => {
+                this.app_log.lat = position.latitude;
+                this.app_log.lng = position.longitude;
+            });
+            
+            this.data.setAppLog(this.app_log);
             
             this.api.postTrack(this.app_log).subscribe({
                 next: (response) => {
                     console.log('Response:', response);
-                    
                 },
                 error: (error) => {
                     console.error('Error:', error);
                 }
             });
         }
+    }
+
+    private getCurrentPosition(): any {
+        return new Observable((observer: Subscriber<any>) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position: any) => {
+            observer.next({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            });
+            observer.complete();
+            });
+        } else {
+            observer.error();
+        }
+        });
     }
 
     async openOtherApp() {
@@ -544,7 +584,17 @@ export class FPNPage implements OnInit {
             //this.assignOfficerId();
             let queue = this.data.getEnviroQue();
 
-            if (queue.length < 9) {            
+            if (queue.length < 9) {     
+                this.app_log = this.data.getAppLog();
+                this.getCurrentPosition()
+                .subscribe((position: any) => {
+                    this.app_log.lat = position.latitude;
+                    this.app_log.lng = position.longitude;
+                });
+                this.enviro_post.lat = this.app_log.lat;
+                this.enviro_post.lng = this.app_log.lng;
+                this.data.setEnviroPost(this.enviro_post);
+                this.data.setAppLog(this.app_log);       
                 this.offenceSwitcherForserver();
                 this.assignOfficerId();
                 this.data.pushEnviroQue();

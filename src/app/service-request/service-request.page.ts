@@ -259,10 +259,16 @@ export class ServiceRequestPage implements OnInit {
                 this.position_lng = position.longitude;
             });
 
+        this.data.setAppLog(this.app_log);
+
+        this.ping();
+
         this.app_version = this.constantsService.APP_VERSION;
         // console.log('App Version:', this.constantsService.APP_VERSION);
 
     }
+
+    
 
     private getCurrentPosition(): any {
         return new Observable((observer: Subscriber<any>) => {
@@ -301,17 +307,19 @@ export class ServiceRequestPage implements OnInit {
     }
 
     ping() {
-        
+        if (!this.app_log.zone_id)
+        {
+            this.presentAlert('Wait', 'Please set your Zone.')
+        }
         this.api.postTrack(this.app_log).subscribe({
             next: (response) => {
-                // console.log('Response:', response);
                 // Handle the response here
                 if(response.success === false) 
                 {
                     let message = response.message + " (Please Edit)";
                     this.presentAlert('Error', 'Try ensurng Device details are provided. If still unsuccessful attempt Auto-Login.');
                 } else {
-                    this.presentAlert('Success', 'Pinged');
+                    // this.presentAlert('Success', 'Pinged');
                 }
             },
             error: (error) => {

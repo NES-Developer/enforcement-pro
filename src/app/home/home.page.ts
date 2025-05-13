@@ -242,42 +242,24 @@ export class HomePage implements OnInit {
         switch (index) {
             case 0:
                 try {
-                    const canOpen = await AppLauncher.canOpenUrl({
-                      url: 'com.example.enforcementproprinter'
-                    });
-              
-                    if (canOpen.value) {
-                      await AppLauncher.openUrl({
+                    await AppLauncher.openUrl({
                         url: 'com.example.enforcementproprinter'
-                      });
-                    } else {
-                      console.log('Cannot open app');
-                      this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-                    }
-                  } catch (error) {
-                    console.error('Error launching app:', error);
+                    });
+                } catch (error) {
+                    // console.error('Error launching app:', error);
                     this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-                  }
-                  break;
+                }
+                break;
             case 1: 
             try {
-                const canOpen = await AppLauncher.canOpenUrl({
-                  url: 'com.ahmedelsayed.sunmiprinterutill'
-                });
-          
-                if (canOpen.value) {
                   await AppLauncher.openUrl({
                     url: 'com.ahmedelsayed.sunmiprinterutill'
                   });
-                } else {
-                  console.log('Cannot open app');
-                  this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-                }
-              } catch (error) {
-                console.error('Error launching app:', error);
+            } catch (error) {
+                // console.error('Error launching app:', error);
                 this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-              }
-              break;
+            }
+            break;
         }
         
     }

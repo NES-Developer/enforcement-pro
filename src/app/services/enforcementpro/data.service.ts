@@ -70,6 +70,8 @@ export class DataService {
     private sr_via: any[] = [];
     private sites: any[] = [];
     private offence_types: any[] = [];
+
+    private fpn_number_offline_printer: any[] = [];
     
     constructor() {
         this.service_request = new ServiceRequest();
@@ -104,6 +106,7 @@ export class DataService {
         this.sr_via = this.loadArrayFromLocalStorage('sr_via');
         this.sites = this.loadArrayFromLocalStorage('sites');
         this.offence_types = this.loadArrayFromLocalStorage('offence_types')
+        this.fpn_number_offline_printer = this.loadArrayFromLocalStorage('fpn_number_offline_printer');
 
         this.selected_site = this.loadObjectFromLocalStorage('selected_site');
         this.selected_zone = this.loadObjectFromLocalStorage('selected_zone');
@@ -257,6 +260,11 @@ export class DataService {
         this.saveArrayToLocalStorage('site_offences', this.site_offences);
     }
 
+    setFPNNumberOfflinePrinter(fpn_number_offline_printer: any[]): void {
+        this.fpn_number_offline_printer = fpn_number_offline_printer || [];
+        this.saveArrayToLocalStorage('fpn_number_offline_printer', this.fpn_number_offline_printer);
+    }
+
     setEnviroQue(enviro_que: EnviroPost[]): void {
         this.enviro_que = enviro_que || [];
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
@@ -345,6 +353,15 @@ export class DataService {
           this.enviro_que.splice(index, 1);
         }
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
+    }
+
+    spliceFPNNumberOfflinePrinter(fpn_number_and_barcode: any): void {
+        const index = this.fpn_number_offline_printer.indexOf(fpn_number_and_barcode);
+        if (index > -1) {
+            this.fpn_number_offline_printer.indexOf(index, 1);
+        }
+        this.saveArrayToLocalStorage('fpn_number_offline_printer', this.fpn_number_offline_printer)
+
     }
 
     addFpnNumberAndBarcodeQue(fpn_number: string, barcode: string, index: number): void {
@@ -474,6 +491,10 @@ export class DataService {
 
     getEnviroQue(): EnviroPost[] {
         return this.enviro_que;
+    }
+
+    getFPNNumberOfflinePrinter(): any {
+        return this.fpn_number_offline_printer;
     }
 
     getOffence(): Offence[] {

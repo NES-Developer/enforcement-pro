@@ -281,6 +281,8 @@ export class NotebookPage implements OnInit {
             return;
         }
 
+        this.saveEnviroData();
+
         let checker = this.validator();
 
         if (checker) {
@@ -307,6 +309,16 @@ export class NotebookPage implements OnInit {
                         this.presentAlert('Error', message);
                     } else {                        
                         let fpn = response.data;    
+
+                        //Check if FPN Number came from app
+                        let enviro_que = this.data.getEnviroQue();
+                        const index = enviro_que.indexOf(this.enviro_post);
+                        let fpn_numbers_and_barcode = this.data.getFPNNumberOfflinePrinter();
+                        let first_fpn_number = fpn_numbers_and_barcode[index].fpn_number;
+                        if (first_fpn_number = fpn.fpn_number)
+                        {
+                            this.data.spliceFPNNumberOfflinePrinter(fpn_numbers_and_barcode[index]);
+                        }
 
                         Clipboard.write({
                             string: fpn.fpn_number
