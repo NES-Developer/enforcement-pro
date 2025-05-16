@@ -314,7 +314,12 @@ export class ServiceRequestPage implements OnInit {
             },
             error: (error) => {
                 console.error('Error:', error);
-                this.presentAlert('Error Tracking', error.message);
+                if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/user/track: 401 OK")
+                {
+                    this.presentAlert('Error', 'You have been logged out. Please click Auto-Login button, then attempt to Ping again');
+                } else {
+                    this.presentAlert('Error Tracking', error.message);
+                }
             }
         });
     }
