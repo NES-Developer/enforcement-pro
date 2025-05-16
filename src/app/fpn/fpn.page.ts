@@ -101,7 +101,7 @@ export class FPNPage implements OnInit {
         this.ping();
         setInterval(() => {
             this.ping();
-        }, 120000); // 2 minutes in milliseconds
+        }, 60000); // 1 minutes in milliseconds
     }
 
     getFPNData(): void {
@@ -522,6 +522,8 @@ export class FPNPage implements OnInit {
                 this.app_log.lat = position.latitude;
                 this.app_log.lng = position.longitude;
             });
+
+            this.app_log.site_id = this.enviro_post.site_id.toString();
             
             this.data.setAppLog(this.app_log);
             

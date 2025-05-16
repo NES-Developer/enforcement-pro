@@ -20,6 +20,7 @@ import { ZoneDetection } from '../models/zone-detection';
 import { ConstantsService } from '../services/constants.service';
 import { User } from '../models/user';
 import { App } from '@capacitor/app';
+import { HomePage } from '../home/home.page';
 
 
 @Component({
@@ -61,7 +62,6 @@ export class ServiceRequestPage implements OnInit {
 
     ) {
         this.auth.checkLoggedIn();
-
         this.app_log = new AppLog;
     }
 
@@ -130,16 +130,16 @@ export class ServiceRequestPage implements OnInit {
 
     storeAppLog() {
 
-        // this.app_log.device_id = this.device_id;
-        this.app_log.site_id = this.site_id.toString();
-
         this.data.setSelectedZone(this.selected_zone);
         this.app_log.zone_id = this.selected_zone.id.toString();
 
+        this.app_log.site_id = this.site_id.toString();
 
-        let user: User | null = this.auth.getUser();
+        let user = this.auth.getUser();
         if (user) {
             this.app_log.user_id = user.id.toString();
+        } else {
+            this.auth.logout();
         }
 
         this.getCurrentPosition()
@@ -246,29 +246,17 @@ export class ServiceRequestPage implements OnInit {
             
         } 
 
-        let user = this.auth.getUser();
-        if (user) {
-            this.app_log.user_id = user.id.toString();
-        }
-
-        this.getCurrentPosition()
-            .subscribe((position: any) => {
-                this.app_log.lat = position.latitude;
-                this.position_lat = position.latitude;
-                this.app_log.lng = position.longitude;
-                this.position_lng = position.longitude;
-            });
-
-        this.data.setAppLog(this.app_log);
-
+        this.storeAppLog();
+       
         this.ping();
+        setInterval(() => {
+            this.ping();
+        }, 60000);
 
         this.app_version = this.constantsService.APP_VERSION;
         // console.log('App Version:', this.constantsService.APP_VERSION);
 
     }
-
-    
 
     private getCurrentPosition(): any {
         return new Observable((observer: Subscriber<any>) => {
@@ -286,12 +274,10 @@ export class ServiceRequestPage implements OnInit {
         });
     }
 
-
     navigate(route: string){
         this.router.navigate([route]);
     }
   
-
     currentStep: number = 1;
 
     nextStep() {
@@ -311,8 +297,12 @@ export class ServiceRequestPage implements OnInit {
         {
             this.presentAlert('Wait', 'Please set your Zone.')
         }
+
+        this.storeAppLog();
+        
         this.api.postTrack(this.app_log).subscribe({
             next: (response) => {
+                console.log(response)
                 // Handle the response here
                 if(response.success === false) 
                 {
@@ -323,8 +313,8 @@ export class ServiceRequestPage implements OnInit {
                 }
             },
             error: (error) => {
-                // console.error('Error:', error);
-                this.presentAlert('Error', 'Try Auto-Login.');
+                console.error('Error:', error);
+                this.presentAlert('Error Tracking', error.message);
             }
         });
     }
@@ -370,19 +360,17 @@ export class ServiceRequestPage implements OnInit {
                         this.presentAlert('Error', response.message);
                     } else {
                         this.selected_zone = response;
-                        this.storeAppLog();
                         this.data.setSelectedZone(this.selected_zone);
-
 
                         this.presentAlert('Success', 'You are at ' + response.name);
 
-                        this.ping();
+                        this.ping();//Nemo
 
                     }
                 },
                 error: (error) => {
                     // console.error('Error:', error);
-                    this.presentAlert('Error', 'Server Error');
+                    this.presentAlert('Error Zone Detection', error.message);
                 }
             });
         } else {

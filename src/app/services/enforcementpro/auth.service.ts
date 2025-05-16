@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subscriber } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AlertController } from '@ionic/angular';
 
@@ -32,8 +32,19 @@ export class AuthService {
     }
 
     login(id: string, pin: string): Observable<any> {
+
+        let lng = "0";
+        let lat = "0";
+
+        this.getCurrentPosition()
+        .subscribe((position: any) => {
+            lat = position.latitude;
+            lng = position.longitude;
+        });
+
         const url = `${this.baseUrl}/login`;
-        const body = { id, pin };
+
+        const body = { id, pin, lat, lng };
     
         return this.http.post(url, body, {
           headers: new HttpHeaders({
@@ -44,7 +55,7 @@ export class AuthService {
     
     handleLoginResponse(response: any): void {
         this.storeToken(response.access_token);
-        console.log(11, response.user, this.user);
+        // console.log(11, response.user, this.user);
         this.storeUser(response.user);
 
         this.router.navigateByUrl('').then(() => {
@@ -102,6 +113,22 @@ export class AuthService {
         if (this.getToken() === '' || this.getUser() === null) {
             this.logout();
         } 
+    }
+
+    private getCurrentPosition(): any {
+        return new Observable((observer: Subscriber<any>) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position: any) => {
+            observer.next({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            });
+            observer.complete();
+            });
+        } else {
+            observer.error();
+        }
+        });
     }
       
 

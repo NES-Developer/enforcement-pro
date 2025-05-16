@@ -88,6 +88,51 @@ export class HomePage implements OnInit {
         this.loadData();
     }
 
+    fpnDuplicate() {
+        let enviro_que = this.data.getEnviroQue();
+        let counter: number = 0;
+        
+        for (let i=0; i < this.recent_fpns.length; i++) {
+            for (let x=0; x < enviro_que.length; x++) {
+                console.log(
+                    this.recent_fpns[i] , this.enviro_que[x] , 
+                    this.recent_fpns[i].offence_id , this.enviro_que[x].offence_id, 
+                );
+                console.log(
+                    this.recent_fpns[i].offender.ethnicity == this.enviro_que[x].ethnicity_id ,
+                    this.recent_fpns[i].offender.first_name == this.enviro_que[x].first_name ,
+                    this.recent_fpns[i].offender.last_name == this.enviro_que[x].last_name ,
+                    this.recent_fpns[i].offender.gender == this.enviro_que[x].gender ,
+                    this.recent_fpns[i].offence_location == this.enviro_que[x].offence_location,
+                    this.recent_fpns[i].lng == this.enviro_que[x].lng.toString(),
+                    this.recent_fpns[i].zone_id == this.enviro_que[x].zone_id 
+                    );
+                if (
+                    this.recent_fpns[i].offender.town == this.enviro_que[x].town &&
+                    this.recent_fpns[i].offender.first_name == this.enviro_que[x].first_name &&
+                    this.recent_fpns[i].offender.last_name == this.enviro_que[x].last_name &&
+                    // this.recent_fpns[i].offender.gender == this.enviro_que[x].gender &&
+                    this.recent_fpns[i].offence_location == this.enviro_que[x].offence_location,
+                    // this.recent_fpns[i].lng == this.enviro_que[x].lng.toString() &&
+                    this.recent_fpns[i].offence_id == this.enviro_que[x].offence_id &&
+                    this.recent_fpns[i].zone_id == this.enviro_que[x].zone_id 
+                ) {
+                    this.data.spliceEnviroQue(this.enviro_que[x]);
+                    counter++;
+                }
+            }
+        }
+
+        if (counter > 0)
+        {
+            this.presentAlert('Found', 'Duplicate found, thank you for reporting. We removed it from Queue.');
+            this.refresh();
+        } else {
+            this.presentAlert('Nothing Found', 'No duplicate found, attempt resubmitting.')
+        }
+
+    }
+
     refresh () {
         if (this.data.checkSelectedSite() === false) {
             this.navigate('site');
@@ -111,7 +156,7 @@ export class HomePage implements OnInit {
             this.ping();
             setInterval(() => {
                 this.ping();
-            }, 120000); // 2 minutes in milliseconds
+            }, 60000); // 1 minutes in milliseconds
         }
 
         this.getRecentFPN();
@@ -122,6 +167,13 @@ export class HomePage implements OnInit {
     }
 
     ping() {
+
+        console.log(this.selected_site);
+        // this.app_log = this.data.getAppLog();
+        // let site_id = this.selected_site.id;
+        // this.app_log.site_id = site_id;
+        // this.data.setAppLog(this.app_log);
+
         if (this.data.checkAppLog()) {
             this.api.postTrack(this.app_log).subscribe({
                 next: (response) => {
@@ -141,6 +193,7 @@ export class HomePage implements OnInit {
             this.api.getRecentFPNs(user.id).subscribe({
                 next: (response) => {
                     this.recent_fpns = response.data;
+                    console.log(this.recent_fpns);
                     // Sort the array by created_at in descending order (newest first)
                     this.recent_fpns.sort((a, b) => {
                         // Convert the created_at strings to Date objects for comparison

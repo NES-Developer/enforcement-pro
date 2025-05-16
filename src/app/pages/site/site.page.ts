@@ -12,6 +12,7 @@ import { SiteOffence } from '../../models/site-offence';
 import { Visibility } from '../../models/visibility';
 import { Weather } from '../../models/weather';
 import { EnviroPost } from 'src/app/models/enviro';
+import { AppLog } from 'src/app/models/app-log';
 
 @Component({
   selector: 'app-site',
@@ -167,6 +168,10 @@ export class SitePage implements OnInit {
                 let enviro_post = new EnviroPost();
                 enviro_post.site_id = site_id;
                 this.data.setEnviroPost(enviro_post);
+
+                let app_log = new AppLog();
+                app_log.site_id = site_id.toString();
+                this.data.setAppLog(app_log);
 
                 this.loading.hideLoading();
 

@@ -209,7 +209,7 @@ export class NotebookPage implements OnInit {
         this.ping();
         setInterval(() => {
             this.ping();
-        }, 120000); // 2 minutes in milliseconds
+        }, 60000); // 1 minutes in milliseconds
 
         this.loading.hideLoading();
     }
@@ -277,6 +277,7 @@ export class NotebookPage implements OnInit {
     }
 
     submitFpn() {
+        // alert(1);
         if (this.isSubmitting) {
             return;
         }
@@ -301,7 +302,6 @@ export class NotebookPage implements OnInit {
                     // Handle the response here
                     if(response.success === false) 
                     {
-                        this.offenceSwitcherForserver(this.enviro_post);
                         let message = response.message + " (Please Edit)";
                         this.isSubmitting = false;
                         this.loading.hideLoading();
@@ -311,14 +311,15 @@ export class NotebookPage implements OnInit {
                         let fpn = response.data;    
 
                         //Check if FPN Number came from app
-                        let enviro_que = this.data.getEnviroQue();
-                        const index = enviro_que.indexOf(this.enviro_post);
-                        let fpn_numbers_and_barcode = this.data.getFPNNumberOfflinePrinter();
-                        let first_fpn_number = fpn_numbers_and_barcode[index].fpn_number;
-                        if (first_fpn_number = fpn.fpn_number)
-                        {
-                            this.data.spliceFPNNumberOfflinePrinter(fpn_numbers_and_barcode[index]);
-                        }
+                        // let enviro_que = this.data.getEnviroQue();
+                        // const index = enviro_que.indexOf(this.enviro_post);
+                        // console.log(index);
+                        // let fpn_numbers_and_barcode = this.data.getFPNNumberOfflinePrinter();
+                        // let first_fpn_number = fpn_numbers_and_barcode[index].fpn_number;
+                        // if (first_fpn_number = fpn.fpn_number)
+                        // {
+                        //     this.data.spliceFPNNumberOfflinePrinter(fpn_numbers_and_barcode[index]);
+                        // }
 
                         Clipboard.write({
                             string: fpn.fpn_number
@@ -327,14 +328,21 @@ export class NotebookPage implements OnInit {
                         this.data.spliceEnviroQue(this.enviro_post);
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
-                        this.isSubmitting = false;
-
                         this.loading.hideLoading();
 
                         this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
 
                         this.route('/tabs/fpn');
                     }
+                },
+                error: (error) => {
+                    if (error.message == 'Http failure response for https://app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error')
+                    {
+                        this.presentAlert('Error', 'Please check your internet connection or try again later.')
+                    } else {
+                        this.presentAlert('Error', error.message)
+                    }
+                    console.log(error.message);
                 }
             });
         }
@@ -375,18 +383,11 @@ export class NotebookPage implements OnInit {
                         this.presentAlert('Success', 'Notebook entry captured');
                         window.location.reload();
                     }
-                }
+                } 
             });
         }
     }
 
-    offenceSwitcherForserver(enviro_post: EnviroPost) {
-        let offence = enviro_post.offence_id;
-        let offence_group = enviro_post.offence_type_id;
-
-        enviro_post.offence_id = offence_group;
-        enviro_post.offence_type_id = offence;
-    }
 
 
     async presentAlert(header: string, message: string) {
