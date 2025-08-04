@@ -120,7 +120,7 @@ export class FPNPage implements OnInit {
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
 
-                console.log(data);
+                // console.log(data);
 
                 this.data.removeEnviroLookUps();
 
@@ -170,6 +170,9 @@ export class FPNPage implements OnInit {
 
                 let offenceGroups = this.extractOffenceGroups(offences);
                 this.data.setOffenceGroups(offenceGroups);
+
+                let fpn_number_offline_printer = data.data.fpn_number_offline_printer;
+                this.data.setFPNNumberOfflinePrinter(fpn_number_offline_printer);
             },
             error: (error) => {
                 this.presentAlert('Error', 'Error refreshing data. Attempt to Auto-Login, if fails please try again later.')
@@ -207,7 +210,6 @@ export class FPNPage implements OnInit {
                 }
                 break;
             case 2:
-                //console.log(this.enviro_post);
                 if (this.enviro_post.is_bwc_active == '') {
                     this.presentAlert('Wait!', 'Please provide BWC.');
                     return false;
@@ -607,6 +609,9 @@ export class FPNPage implements OnInit {
                 this.loading.hideLoading();
                 this.presentAlert('Error', 'Queue has exceeded 9, please submit. Submit some FPNs on queue to increase space.')
             }
+        }
+        else {
+            this.presentAlert('Error', 'Please ensure all required feild is populating.')
         }
     }
 

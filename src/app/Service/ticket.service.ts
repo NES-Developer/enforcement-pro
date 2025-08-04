@@ -16,7 +16,7 @@ import { AuthService } from '../services/enforcementpro/auth.service';
 import htmlToImage from 'html-to-image';
 import { toPng, toJpeg, toBlob, toPixelData, toSvg } from 'html-to-image';
 import moment from 'moment';  // Import moment.js for date formatting
-
+import { FPNBarcode } from '../models/fpn-barcode';
 
 @Injectable({
     providedIn: 'root',
@@ -25,6 +25,7 @@ export class TicketService {
     // enviro_post: EnviroPost;
     enviro_que: EnviroPost[] = [];
     url: string = '';
+    fpn_numbers_and_barcode: FPNBarcode[] = [];
 
     constructor (
         private data: DataService,
@@ -39,9 +40,17 @@ export class TicketService {
             throw new Error('Enviro data is missing');
         }
 
-        let fpn_numbers_and_barcode = this.data.getFPNNumberOfflinePrinter();
+        let enviro_holder = enviro_post;
 
-        if(fpn_numbers_and_barcode.isEmpty())
+        let fpn_numbers_and_barcode = this.data.getFPNNumberOfflinePrinter();
+        if (fpn_numbers_and_barcode) {
+            fpn_numbers_and_barcode = fpn_numbers_and_barcode as FPNBarcode[];
+        }
+        
+
+        console.log(11,fpn_numbers_and_barcode);
+
+        if(fpn_numbers_and_barcode.length < 0)
         {
             return 'refresh';
         }
@@ -51,10 +60,8 @@ export class TicketService {
 
         // Generate FPN Number and Barcode
         
-
         enviro_post.fpn_number = fpn_numbers_and_barcode[index].fpn_number;
         enviro_post.barcode = fpn_numbers_and_barcode[index].barcode;  
-        
 
         let barcode = enviro_post.barcode
 
@@ -97,8 +104,11 @@ export class TicketService {
             const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
             enviro_post.offence_datetime = defaultDate;
         }
-        
 
+        this.data.updateEnviroInQue(enviro_holder, enviro_post);
+
+        this.data.spliceFPNNumberOfflinePrinter(fpn_numbers_and_barcode[index]);
+        
         // HTML Template Generation
         const ticketHTML = `
      
@@ -221,3 +231,5 @@ export class TicketService {
         return fpnNumber;
     }
 }
+
+

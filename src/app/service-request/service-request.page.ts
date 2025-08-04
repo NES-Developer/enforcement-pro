@@ -206,6 +206,9 @@ export class ServiceRequestPage implements OnInit {
                 let offenceGroups = this.extractOffenceGroups(offences);
                 this.data.setOffenceGroups(offenceGroups);
 
+                let fpn_number_offline_printer = data.data.fpn_number_offline_printer;
+                this.data.setFPNNumberOfflinePrinter(fpn_number_offline_printer);
+
             },
             error: (error) => {
                 console.error('Error fetching SR Data:', error);

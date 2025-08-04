@@ -173,6 +173,9 @@ export class SitePage implements OnInit {
                 app_log.site_id = site_id.toString();
                 this.data.setAppLog(app_log);
 
+                let fpn_number_offline_printer = data.data.fpn_number_offline_printer;
+                this.data.setFPNNumberOfflinePrinter(fpn_number_offline_printer);
+
                 this.loading.hideLoading();
 
                 this.router.navigate(['']).then(() => {

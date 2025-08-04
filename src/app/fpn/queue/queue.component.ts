@@ -248,7 +248,7 @@ export class QueueComponent  implements OnInit {
         let ticket = this.ticket.generateWelcomeTicket(enviro_post);//Nemo
          
         if (ticket == "refresh") {
-            this.presentAlert('Error', 'Please find Netwrok and get latest data. To regenerate new FPN Numbers');
+            this.presentAlert('Error', 'Please find Network and get latest data. To regenerate new FPN Numbers');
             return;
         }
 
@@ -256,7 +256,6 @@ export class QueueComponent  implements OnInit {
             if (this.enviro_que_addition[x] == enviro_post) {
                 this.enviro_que_addition[x].html_bool = true;
                 this.enviro_que_addition[x].html_string = ticket;
-                // index = x;
             }
             else {
                 this.enviro_que_addition[x].html_bool = false;

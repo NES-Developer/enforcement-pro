@@ -497,7 +497,7 @@ export class DataService {
         return this.enviro_que;
     }
 
-    getFPNNumberOfflinePrinter(): any {
+    getFPNNumberOfflinePrinter(): any[] {
         return this.fpn_number_offline_printer;
     }
 
@@ -567,6 +567,15 @@ export class DataService {
 
     findSiteOffence(offence_id: number): SiteOffence | undefined {
         return this.site_offences.find(z => z.offence_id === offence_id);
+    }
+
+    updateEnviroInQue(old_enviro: EnviroPost, new_enviro: EnviroPost)
+    {
+        const index = this.enviro_que.indexOf(old_enviro);
+        if (index > -1) {
+            this.enviro_que[index] = new_enviro
+        }
+        this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
 
     removeEnviroLookUps(): void {

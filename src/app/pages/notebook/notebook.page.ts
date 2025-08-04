@@ -464,8 +464,10 @@ export class NotebookPage implements OnInit {
                 let offenceGroups = this.extractOffenceGroups(offences);
                 this.data.setOffenceGroups(offenceGroups);
 
-                this.loading.hideLoading();
+                let fpn_number_offline_printer = data.data.fpn_number_offline_printer;
+                this.data.setFPNNumberOfflinePrinter(fpn_number_offline_printer);
 
+                this.loading.hideLoading();
 
             },
             error: (error) => {
