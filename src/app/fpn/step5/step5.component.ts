@@ -24,6 +24,8 @@ import { FPNPage } from '../fpn.page';
 export class Step5Component  implements OnInit, AfterViewInit {
     @ViewChild('firstInput', { static: false }) firstInput: IonInput | any;
     @ViewChild('mapContainer', { static: false }) mapRef!: ElementRef<HTMLElement>;
+
+
     apiKey: string = '';
     address: string = '';
     map!: L.Map;
@@ -68,7 +70,7 @@ export class Step5Component  implements OnInit, AfterViewInit {
 
     ngAfterViewInit(): void {
         this.loadMap();
-      }
+    }
 
 
     loadData() {
@@ -85,10 +87,6 @@ export class Step5Component  implements OnInit, AfterViewInit {
             this.enviro_post.lng = position.longitude;
         });
 
-        const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
-        this.enviro_post.offence_datetime = defaultDate;
-        this.enviro_post.issue_datetime = defaultDate;
-
         this.saveEnviroData();
     }
 
@@ -99,13 +97,27 @@ export class Step5Component  implements OnInit, AfterViewInit {
     saveEnviroData() {
         this.onInputChange();
 
-        const formattedIssueDate = this.formatDateTime(this.issue_date, this.issue_time);
-        const formattedDate = this.formatDateTime(this.offence_date, this.offence_time);
+        if (this.issue_date !== '', this.issue_time !== '') {
+            const formattedIssueDate = this.formatDateTime(this.issue_date, this.issue_time);
+            this.enviro_post.issue_datetime = formattedIssueDate.toString();    
+        } else if (this.enviro_post.issue_datetime) {
+            const [datePart, timePart] = this.enviro_post.issue_datetime.split('T');
+            this.issue_date = datePart;
+            this.issue_time = timePart ? timePart.substring(0, 5) : ''; // e.g., "12:30"
+        } else {
+            this.enviro_post.issue_datetime = '';
+        }
 
-        this.enviro_post.offence_datetime = formattedDate.toString();
-        this.enviro_post.issue_datetime = formattedIssueDate.toString();    
-
-        console.log(this.enviro_post.issue_datetime, this.enviro_post.offence_datetime)
+        if (this.offence_date !== '', this.offence_time !== '') {
+            const formattedDate = this.formatDateTime(this.offence_date, this.offence_time);
+            this.enviro_post.offence_datetime = formattedDate.toString();    
+        } else if (this.enviro_post.offence_datetime) {
+            const [datePart, timePart] = this.enviro_post.offence_datetime.split('T');
+            this.offence_date = datePart;
+            this.offence_time = timePart ? timePart.substring(0, 5) : '';
+        } else {
+            this.enviro_post.offence_datetime = '';
+        }
 
         this.data.setEnviroPost(this.enviro_post);
     }

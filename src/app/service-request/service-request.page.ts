@@ -43,14 +43,9 @@ export class ServiceRequestPage implements OnInit {
     position_lng: string = "0";
     position_lat: string = "0";
 
-    // device_id: string = "0";
     site_id: number = 0;
-    // zone_id: string = '0';
-
     app_log: AppLog;
     app_version: string = '';
-
-    // app_version: str
 
     constructor(
         private auth: AuthService,
@@ -58,10 +53,14 @@ export class ServiceRequestPage implements OnInit {
         private router: Router,
         private api: ApiService,
         private alertController: AlertController,
-        private constantsService: ConstantsService
+        private constantsService: ConstantsService,
 
     ) {
-        this.auth.checkLoggedIn();
+
+        if (!this.auth.loggedInCheck()) {
+            this.autoLogin();
+        }
+
         this.app_log = new AppLog;
     }
 
@@ -79,7 +78,7 @@ export class ServiceRequestPage implements OnInit {
             this.navigate('site');
         }   
         
-        if (this.data.checkApiAppVersion() == false) {
+        if (this.data.checkApiAppVersionAndUrl() == false) {
             this.getVersion();
         }
 
@@ -90,7 +89,6 @@ export class ServiceRequestPage implements OnInit {
     {
         this.api.getApiVersion().subscribe(
             (response) => {
-                console.log(response);
                 this.api_app_version = response.data.version;
                 this.api_app_url = response.data.url;
                 this.data.setApiAppVersion(this.api_app_version);
@@ -110,15 +108,17 @@ export class ServiceRequestPage implements OnInit {
         this.auth.login(login.id, login.pin).subscribe(
             (response) => {
                 console.log(1,response)
-                if(response.error_code) {
-                    let message: string = response.message;
-                    this.presentAlert("Login Attempt Failed", "Please Logout and Login again.")
-                } else if (response.access_token !== '' || response.user) {
-                     this.auth.handleLoginResponse(response);
-                }
+                if (response.access_token !== '' || response.user) {
+
+                    this.auth.storeToken(response.access_token);
+                    this.auth.storeUser(response.user);
+
+                } else {
+                    this.presentAlert("Login Attempt Failed", response.message)
+                } 
             },
             (error) => {
-                this.presentAlert("Login Attempt Failed", "Please Logout and Login again.")
+                this.presentAlert("Login Attempt Failed", "Please Logout and Login again. " + error.message)
             }
         );
     }
@@ -227,13 +227,14 @@ export class ServiceRequestPage implements OnInit {
     }
 
     loadData() {
+        this.app_version = this.constantsService.APP_VERSION;
+
         this.selected_site = this.data.getSelectedSite();
         this.selected_zone = this.data.getSelectedZone();
         this.site_id = this.selected_site.id;
 
         this.api_app_version = this.data.getApiAppVersion();
-        this.api_app_url = this.data.getApiAppVersion();
-        // console.log(this.site_id);
+        this.api_app_url = this.data.getApiAppUrl();
 
         this.sites = this.data.getSites();
         this.zones = this.data.getZones();
@@ -251,9 +252,8 @@ export class ServiceRequestPage implements OnInit {
         this.ping();
         setInterval(() => {
             this.ping();
-        }, 60000);
+        }, 30000);
 
-        this.app_version = this.constantsService.APP_VERSION;
         // console.log('App Version:', this.constantsService.APP_VERSION);
 
     }
@@ -314,9 +314,9 @@ export class ServiceRequestPage implements OnInit {
             },
             error: (error) => {
                 console.error('Error:', error);
-                if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/user/track: 401 OK")
+                if (error.status == 401)
                 {
-                    this.presentAlert('Error', 'You have been logged out. Please click Auto-Login button, then attempt to Ping again');
+                    this.presentAlert('Error Tracking', 'You have been logged out. Please click Auto-Login button, then attempt to Ping again');
                 } else {
                     this.presentAlert('Error Tracking', error.message);
                 }

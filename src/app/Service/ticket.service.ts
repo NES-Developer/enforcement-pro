@@ -92,8 +92,12 @@ export class TicketService {
         let url: string = url_suffix + '/' + site.logo;
 
         //Get Offence time date
-        const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
-        enviro_post.offence_datetime = defaultDate;
+        if (enviro_post.offence_datetime == '')
+        {
+            const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
+            enviro_post.offence_datetime = defaultDate;
+        }
+        
 
         // HTML Template Generation
         const ticketHTML = `

@@ -41,8 +41,8 @@ export class EnviroPost {
    poi_prefix_id: number = 0;
    poi: string = '';
 
-   offence_datetime: string = moment().format('YYYY-MM-DDTHH:mm:ss');
-   issue_datetime: string = moment().format('YYYY-MM-DDTHH:mm:ss');
+   offence_datetime: string = '';//moment().format('YYYY-MM-DDTHH:mm:ss');
+   issue_datetime: string = '';//moment().format('YYYY-MM-DDTHH:mm:ss');
    enviro_issued_onspot: string = 'yes';
    is_id_verified: string = '';
    is_address_verified: string = '';

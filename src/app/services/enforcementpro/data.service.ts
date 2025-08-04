@@ -373,6 +373,10 @@ export class DataService {
         return this.api_app_version !== '';
     }
 
+    checkApiAppVersionAndUrl(): boolean {
+        return this.api_app_version !== '' && this.api_app_url !== '';
+    }
+
     checkNoteBookEntriesData(): boolean {
         return this.builds.length > 0 && this.hair_colours.length > 0;
     }

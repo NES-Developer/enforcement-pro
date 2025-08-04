@@ -4,7 +4,6 @@ import { DataService } from '../../services/enforcementpro/data.service';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { AlertController } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FPNPage } from '../fpn.page';
 import { Clipboard } from '@capacitor/clipboard';
 import { AppLog } from '../../models/app-log';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -14,9 +13,6 @@ import { TicketService } from 'src/app/Service/ticket.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
-import { Capacitor } from '@capacitor/core';
-import { Share } from '@capacitor/share';
-import { FilesystemDirectory } from '@capacitor/filesystem';
 
 // import { Http } from '@capacitor/http';
 
@@ -47,9 +43,13 @@ export class QueueComponent  implements OnInit {
         private loading:LoadingService,
         private auth: AuthService,
         private ticket: TicketService,
-
         private sanitizer: DomSanitizer
     ) {
+
+        if (!this.auth.loggedInCheck())
+        {
+            this.route('');
+        }
 
         this.app_log = new AppLog();
 
@@ -57,59 +57,15 @@ export class QueueComponent  implements OnInit {
             this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
         });
 
-       
-
-        // const rawHtml = ``;
-        // this.html_string = this.sanitizer.bypassSecurityTrustHtml(rawHtml);
-        // console.log(this.html_string)
     }
 
     ngOnInit(): void {
         this.loadData();
     }
 
-    // async saveDataAsJson() {
-    //     if (!Capacitor.isNativePlatform()) {
-    //         //   console.warn('Run this on a real device.');
-    //         const jsonData = JSON.stringify(this.enviro_que, null, 2);
-    //         const fileName = `enviro_que_${new Date().toISOString()}.json`;
-
-    //         this.downloadFileWeb(jsonData, fileName);
-    //         this.presentAlert('Success', 'Successfully captured que, please print and navigate to installer.');
-
-    //         return;
-    //     }
-      
-    //     const data = this.enviro_que;
-      
-    //     const now = new Date();
-    //     const timestamp = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
-        
-    //     const fileName = `enviro_que_${timestamp}.json`;
-
-    //     try {
-    //         await Filesystem.writeFile({
-    //             path: fileName,
-    //             data: JSON.stringify(data),
-    //             directory: Directory.Documents, // Or Directory.External for Android
-    //             encoding: Encoding.UTF8
-    //         });
-
-    //         this.presentAlert('Success', 'Successfully captured que, please print and navigate to installer.');
-
-      
-    //     //   console.log(`✅ File saved to Documents/${fileName}`);
-    //     } catch (error) {
-    //         this.presentAlert('Error', 'Failed to capture image');
-
-    //     //   console.error('❌ Failed to write file:', error);
-    //     }
-    // }
-
     loadData() {
         this.enviro_que =  this.data.getEnviroQue();
 
-        //This code below is intended to support Generating of tickets
         this.enviro_que_addition = this.enviro_que;
         for (let x=0; x<this.enviro_que.length; x++) {
             const rawHtml = `` // Assuming the raw HTML exists in ``
@@ -123,14 +79,13 @@ export class QueueComponent  implements OnInit {
         this.ping();
         setInterval(() => {
             this.ping();
-        }, 60000); // 1 minutes in milliseconds
+        }, 30000); // 1 minutes in milliseconds
     }
 
     async exportEnviroQue(enviro_post: any) {
         try {
           const jsonData = JSON.stringify(enviro_post, null, 2);
       
-          // 📆 Timestamp for filename
           const now = new Date();
           const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
             .toString()
@@ -139,7 +94,6 @@ export class QueueComponent  implements OnInit {
             .toString()
             .padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
       
-          // 👤 Use first_name + last_name in filename
           const safeFirstName = (enviro_post.first_name || 'unknown').replace(/\s+/g, '_');
           const safeLastName = (enviro_post.last_name || 'user').replace(/\s+/g, '_');
           const fileName = `${safeFirstName}_${safeLastName}_${timestamp}.json`;
@@ -175,14 +129,64 @@ export class QueueComponent  implements OnInit {
             encoding: Encoding.UTF8,
           });
       
-          console.log('✅ File saved:', result.uri);
+        //   console.log('✅ File saved:', result.uri);
           this.presentAlert('Success', `Saved to Documents/${folderName}`);
           console.log(enviro_post);
       
         } catch (error) {
-          console.error('❌ Error saving file:', error);
+        //   console.error('❌ Error saving file:', error);
           this.presentAlert('Error', 'Failed to export file: ' + error);
         }
+    }
+
+
+    async clearFPNFolder() {
+        const folderName = 'FPNs';
+      
+        try {
+          // List files in FPNs folder
+          const listResult = await Filesystem.readdir({
+            path: folderName,
+            directory: Directory.Documents,
+          });
+      
+          // Accepts both forms: { files: ['file.json', ...] } or { files: [{ name: 'file.json' }, ...] }
+          const files =
+            Array.isArray(listResult.files) && listResult.files.length > 0
+              ? typeof listResult.files[0] === 'string'
+                ? listResult.files
+                : listResult.files.map((f: any) => f.name)
+              : [];
+      
+          if (files.length === 0) {
+            this.presentAlert('Info', 'FPNs folder exists but is already empty.');
+            return;
+          }
+      
+          // Delete each file found
+          for (const fileName of files) {
+            await Filesystem.deleteFile({
+              path: `${folderName}/${fileName}`,
+              directory: Directory.Documents,
+            });
+          }
+      
+          this.presentAlert('Success', 'Troubleshoot Phase 1, a Success.');
+        } catch (error: any) {
+            if (
+                error.message?.toLowerCase().includes('does not exist') ||
+                error.message?.toLowerCase().includes('not found')
+            ) {
+                this.presentAlert('Info', 'FPNs folder does not exist.');
+            } else {
+                this.presentAlert('Error', 'Failed to clear FPNs folder: ' + error);
+            }
+        }
+    }
+
+    postFPNTroubleShoot(enviro_post: EnviroPost)
+    {
+        this.api
     }
       
 
@@ -201,78 +205,6 @@ export class QueueComponent  implements OnInit {
         a.click();
         document.body.removeChild(a);
     }
-
-    // submitFPN(enviro_post: any) {
-    //     if (this.isSubmitting) {
-    //         return;
-    //     }
-
-    //     this.isSubmitting = true;
-    //     this.loading.showLoading();
-
-    //     enviro_post = enviro_post.map((item: any) => {
-    //         const cleaned = { ...item };
-    //         delete cleaned.html_bool;
-    //         delete cleaned.html_string;
-    //         return cleaned;
-    //     });
-
-    //     this.api.postFPN(enviro_post).subscribe({
-    //         next: (response) => {
-
-    //             if(response.success === false) 
-    //             {
-    //                 let message = response.message + " (Please Edit)";
-                    
-    //                 this.isSubmitting = false;
-    //                 this.loading.hideLoading();
-
-    //                 this.presentAlert('Error', message);
-
-    //             } else {
-    //                 let fpn_number = response.data.fpn_number;
-    //                 this.presentAlert('Success', fpn_number);
-
-    //                 let fpn = response.data;
-
-    //                 Clipboard.write({
-    //                     string: fpn.fpn_number
-    //                 });
-
-    //                 this.isSubmitting = false;
-    //                 this.loading.hideLoading();
-
-    //                 this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
-
-    //                 this.data.spliceEnviroQue(enviro_post);
-    //                 this.enviro_que = this.data.getEnviroQue();
-    //             }
-    //         },
-    //         error: (error) => {
-    //             // console.log(2, error);
-
-    //             this.isSubmitting = false;
-    //             this.loading.hideLoading();
-
-    //             if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
-    //             {
-    //                 this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
-    //             }
-    //             else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 500 OK")
-    //             {
-    //                 this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
-    //             } 
-    //             else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
-    //             {
-    //                 this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
-    //             } 
-    //             else 
-    //             {
-    //                 this.presentAlert('Error', error.message);
-    //             }   
-    //         }
-    //     });
-    // }
 
     ping() {
         this.api.postTrack(this.app_log).subscribe({
@@ -366,8 +298,6 @@ export class QueueComponent  implements OnInit {
                 this.saveBase64Image(dataUrl, 'ticket_offline.png');
                 this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
 
-                // this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
-            //   enviro_post.html_string = dataUrl; // Set base64 image as the new html_string
             })
             .catch((error) => {
 

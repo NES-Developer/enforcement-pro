@@ -10,11 +10,6 @@
                 </ion-button>
             </ion-col>
             <ion-col>
-                <ion-title>
-                    Queue
-                </ion-title>
-            </ion-col>
-            <ion-col>
                 <ion-button (click)="route('/tabs/home')">
                     <ion-icon name="home"></ion-icon>
                 </ion-button>
@@ -30,15 +25,15 @@
         </ion-toolbar>
     </ion-header>
 
-    <!-- <ion-item>
+    <ion-item (click)="clearFPNFolder()">
         <ion-icon 
             color="primary" 
-            slot="end" 
-            name="download-outline" 
+            name="construct-outline"
             size="large" 
-            (click)="saveDataAsJson()">
+            >
         </ion-icon>
-    </ion-item> -->
+        <ion-label>Troubleshoot Offline Printing</ion-label>
+    </ion-item>
 
     <ion-list [inset]="true">
 

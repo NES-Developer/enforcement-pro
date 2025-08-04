@@ -55,7 +55,6 @@ export class AuthService {
     
     handleLoginResponse(response: any): void {
         this.storeToken(response.access_token);
-        // console.log(11, response.user, this.user);
         this.storeUser(response.user);
 
         this.router.navigateByUrl('').then(() => {
@@ -109,8 +108,15 @@ export class AuthService {
         return this.user;
     }
 
-    checkLoggedIn() {
+    public loggedInCheck() {
         if (this.getToken() === '' || this.getUser() === null) {
+            return false;
+        } 
+        return true;
+    }
+
+    checkLoggedIn() {
+        if (!this.loggedInCheck()) {
             this.logout();
         } 
     }
@@ -140,6 +146,7 @@ export class AuthService {
         localStorage.removeItem('user');
         
         this.data.removeAllData();
+
 
         this.router.navigate(['/login']);
     }

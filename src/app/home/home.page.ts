@@ -24,6 +24,7 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 
 import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
 import { EnviroPost } from '../models/enviro';
+import { Login } from '../models/login';
 
 
 @Component({
@@ -56,6 +57,13 @@ export class HomePage implements OnInit {
         private alertController: AlertController,
         private loading:LoadingService,
     ) {
+        if (!this.auth.loggedInCheck())
+        {
+            this.autoLogin();
+        }
+
+        this.loading.showLoading();
+        
         let user = this.auth.getUser();
 
         if (user) 
@@ -64,22 +72,17 @@ export class HomePage implements OnInit {
         } else {
             this.user = new User();
         }
-        console.log(this.user)
+
         this.app_log = new AppLog();
     }
 
     ngOnInit(): void {
-        let user = this.auth.getUser();
-        if (user) 
-        {
-            this.user = user;
-        }
+   
         this.init();
 
     }
 
     init() {
-        this.auth.checkLoggedIn();
 
         if (this.data.checkSelectedSite() === false) {
             this.navigate('site');
@@ -147,10 +150,31 @@ export class HomePage implements OnInit {
         return url;
     }
 
+    autoLogin() {
+        let login: Login = this.data.getLogin();
+
+        this.auth.login(login.id, login.pin).subscribe(
+            (response) => {
+                console.log(1,response)
+                if (response.access_token !== '' || response.user) {
+
+                    this.auth.storeToken(response.access_token);
+                    this.auth.storeUser(response.user);
+
+                } else {
+                    // let message: string = response.message;
+                    this.presentAlert("Login Attempt Failed", response.message)
+                } 
+            },
+            (error) => {
+                this.presentAlert("Login Attempt Failed", "Please Logout and Login again. " + error.message)
+            }
+        );
+    }
+
     loadData() {
         this.app_log = this.data.getAppLog();
         this.enviro_que = this.data.getEnviroQue();
-        // this.user = this.data.getuser
 
         if(this.data.checkAppLog()) {
             this.ping();
@@ -162,18 +186,13 @@ export class HomePage implements OnInit {
         this.getRecentFPN();
 
         this.selected_site = this.data.getSelectedSite() || null;
-        console.log(this.selected_site);
         this.url = this.data.getUrl();
+
+        this.loading.hideLoading();
+
     }
 
     ping() {
-
-        console.log(this.selected_site);
-        // this.app_log = this.data.getAppLog();
-        // let site_id = this.selected_site.id;
-        // this.app_log.site_id = site_id;
-        // this.data.setAppLog(this.app_log);
-
         if (this.data.checkAppLog()) {
             this.api.postTrack(this.app_log).subscribe({
                 next: (response) => {
@@ -187,7 +206,6 @@ export class HomePage implements OnInit {
     }
 
     getRecentFPN() {
-        this.loading.showLoading();
         let user = this.auth.getUser();
         if (user) {
             this.api.getRecentFPNs(user.id).subscribe({
@@ -204,16 +222,10 @@ export class HomePage implements OnInit {
                         // For descending order (newest first), subtract dateA from dateB.
                         return dateB.getTime() - dateA.getTime();
                     });
-                    console.log('Response:', response);
-                    this.loading.hideLoading();
                 },
-                error: (error) => {
-                    if (error.status == 401)
-                    {
-                        this.presentAlert('Error When Collecting Recent FPNs', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
-                    }
-                    console.error('Error:', error);
-                    this.loading.hideLoading();
+                error: (error) => {         
+                    this.presentAlert(error.status, error.message);
+
                 }
             });
         }

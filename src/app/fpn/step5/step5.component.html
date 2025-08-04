@@ -54,6 +54,30 @@
     <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town_area"></ion-input>
 </ion-item>
 
+
+<!-- Modify DateTime -->
+<ion-item>
+    <ion-label>You can manually put Offence and Issue Datetime, or leave empty and the system will populate.</ion-label>  
+</ion-item>
+
+<ion-item>
+    <ion-label>Offense Datetime</ion-label>  
+</ion-item>
+<ion-item>
+    <ion-input type="date" [(ngModel)]="offence_date" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="time" [(ngModel)]="offence_time" (ionChange)="saveEnviroData()"></ion-input>
+</ion-item>
+
+<ion-item>
+    <ion-label>Issue Datetime</ion-label>  
+</ion-item>
+<ion-item>
+    <ion-input type="date" [(ngModel)]="issue_date" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="time" [(ngModel)]="issue_time" (ionChange)="saveEnviroData()"></ion-input>
+</ion-item>
+
+
+
 <!-- FPN issued on the spot -->
 <ion-item>
     <ion-label>FPN issued on the spot *</ion-label>  

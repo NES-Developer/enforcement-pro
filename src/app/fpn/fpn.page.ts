@@ -46,7 +46,14 @@ export class FPNPage implements OnInit {
         private router: Router,
         private loading:LoadingService,
     ) {
-        this.auth.checkLoggedIn();
+        // this.auth.checkLoggedIn();
+        if (!this.auth.loggedInCheck())
+        {
+            this.presentAlert('Your Not Logged In', 'Please Auto-Login');
+            this.route('');
+        }
+
+        this.loading.showLoading();
 
         if (this.data.checkSelectedSite() === false) {
             this.navigate('site');
@@ -101,7 +108,10 @@ export class FPNPage implements OnInit {
         this.ping();
         setInterval(() => {
             this.ping();
-        }, 60000); // 1 minutes in milliseconds
+        }, 30000); // 1 minutes in milliseconds
+
+        this.loading.hideLoading();
+
     }
 
     getFPNData(): void {
@@ -275,14 +285,7 @@ export class FPNPage implements OnInit {
                     return false;
                 }
                 
-                if (!this.enviro_post.offence_datetime) {
-                    this.presentAlert('Wait!', 'Please provide Offence timestamp.');
-                    return false;
-                }
-                if (!this.enviro_post.issue_datetime) {
-                    this.presentAlert('Wait!', 'Please provide Issue timestamp.');
-                    return false;
-                }
+               
                 if (!this.enviro_post.enviro_issued_onspot) {
                     this.presentAlert('Wait!', 'Please provide informantion of issue onspot');
                     return false;
@@ -428,13 +431,8 @@ export class FPNPage implements OnInit {
                     }
                     else if (error.status == 500)
                     {
-                        console.log(error);
-                        this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
+                        this.presentAlert('Error', 'Processed Error');
                     } 
-                    // else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
-                    // {
-                    //     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
-                    // } 
                     else 
                     {
                         this.presentAlert('Error', error.message);
@@ -445,6 +443,8 @@ export class FPNPage implements OnInit {
 
         }
     }
+
+
 
     offenceSwitcherForserver() {
         let offence = this.enviro_post.offence_id;

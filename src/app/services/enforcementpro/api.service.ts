@@ -36,6 +36,11 @@ export class ApiService {
         });
     }
 
+    postTroubleShoot(data: EnviroPost): Observable<any> {
+        const url = `${this.baseUrl}/troubleshoot`;
+        return this.http.post(url, data, { headers: this.getHeaders() });
+    }
+
     postFPN(data: EnviroPost): Observable<any> {
         const url = `${this.baseUrl}/enviro1`;
         return this.http.post(url, data, { headers: this.getHeaders() });
