@@ -160,7 +160,8 @@ export class FPNPage implements OnInit {
                 this.data.setOffenceGroups(offenceGroups);
             },
             error: (error) => {
-                this.presentAlert('Error', 'Error refreshing data. Attempt to Auto-Login, if fails please try again later.')
+                this.auth.autoLogin();
+                this.presentAlert('Error', 'Error refreshing data. Please try again after 5 Seconds.')
             }
         });
     }
@@ -409,16 +410,17 @@ export class FPNPage implements OnInit {
 
                     if (error.status == 401)
                     {
-                        this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
+                        this.presentAlert('Please Await', 'Submission in progress');
+
+                        //Auto Login
+                        this.auth.autoLogin();
+                        this.submitForm();
+
                     }
                     else if (error.status == 500)
                     {
-                        this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
+                        this.presentAlert('Error 500', 'Process Error.');
                     } 
-                    // else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
-                    // {
-                    //     this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
-                    // } 
                     else 
                     {
                         this.presentAlert('Error', error.message);
@@ -493,7 +495,6 @@ export class FPNPage implements OnInit {
 
     ping() {
         if (this.data.checkAppLog()) {
-
             let user: User | null = this.auth.getUser();
             if (user) {
                 this.app_log.user_id = user.id.toString();
@@ -510,6 +511,8 @@ export class FPNPage implements OnInit {
             });
         }
     }
+
+    
 
     async openOtherApp() {
         try {

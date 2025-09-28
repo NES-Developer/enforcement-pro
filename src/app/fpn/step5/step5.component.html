@@ -76,7 +76,7 @@
 </ion-item>
 
   <!-- Poi Prefix Select -->
-  <ion-item>
+<ion-item>
     <ion-label>
         POI Prefix
     </ion-label>
@@ -90,7 +90,83 @@
 </ion-item>
 
 
+<!-- Manual Time Selection -->
+<ion-item>
+    <ion-label>Manually Override Issue and Offence Timestsamp?</ion-label>
+</ion-item>
+<ion-item>
+<ion-select 
+    interface="action-sheet" 
+    [(ngModel)]="enviro_post.manual_time" 
+    (ionChange)="saveEnviroData()">
+    <ion-select-option [value]="true">Yes</ion-select-option>
+    <ion-select-option [value]="false">No</ion-select-option>
+</ion-select>
+</ion-item>
+  
+  <!-- Offence DateTime -->
+<ng-container *ngIf="enviro_post.manual_time">
+    <ion-item lines="none">
+      <ion-label class="ion-text-center"><strong>Offence DateTime</strong></ion-label>
+    </ion-item>
+    <ion-item class="ion-text-center">
+      <ion-datetime-button datetime="offenceDatetime"></ion-datetime-button>
+      <ion-modal [keepContentsMounted]="true">
+        <ng-template>
+          <ion-datetime
+            id="offenceDatetime"
+            presentation="date-time"
+            [(ngModel)]="enviro_post.offence_datetime"
+            (ionChange)="saveEnviroData()"
+            [formatOptions]="{
+              date: {
+                weekday: 'short',
+                month: 'long',
+                day: '2-digit',
+              },
+              time: {
+                hour: '2-digit',
+                minute: '2-digit',
+              }
+            }"
+          ></ion-datetime>
+        </ng-template>
+      </ion-modal>
+    </ion-item>
+  
+    <!-- Issue DateTime -->
+    <ion-item lines="none">
+      <ion-label class="ion-text-center"><strong>Issue DateTime</strong></ion-label>
+    </ion-item>
+    <ion-item class="ion-text-center">
+      <ion-datetime-button datetime="issueDatetime"></ion-datetime-button>
+      <ion-modal [keepContentsMounted]="true">
+        <ng-template>
+          <ion-datetime
+            id="issueDatetime"
+            presentation="date-time"
+            [(ngModel)]="enviro_post.issue_datetime"
+            (ionChange)="saveEnviroData()"
+            [formatOptions]="{
+              date: {
+                weekday: 'short',
+                month: 'long',
+                day: '2-digit',
+              },
+              time: {
+                hour: '2-digit',
+                minute: '2-digit',
+              }
+            }"
+          ></ion-datetime>
+        </ng-template>
+      </ion-modal>
+    </ion-item>
+</ng-container>
+  
 
+<ion-item>
+</ion-item>
 <ion-item>
 </ion-item>
 <ion-item>

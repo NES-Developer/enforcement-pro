@@ -34,11 +34,6 @@ export class Step5Component  implements OnInit, AfterViewInit {
     enviro_post: EnviroPost = new EnviroPost();
     private accessToken = 'pryBQPsykVwwDlHKRCzuceqEyJjYgmcNXjLk11h0hzFzWdVRDygST2uJMGmWO5Av';
 
-    offence_date: string = '';
-    offence_time: string = '';
-    issue_date: string = '';
-    issue_time: string = '';
-
 
     alertHeader:string= '';
     alertSubHeader:string=  '';
@@ -88,7 +83,6 @@ export class Step5Component  implements OnInit, AfterViewInit {
         const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
         this.enviro_post.offence_datetime = defaultDate;
         this.enviro_post.issue_datetime = defaultDate;
-        console.log(this.enviro_post.offence_datetime, this.enviro_post.issue_datetime);
     }
 
     onInputChange(){
@@ -98,11 +92,11 @@ export class Step5Component  implements OnInit, AfterViewInit {
     saveEnviroData() {
         this.onInputChange();
 
-        const formattedIssueDate = this.formatDateTime(this.issue_date, this.issue_time);
-        const formattedDate = this.formatDateTime(this.offence_date, this.offence_time);
-
-        this.enviro_post.offence_datetime = formattedDate.toString();
-        this.enviro_post.issue_datetime = formattedIssueDate.toString();    
+        this.enviro_post.offence_datetime = moment(this.enviro_post.offence_datetime)
+            .format('YYYY-MM-DDTHH:mm:ss');
+        
+        this.enviro_post.issue_datetime = moment(this.enviro_post.issue_datetime)
+            .format('YYYY-MM-DDTHH:mm:ss');
 
         console.log(this.enviro_post.issue_datetime, this.enviro_post.offence_datetime)
 
@@ -148,6 +142,7 @@ export class Step5Component  implements OnInit, AfterViewInit {
         }
         });
     }
+
     toggleMap(){
         if(this.enviro_post.offence_location == ""){
 

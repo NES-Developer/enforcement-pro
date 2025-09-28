@@ -16,6 +16,7 @@ import { User } from '../models/user';
 
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
+import { Login } from '../models/login';
 
 
 
@@ -47,8 +48,9 @@ export class HomePage implements OnInit {
         private alertController: AlertController,
         private loading:LoadingService,
     ) {
+        this.auth.checkLoggedIn();
+
         let user = this.auth.getUser();
-        console.log(11,user)
 
         if (user) 
         {
@@ -70,6 +72,8 @@ export class HomePage implements OnInit {
         }
         this.init();
     }
+
+
 
     init() {
         this.auth.checkLoggedIn();

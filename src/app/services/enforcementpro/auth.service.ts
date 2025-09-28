@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subscriber } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AlertController } from '@ionic/angular';
 
@@ -9,6 +9,7 @@ import { User } from '../../models/user';
 import { Router } from '@angular/router'; // Import Router
 import { DataService } from './data.service';
 import { LoadingService } from '../loading.service';
+import { Login } from '../../models/login';
 
 @Injectable({
   providedIn: 'root'
@@ -31,16 +32,64 @@ export class AuthService {
         this.user = new User();
     }
 
+    private getCurrentPosition(): any {
+        return new Observable((observer: Subscriber<any>) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position: any) => {
+            observer.next({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            });
+            observer.complete();
+            });
+        } else {
+            observer.error();
+        }
+        });
+    }
+
     login(id: string, pin: string): Observable<any> {
         const url = `${this.baseUrl}/login`;
-        const body = { id, pin };
+
+        let lat = 0;
+        let lng = 0;
+
+        this.getCurrentPosition()
+        .subscribe((position: any) => {
+            lat = position.latitude;
+            lng = position.longitude;
+        });
+
+        const body = { id, pin, lat, lng };
     
         return this.http.post(url, body, {
-          headers: new HttpHeaders({
-            'Content-Type': 'application/json'
-          })
+            headers: new HttpHeaders({
+                'Content-Type': 'application/json'
+            })
         });
-      }
+    }
+
+    
+    autoLogin() {
+        let login: Login = this.data.getLogin();
+      
+        this.login(login.id, login.pin).subscribe(
+            (response: any) => {
+                if (response.error_code) {
+                    this.logout();
+                } else if (response.access_token !== '' || response.user) {
+                    this.storeToken(response.access_token);
+                    this.storeUser(response.user);
+                } else {
+                    this.logout();
+                }
+            },
+            (error) => {
+                this.logout();
+            }
+        );
+    }
+      
     
     handleLoginResponse(response: any): void {
         this.storeToken(response.access_token);
@@ -102,6 +151,8 @@ export class AuthService {
         if (this.getToken() === '' || this.getUser() === null) {
             this.logout();
         } 
+
+        this.autoLogin();
     }
       
 

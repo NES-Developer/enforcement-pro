@@ -133,17 +133,16 @@ export class QueueComponent  implements OnInit {
                 this.isSubmitting = false;
                 this.loading.hideLoading();
 
-                if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 401 OK")
+                if (error.status == 401)
                 {
-                    this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
+                    this.presentAlert('Please Await', 'Submission in progress');
+                    //Auto Login
+                    this.auth.autoLogin();
+                    this.submitFPN(enviro_post);
                 }
-                else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 500 OK")
+                else if (error.status == 500)
                 {
-                    this.presentAlert('Error', 'Network Error, Please save to Queue and try again later.');
-                } 
-                else if (error.message == "Http failure response for https//app.enforcementpro.co.uk/api/app/enviro1: 0 Unknown Error")
-                {
-                    this.presentAlert('Error', 'You have been logged out. Navigate to Settings and click Auto-Login button, then navigate back and Submit');
+                    this.presentAlert('Error 500', 'Process Error.');
                 } 
                 else 
                 {
