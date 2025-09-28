@@ -17,6 +17,7 @@ import { User } from '../models/user';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Login } from '../models/login';
+import { EnviroPost } from '../models/enviro';
 
 
 
@@ -73,6 +74,36 @@ export class HomePage implements OnInit {
         this.init();
     }
 
+    fpnDuplicate() {
+        let enviro_que: EnviroPost[] = this.data.getEnviroQue();
+        let counter: number = 0;
+        
+        for (let i=0; i < this.recent_fpns.length; i++) {
+            for (let x=0; x < enviro_que.length; x++) {
+              
+                if (
+                    this.recent_fpns[i].offender.town == enviro_que[x].town &&
+                    this.recent_fpns[i].offender.first_name == enviro_que[x].first_name &&
+                    this.recent_fpns[i].offender.last_name == enviro_que[x].last_name &&
+                    this.recent_fpns[i].offence_location == enviro_que[x].offence_location,
+                    this.recent_fpns[i].offence_id == enviro_que[x].offence_id &&
+                    this.recent_fpns[i].zone_id == enviro_que[x].zone_id 
+                ) {
+                    this.data.spliceEnviroQue(enviro_que[x]);
+                    counter++;
+                }
+            }
+        }
+
+        if (counter > 0)
+        {
+            this.presentAlert('Found', 'Duplicate found, thank you for reporting. We removed it from Queue.');
+            this.refresh();
+        } else {
+            this.presentAlert('Nothing Found', 'No duplicate found, attempt resubmitting.')
+        }
+
+    }
 
 
     init() {
