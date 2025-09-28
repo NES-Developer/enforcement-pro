@@ -4,7 +4,6 @@ import { DataService } from '../../services/enforcementpro/data.service';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { AlertController } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FPNPage } from '../fpn.page';
 import { Clipboard } from '@capacitor/clipboard';
 import { AppLog } from '../../models/app-log';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -27,13 +26,13 @@ export class QueueComponent  implements OnInit {
 
     currentStep: number = 1;
     enviro_que: EnviroPost[] = [];
-    // enviro_que_addition: any[] = [];
+    enviro_que_addition: any[] = [];//xx
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
     app_log: AppLog;
     isSubmitting: boolean = false;
 
-    // html_bool: boolean = fals;
-    // html_string: SafeHtml = "";
+    html_bool: boolean = false;//xx
+    html_string: SafeHtml = "";//xx
 
     constructor(
         private api: ApiService,
@@ -44,9 +43,10 @@ export class QueueComponent  implements OnInit {
         private loading:LoadingService,
         private auth: AuthService,
         private ticket: TicketService,
-
         private sanitizer: DomSanitizer
     ) {
+
+        this.auth.checkLoggedIn();
 
         this.app_log = new AppLog();
 
@@ -54,11 +54,6 @@ export class QueueComponent  implements OnInit {
             this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
         });
 
-       
-
-        // const rawHtml = ``;
-        // this.html_string = this.sanitizer.bypassSecurityTrustHtml(rawHtml);
-        // console.log(this.html_string)
     }
 
     ngOnInit(): void {
@@ -68,16 +63,15 @@ export class QueueComponent  implements OnInit {
     loadData() {
         this.enviro_que =  this.data.getEnviroQue();
 
-        //This code below is intended to support Generating of tickets
-        // this.enviro_que_addition = this.enviro_que;
-        // for (let x=0; x<this.enviro_que.length; x++) {
-        //     const rawHtml = `` // Assuming the raw HTML exists in ``
-        //     this.enviro_que_addition[x] = {
-        //         ...this.enviro_que_addition[x], // Retain existing properties
-        //         html_bool: false, // Add html_bool
-        //         html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
-        //     };
-        // }
+        this.enviro_que_addition = this.enviro_que;
+        for (let x=0; x<this.enviro_que.length; x++) {
+            const rawHtml = `` // Assuming the raw HTML exists in ``
+            this.enviro_que_addition[x] = {
+                ...this.enviro_que_addition[x], // Retain existing properties
+                html_bool: false, // Add html_bool
+                html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
+            };
+        }
 
         this.ping();
         setInterval(() => {
@@ -85,71 +79,128 @@ export class QueueComponent  implements OnInit {
         }, 60000); // 1 minutes in milliseconds
     }
 
-    submitFPN(enviro_post: any) {
-        if (this.isSubmitting) {
-            return;
-        }
-        
-
-        this.isSubmitting = true;
-        this.loading.showLoading();
-
-        this.api.postFPN(enviro_post).subscribe({
-            next: (response) => {
-
-                console.log(1, response);
-
-                // Handle the response here
-                if(response.success === false) 
-                {
-                    let message = response.message + " (Please Edit)";
-                    
-                    this.isSubmitting = false;
-                    this.loading.hideLoading();
-
-                    this.presentAlert('Error', message);
-
-                } else {
-                    let fpn_number = response.data.fpn_number;
-                    this.presentAlert('Success', fpn_number);
-
-                    let fpn = response.data;
-
-                    Clipboard.write({
-                        string: fpn.fpn_number
-                    });
-
-                    this.isSubmitting = false;
-                    this.loading.hideLoading();
-
-                    this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
-                    this.data.spliceEnviroQue(enviro_post);
-                    this.enviro_que = this.data.getEnviroQue();
-                }
-            },
-            error: (error) => {
-                console.log(2, error);
-
-                this.isSubmitting = false;
-                this.loading.hideLoading();
-
-                if (error.status == 401)
-                {
-                    this.presentAlert('Please Await', 'Submission in progress');
-                    //Auto Login
-                    this.auth.autoLogin();
-                    this.submitFPN(enviro_post);
-                }
-                else if (error.status == 500)
-                {
-                    this.presentAlert('Error 500', 'Process Error.');
-                } 
-                else 
-                {
-                    this.presentAlert('Error', error.message);
-                }   
+    async exportEnviroQue(enviro_post: any) {
+        try {
+          const jsonData = JSON.stringify(enviro_post, null, 2);
+      
+          const now = new Date();
+          const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
+            .toString()
+            .padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}_${now
+            .getHours()
+            .toString()
+            .padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
+      
+          const safeFirstName = (enviro_post.first_name || 'unknown').replace(/\s+/g, '_');
+          const safeLastName = (enviro_post.last_name || 'user').replace(/\s+/g, '_');
+          const fileName = `${safeFirstName}_${safeLastName}_${timestamp}.json`;
+      
+          const folderName = 'FPNs';
+          const fullPath = `${folderName}/${fileName}`;
+      
+          // ✅ Check if FPNs folder exists
+          try {
+            await Filesystem.stat({
+              path: folderName,
+              directory: Directory.Documents,
+            });
+            console.log('📁 FPNs folder exists');
+          } catch (folderErr: any) {
+            if (folderErr.message?.includes('does not exist')) {
+              console.log('📁 Creating FPNs folder...');
+              await Filesystem.mkdir({
+                path: folderName,
+                directory: Directory.Documents,
+                recursive: true,
+              });
+            } else {
+              throw folderErr; // rethrow unexpected errors
             }
-        });
+          }
+      
+          // ✅ Write or overwrite the file
+          const result = await Filesystem.writeFile({
+            path: fullPath,
+            data: jsonData,
+            directory: Directory.Documents,
+            encoding: Encoding.UTF8,
+          });
+      
+        //   console.log('✅ File saved:', result.uri);
+          this.presentAlert('Success', `Saved to Documents/${folderName}`);
+          console.log(enviro_post);
+      
+        } catch (error) {
+        //   console.error('❌ Error saving file:', error);
+          this.presentAlert('Error', 'Failed to export file: ' + error);
+        }
+    }
+
+
+    async clearFPNFolder() {
+        const folderName = 'FPNs';
+      
+        try {
+          // List files in FPNs folder
+          const listResult = await Filesystem.readdir({
+            path: folderName,
+            directory: Directory.Documents,
+          });
+      
+          // Accepts both forms: { files: ['file.json', ...] } or { files: [{ name: 'file.json' }, ...] }
+          const files =
+            Array.isArray(listResult.files) && listResult.files.length > 0
+              ? typeof listResult.files[0] === 'string'
+                ? listResult.files
+                : listResult.files.map((f: any) => f.name)
+              : [];
+      
+          if (files.length === 0) {
+            this.presentAlert('Info', 'FPNs folder exists but is already empty.');
+            return;
+          }
+      
+          // Delete each file found
+          for (const fileName of files) {
+            await Filesystem.deleteFile({
+              path: `${folderName}/${fileName}`,
+              directory: Directory.Documents,
+            });
+          }
+      
+          this.presentAlert('Success', 'Troubleshoot Phase 1, a Success.');
+        } catch (error: any) {
+            if (
+                error.message?.toLowerCase().includes('does not exist') ||
+                error.message?.toLowerCase().includes('not found')
+            ) {
+                this.presentAlert('Info', 'FPNs folder does not exist.');
+            } else {
+                this.presentAlert('Error', 'Failed to clear FPNs folder: ' + error);
+            }
+        }
+    }
+
+    // postFPNTroubleShoot(enviro_post: EnviroPost)
+    // {
+    //     this.api
+    // }
+      
+
+    refresh() {
+        window.location.reload();
+    }
+    
+    // Web: Trigger file download in the browser
+    downloadFileWeb(data: string, fileName: string) {
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 
     ping() {
@@ -189,25 +240,29 @@ export class QueueComponent  implements OnInit {
         await alert.present();
     }
 
-    // generateTicket(enviro_post: EnviroPost) {
-    //     console.log(1);
+    generateTicket(enviro_post: EnviroPost) {
 
-    //     let ticket = this.ticket.generateWelcomeTicket(enviro_post);
-    //     console.log(1);
+        let ticket = this.ticket.generateWelcomeTicket(enviro_post);//Nemo
+         
+        if (ticket == "refresh") {
+            this.presentAlert('Error', 'Please find Network and get latest data. To regenerate new FPN Numbers');
+            return;
+        }
 
-    //     // let index = 0;
+        for (let x = 0; x<this.enviro_que_addition.length; x++) {
+            if (this.enviro_que_addition[x] == enviro_post) {
+                this.enviro_que_addition[x].html_bool = true;
+                this.enviro_que_addition[x].html_string = ticket;
+            }
+            else {
+                this.enviro_que_addition[x].html_bool = false;
+            }
+        }
 
-    //     for (let x = 0; x<this.enviro_que_addition.length; x++) {
-    //         if (this.enviro_que_addition[x] == enviro_post) {
-    //             this.enviro_que_addition[x].html_bool = true;
-    //             this.enviro_que_addition[x].html_string = ticket;
-    //             // index = x;
-    //         }
-    //         else {
-    //             this.enviro_que_addition[x].html_bool = false;
-    //         }
-    //     }
-    // }
+        Clipboard.write({
+            string: ticket
+        });
+    }
 
     copyTicketToClipboard(enviro_post: any) {
 
@@ -224,17 +279,21 @@ export class QueueComponent  implements OnInit {
                     string: dataUrl.toString()
                 });
 
-                // for (let x = 0; x<this.enviro_que_addition.length; x++) { nemo
-                //     this.enviro_que_addition[x].html_bool = false;
-                // }
+
+                for (let x = 0; x<this.enviro_que_addition.length; x++) { 
+                    if (this.enviro_que_addition[x] == enviro_post) 
+                    {
+                        this.enviro_que_addition[x].html_string = dataUrl.toString();
+
+                    }
+                    this.enviro_que_addition[x].html_bool = false;
+                }
 
                 this.isSubmitting = false;
                 this.loading.hideLoading();
                 this.saveBase64Image(dataUrl, 'ticket_offline.png');
-                // this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
+                this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
 
-                // this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
-            //   enviro_post.html_string = dataUrl; // Set base64 image as the new html_string
             })
             .catch((error) => {
 
