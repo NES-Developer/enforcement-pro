@@ -70,6 +70,8 @@ export class DataService {
     private sr_via: any[] = [];
     private sites: any[] = [];
     private offence_types: any[] = [];
+
+    private fpn_number_offline_printer: any[] = [];
     
     constructor() {
         this.service_request = new ServiceRequest();
@@ -104,6 +106,7 @@ export class DataService {
         this.sr_via = this.loadArrayFromLocalStorage('sr_via');
         this.sites = this.loadArrayFromLocalStorage('sites');
         this.offence_types = this.loadArrayFromLocalStorage('offence_types')
+        this.fpn_number_offline_printer = this.loadArrayFromLocalStorage('fpn_number_offline_printer');
 
         this.selected_site = this.loadObjectFromLocalStorage('selected_site');
         this.selected_zone = this.loadObjectFromLocalStorage('selected_zone');
@@ -257,6 +260,11 @@ export class DataService {
         this.saveArrayToLocalStorage('site_offences', this.site_offences);
     }
 
+    setFPNNumberOfflinePrinter(fpn_number_offline_printer: any[]): void {
+        this.fpn_number_offline_printer = fpn_number_offline_printer || [];
+        this.saveArrayToLocalStorage('fpn_number_offline_printer', this.fpn_number_offline_printer);
+    }
+
     setEnviroQue(enviro_que: EnviroPost[]): void {
         this.enviro_que = enviro_que || [];
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
@@ -347,6 +355,15 @@ export class DataService {
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
 
+    spliceFPNNumberOfflinePrinter(fpn_number_and_barcode: any): void {
+        const index = this.fpn_number_offline_printer.indexOf(fpn_number_and_barcode);
+        if (index > -1) {
+            this.fpn_number_offline_printer.indexOf(index, 1);
+        }
+        this.saveArrayToLocalStorage('fpn_number_offline_printer', this.fpn_number_offline_printer)
+
+    }
+
     addFpnNumberAndBarcodeQue(fpn_number: string, barcode: string, index: number): void {
         this.enviro_que[index].fpn_number = fpn_number;
         this.enviro_que[index].barcode = barcode;
@@ -354,6 +371,10 @@ export class DataService {
 
     checkApiAppVersion(): boolean {
         return this.api_app_version !== '';
+    }
+
+    checkApiAppVersionAndUrl(): boolean {
+        return this.api_app_version !== '' && this.api_app_url !== '';
     }
 
     checkNoteBookEntriesData(): boolean {
@@ -389,7 +410,7 @@ export class DataService {
     }
 
     checkAppLog(): boolean {
-        return this.app_log !== null && this.app_log.device_id !== null && this.app_log.lat !== null && this.app_log.lng !== null;
+        return this.app_log !== null && this.app_log.lat !== null && this.app_log.lng !== null;
     }
 
     getLastFpnId(): number {
@@ -476,6 +497,10 @@ export class DataService {
         return this.enviro_que;
     }
 
+    getFPNNumberOfflinePrinter(): any[] {
+        return this.fpn_number_offline_printer;
+    }
+
     getOffence(): Offence[] {
         return this.offences;
     }
@@ -542,6 +567,15 @@ export class DataService {
 
     findSiteOffence(offence_id: number): SiteOffence | undefined {
         return this.site_offences.find(z => z.offence_id === offence_id);
+    }
+
+    updateEnviroInQue(old_enviro: EnviroPost, new_enviro: EnviroPost)
+    {
+        const index = this.enviro_que.indexOf(old_enviro);
+        if (index > -1) {
+            this.enviro_que[index] = new_enviro
+        }
+        this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
 
     removeEnviroLookUps(): void {
