@@ -1,0 +1,406 @@
+import { Component, OnInit } from '@angular/core';
+import { AuthService } from '../services/enforcementpro/auth.service';
+import { DataService } from '../services/enforcementpro/data.service';
+import { Router } from '@angular/router';
+import { Site } from '../models/site';
+import { Zone } from '../models/zone';
+import { AppLog } from '../models/app-log';
+import { ApiService } from '../services/enforcementpro/api.service';
+import { Weather } from '../models/weather';
+import { POIPrefix } from '../models/poi-prefix';
+import { Visibility } from '../models/visibility';
+import { Offence } from '../models/offence';
+import { OffenceGroup } from '../models/offence-group';
+import { SiteOffence } from '../models/site-offence';
+import { Observable, Subscriber, interval } from 'rxjs';
+import { AlertController } from '@ionic/angular';
+import { Login } from '../models/login';
+import { ZoneDetection } from '../models/zone-detection';
+//import * as L from 'leaflet';
+import { ConstantsService } from '../services/constants.service';
+import { User } from '../models/user';
+import { App } from '@capacitor/app';
+import { HomePage } from '../home/home.page';
+
+
+@Component({
+  selector: 'app-service-request',
+  templateUrl: 'service-request.page.html',
+  styleUrls: ['service-request.page.scss']
+})
+export class ServiceRequestPage implements OnInit {
+
+    api_app_version: string = "";
+    api_app_url: string = "";
+
+    map: any;
+    selected_site!: Site;
+    selected_zone!: Zone;
+
+    zones: Zone[] = [];
+    sites: Site[] = [];
+
+    position_lng: string = "0";
+    position_lat: string = "0";
+
+    site_id: number = 0;
+    app_log: AppLog;
+    app_version: string = '';
+
+    constructor(
+        private auth: AuthService,
+        private data: DataService,
+        private router: Router,
+        private api: ApiService,
+        private alertController: AlertController,
+        private constantsService: ConstantsService,
+
+    ) {
+        if (!this.auth.loggedInCheck()) {
+            this.autoLogin();
+        }
+
+        this.app_log = new AppLog;
+    }
+
+
+    ngOnInit(): void {
+        this.init();
+    }
+
+    init() {
+        if (!this.data.checkFPNData()){
+            this.getFPNData();
+        }
+
+        if (this.data.checkSelectedSite() == false) {
+            this.navigate('site');
+        }   
+        
+        if (this.data.checkApiAppVersionAndUrl() == false) {
+            this.getVersion();
+        }
+
+        this.loadData();
+    }
+
+    getVersion()
+    {
+        this.api.getApiVersion().subscribe(
+            (response) => {
+                this.api_app_version = response.data.version;
+                this.api_app_url = response.data.url;
+                this.data.setApiAppVersion(this.api_app_version);
+                this.data.setApiAppUrl(this.api_app_url)
+            },
+            (error) => {
+                console.log(error);
+
+                this.presentAlert("Failed", "Failed to get app version Network Error")
+            }
+        );
+    }
+
+    autoLogin() {
+        let login: Login = this.data.getLogin();
+
+        this.auth.login(login.id, login.pin).subscribe(
+            (response) => {
+                console.log(1,response)
+                if (response.access_token !== '' || response.user) {
+
+                    this.auth.storeToken(response.access_token);
+                    this.auth.storeUser(response.user);
+
+                } else {
+                    this.presentAlert("Login Attempt Failed", response.message)
+                } 
+            },
+            (error) => {
+                this.presentAlert("Login Attempt Failed", "Please Logout and Login again. " + error.message)
+            }
+        );
+    }
+
+    downloadFile() {
+        // Open the file URL in a new tab to trigger download
+        window.open(this.api_app_url, '_blank');
+    }
+
+    storeAppLog() {
+
+        this.data.setSelectedZone(this.selected_zone);
+        this.app_log.zone_id = this.selected_zone.id.toString();
+
+        this.app_log.site_id = this.site_id.toString();
+
+        let user = this.auth.getUser();
+        if (user) {
+            this.app_log.user_id = user.id.toString();
+        } else {
+            this.auth.logout();
+        }
+
+        this.getCurrentPosition()
+        .subscribe((position: any) => {
+            this.app_log.lat = position.latitude;
+            this.position_lat = position.latitude;
+            this.app_log.lng = position.longitude;
+            this.position_lng = position.longitude;
+        });
+
+        this.data.setAppLog(this.app_log);
+    }
+
+    getFPNData(): void {
+        let site: any = this.data.getSelectedSite();
+        let site_id: number = site.id;
+        this.api.getFPNData(site_id).subscribe({
+            next: (data) => {
+                this.data.removeEnviroLookUps()
+
+
+                let salutations = data.data.salutations;
+                this.data.setSalutations(salutations);
+
+                let builds = data.data.builds;
+                this.data.setBuilds(builds);
+
+                let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
+                this.data.setHairColors(hair_colours);
+
+                this.zones = data.data.zones;
+                this.data.setZones(this.zones);
+
+                let offence_how = data.data.offence_how;
+                this.data.setOffenceHow(offence_how);
+
+                let offence_location_suffix = data.data.offence_location_suffix;
+                this.data.setOffenceLocationSuffix(offence_location_suffix);
+
+                let address_verified_by = data.data.address_verified_via;
+                this.data.setAddressVerifiedBy(address_verified_by);
+
+                let ethnicities = data.data.ethnicities;
+                this.data.setEthnicities(ethnicities);
+
+                let id_shown = data.data.id_shown;
+                this.data.setIdShown(id_shown);
+
+                let weather: Weather[] = data.data.weathers;
+                this.data.setWeather(weather);
+
+                let visibility: Visibility[] = data.data.visibility;
+                this.data.setVisibility(visibility);
+
+                let poi_prefix: POIPrefix[] = data.data.poi_prefix;
+                this.data.setPOIPrefix(poi_prefix);
+
+                let site_offence = data.data.site_offences;
+                this.data.setSiteOffences(site_offence);
+
+                let offences = this.extractOffence(site_offence);
+                this.data.setOffences(offences);
+
+                let offenceGroups = this.extractOffenceGroups(offences);
+                this.data.setOffenceGroups(offenceGroups);
+
+                let fpn_number_offline_printer = data.data.fpn_number_offline_printer;
+                this.data.setFPNNumberOfflinePrinter(fpn_number_offline_printer);
+
+            },
+            error: (error) => {
+                console.error('Error fetching SR Data:', error);
+                // Handle error as needed
+            }
+        });
+    }
+
+    extractOffence(site_offences: SiteOffence[]): Offence[] {
+        const groups = site_offences.map(site_offence => site_offence.offences);
+        return Array.from(new Set(groups.map(group => group.id)))
+          .map(id => groups.find(group => group.id === id) as Offence);
+    }
+
+    extractOffenceGroups(offences: Offence[]): OffenceGroup[] {
+        const groups = offences.map(offence => offence.offenceGroup);
+        return Array.from(new Set(groups.map(group => group.id)))
+          .map(id => groups.find(group => group.id === id) as OffenceGroup);
+    }
+
+    loadData() {
+        this.app_version = this.constantsService.APP_VERSION;
+
+        this.selected_site = this.data.getSelectedSite();
+        this.selected_zone = this.data.getSelectedZone();
+        this.site_id = this.selected_site.id;
+
+        this.api_app_version = this.data.getApiAppVersion();
+        this.api_app_url = this.data.getApiAppUrl();
+
+        this.sites = this.data.getSites();
+        this.zones = this.data.getZones();
+
+        // console.log(this.app_log.device_id );
+        if (this.data.checkAppLog()) {
+            this.app_log = this.data.getAppLog();
+            // this.device_id = this.app_log.device_id;
+            this.selected_zone.id = parseInt(this.app_log.zone_id);
+            
+        } 
+
+        this.storeAppLog();
+       
+        this.ping();
+        setInterval(() => {
+            this.ping();
+        }, 30000);
+
+        // console.log('App Version:', this.constantsService.APP_VERSION);
+
+    }
+
+    private getCurrentPosition(): any {
+        return new Observable((observer: Subscriber<any>) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position: any) => {
+            observer.next({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            });
+            observer.complete();
+            });
+        } else {
+            observer.error();
+        }
+        });
+    }
+
+    navigate(route: string){
+        this.router.navigate([route]);
+    }
+  
+    currentStep: number = 1;
+
+    nextStep() {
+        if (this.currentStep < 4) {
+        this.currentStep++;
+        }
+    } 
+
+    previousStep() {
+        if (this.currentStep > 1) {
+        this.currentStep--;
+        }
+    }
+
+    ping() {
+        if (!this.app_log.zone_id)
+        {
+            this.presentAlert('Wait', 'Please set your Zone.')
+        }
+
+        this.storeAppLog();
+        
+        this.api.postTrack(this.app_log).subscribe({
+            next: (response) => {
+                console.log(response)
+                // Handle the response here
+                if(response.success === false) 
+                {
+                    let message = response.message + " (Please Edit)";
+                    this.presentAlert('Error', 'Try ensurng Device details are provided. If still unsuccessful attempt Auto-Login.');
+                } else {
+                    // this.presentAlert('Success', 'Pinged');
+                }
+            },
+            error: (error) => {
+                console.error('Error:', error);
+                if (error.status == 401)
+                {
+                    this.presentAlert('Error Tracking', 'You have been logged out. Please click Auto-Login button, then attempt to Ping again');
+                } else {
+                    this.presentAlert('Error Tracking', error.message);
+                }
+            }
+        });
+    }
+
+    // deviceValidation() {
+    //     this.api.deviceValidation(this.app_log.device_id).subscribe({
+    //         next: (response) => {
+    //             // console.log('Response:', response);
+    //             // Handle the response here
+    //             let message = response.message;
+    //             if(response.success === false) 
+    //             {
+    //                 this.presentAlert('Error', response.msg);
+
+    //             } else {
+    //                 this.storeAppLog();
+                    
+    //                 this.presentAlert('Success', response.msg);
+    //             }
+    //         },
+    //         error: (error) => {
+    //             console.error('Error:', error);
+    //             this.presentAlert('Error', 'Server Error: ' + error.message );
+    //         }
+    //     });
+    // }
+
+
+    forceCloseApp() {
+        App.exitApp(); // Force closes the app
+    }
+
+    ZoneDetection() {
+        if (this.app_log.lat !== "0" && this.app_log.lng !== "0" && this.site_id !== 0 ) {
+            let zone_detection = new ZoneDetection();
+            zone_detection.lat = this.app_log.lat;
+            zone_detection.lng = this.app_log.lng;
+            zone_detection.site_id = this.site_id.toString();
+            
+            this.api.zoneDetection(zone_detection).subscribe({
+                next: (response) => {
+                    if (response.success === false){
+                        this.presentAlert('Error', response.message);
+                    } else {
+                        this.selected_zone = response;
+                        this.data.setSelectedZone(this.selected_zone);
+
+                        this.presentAlert('Success', 'You are at ' + response.name);
+
+                        this.ping();//Nemo
+
+                    }
+                },
+                error: (error) => {
+                    // console.error('Error:', error);
+                    this.presentAlert('Error Zone Detection', error.message);
+                }
+            });
+        } else {
+            this.presentAlert("Error", "Please wait for your location to be loaded. Try again later.")
+        }
+    }
+
+    async presentAlert(header: string, message: string) {
+        let primary_button_title: string = 'Ok';
+        let secondary_button_title: string = 'Cancel';
+        const alert = await this.alertController.create({
+            header: header,
+            message: message,
+            buttons: [
+                {
+                    text: primary_button_title,
+                },
+                {
+                    text: secondary_button_title,
+                }
+            ],
+        });
+        await alert.present();
+    }
+
+}

@@ -1,0 +1,89 @@
+<ion-header [translucent]="true">
+    <ion-toolbar>
+        <ion-row>
+            <ion-col>
+                <ion-button href="/tabs/home">
+                    <ion-icon name="home"></ion-icon>
+                </ion-button>
+                <ion-button (click)="route('/tabs/fpn')">
+                    <ion-icon name="arrow-back-outline"></ion-icon>
+                </ion-button>
+            </ion-col>
+            <ion-col>
+                <ion-title>
+                    FPN
+                </ion-title>
+            </ion-col>
+            <ion-col>
+                <ion-button>
+                    <ion-icon name="camera"></ion-icon>
+                    <ion-badge color="white">
+                        {{enviro_post.offence_images.length !== null ? enviro_post.offence_images.length : 0}}
+                    </ion-badge>
+                </ion-button>
+            </ion-col>
+        </ion-row>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+    <ion-header collapse="condense">
+        <ion-toolbar>
+            <ion-title size="large">Photo</ion-title>
+        </ion-toolbar>
+    </ion-header>
+
+    <ion-item>
+        <div style="width: 100%" *ngIf="!error">
+            <video [class.show]="!isCaptured" [class.hide]="isCaptured" #video id="video"  [height]="HEIGHT"
+                autoplay></video>
+        </div>
+    </ion-item> 
+
+    <ion-item>
+        <div style="width: 100%" *ngIf="!error">
+            <canvas [class.show]="isCaptured" [class.hide]="!isCaptured" #canvas id="canvas" 
+                [height]="HEIGHT"></canvas>
+        </div>
+    </ion-item> 
+
+    <ion-item>
+        <div class="row" style="display: block; margin-left: auto; margin-right: auto">
+            <button class="btn btn-dark w-100" *ngIf="!isCaptured" (click)="capture()">
+                <ion-icon name="camera"></ion-icon>
+            </button>
+            <button class="btn btn-warning" *ngIf="isCaptured" (click)="removeCurrent()">
+                x
+            </button>
+            
+        </div>
+    </ion-item>
+
+    <ion-item>
+        <div class="snap-container">
+            
+            <div *ngIf="error" class="text-danger mt-4">
+                {{ error }}.
+                <div class="mt-5">
+                </div>
+                </div>
+            </div>
+        
+            <ul class="list-unstyled">
+                <li *ngFor="let src of enviro_post.offence_images; let idx = index" (click)="setPhoto(idx)">
+                    <img [src]="src" height="50" />
+                    
+                    <button class="btn btn-danger rounded-circle" (click)="removePhoto(idx)">
+                        <ion-icon name="trash"></ion-icon>
+                    </button>
+                </li>
+            </ul>
+    </ion-item>
+
+    <ion-item>
+        <ion-badge>
+            Photo Count: {{ enviro_post.offence_images.length }}
+        </ion-badge>
+    </ion-item>
+
+</ion-content>

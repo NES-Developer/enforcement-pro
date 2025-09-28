@@ -1,0 +1,48 @@
+
+
+  
+  .show {
+    display: block;
+  }
+  
+  .hide {
+    display: none;
+  }
+  
+ion-content {
+  --background: WHITE; /* Set content background to white */
+}
+
+ion-header {
+  --background: var(--ion-color-primary);
+  --color: white;
+}
+
+ION-TOOLBAR { 
+  --background: WHITE !important;
+  text-transform: uppercase !important;
+  --color: #d5a431 !important; /* A more marketable and appealing orange color */
+  text-align: center !important; /* Center the text */
+}
+
+ion-button {
+  --background: #d5a431;
+  --color: WHITE;
+
+}
+
+
+
+ion-select {
+  --background: WHITE; /* Set content background to white */
+}
+
+ion-item {
+  --background: WHITE;
+  --color: black;
+  --border-color:white;
+}
+
+
+
+

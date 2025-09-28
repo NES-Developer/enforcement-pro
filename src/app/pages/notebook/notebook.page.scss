@@ -1,0 +1,85 @@
+
+
+ion-content {
+    --background: WHITE; /* Set content background to white */
+}
+
+ion-header {
+    --background: var(--ion-color-primary);
+    --color: white;
+}
+
+ION-TOOLBAR {
+    --background: WHITE;
+    text-transform: uppercase;
+    --color: #d5a431; /* A more marketable and appealing orange color */
+    text-align: center; /* Center the text */
+}
+
+ion-button {
+    --background: #d5a431;
+    --color: WHITE;
+}
+
+ion-card {
+    margin: 20px;
+}
+
+ion-select {
+    --background: WHITE; /* Set content background to white */
+}
+
+ion-item {
+    --background: WHITE;
+    --color: black;
+    --border-color:white;
+}
+
+ion-item-divider {
+    --background: transparent;
+    --color: #d5a431; /* A more marketable and appealing orange color */
+    //--inner-border-width: 1px; /* Adjusts the thickness of the divider line */
+    margin-top: -25px;
+}
+
+ion-checkbox {
+    --border-radius: 50%;
+    --background: white;
+    --color: white;
+    --border-color: transparent;
+}
+
+ion-label {
+    text-align: left; /* align text to the center */
+    width: 100%; /* set width to 80% */
+    max-width: 100%; /* set max-width to 80% */
+
+}
+
+ion-input {
+    --background: #F7F7F7; /* light grey color */
+    --border-radius: 5px;
+    --border-color: black;
+    text-align: center; /* align text to the center */
+    width: 100%; /* set width to 80% */
+    max-width: 100%; /* set max-width to 80% */
+}
+
+ion-select {
+    --background: #F7F7F7; /* light grey color */
+    --border-radius: 5px;
+    width: 100%; /* set width to 80% */
+    max-width: 100%; /* set max-width to 80% */
+}
+
+ion-list {
+    --background: transparent; /* light grey color */
+    --color: transparent;
+    --border-color: transparent;
+}
+
+.medium-label {
+    font-weight: 500; /* Medium font weight */
+    font-size: 16px; /* Medium font size */
+    margin-bottom: 8px; /* Adjust margin for spacing */
+}
