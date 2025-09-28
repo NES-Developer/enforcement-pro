@@ -106,7 +106,7 @@ export class HomePage implements OnInit {
             this.ping();
             setInterval(() => {
                 this.ping();
-            }, 120000); // 2 minutes in milliseconds
+            }, 60000); // 1 minutes in milliseconds
         }
 
         this.getRecentFPN();
