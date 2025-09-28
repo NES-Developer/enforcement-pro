@@ -56,7 +56,6 @@ export class ServiceRequestPage implements OnInit {
         private constantsService: ConstantsService,
 
     ) {
-
         if (!this.auth.loggedInCheck()) {
             this.autoLogin();
         }

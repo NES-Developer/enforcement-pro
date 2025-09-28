@@ -19,6 +19,7 @@ import { LoadingService } from '../services/loading.service';
 // import { Capacitor } from '@capacitor/core';
 import { User } from '../models/user';
 import { Observable, Subscriber } from 'rxjs';
+import { Login } from '../models/login';
 
 @Component({
   selector: 'app-fpn',
@@ -49,8 +50,7 @@ export class FPNPage implements OnInit {
         // this.auth.checkLoggedIn();
         if (!this.auth.loggedInCheck())
         {
-            this.presentAlert('Your Not Logged In', 'Please Auto-Login');
-            this.route('');
+            this.autoLogin();
         }
 
         this.loading.showLoading();
@@ -85,6 +85,28 @@ export class FPNPage implements OnInit {
         }
 
         this.app_log = new AppLog();
+    }
+
+    autoLogin() {
+        let login: Login = this.data.getLogin();
+
+        this.auth.login(login.id, login.pin).subscribe(
+            (response) => {
+                console.log(1,response)
+                if (response.access_token !== '' || response.user) {
+
+                    this.auth.storeToken(response.access_token);
+                    this.auth.storeUser(response.user);
+
+                } else {
+                    this.presentAlert("Login Attempt Failed", response.message)
+                    this.auth.logout();
+                } 
+            },
+            (error) => {
+                this.presentAlert("Login Attempt Failed", "Please Auto Log")
+            }
+        );
     }
 
 

@@ -14,15 +14,7 @@ import { AppLauncher } from '@capacitor/app-launcher';
 import { LoadingService } from '../services/loading.service';
 import { User } from '../models/user';
 
-import { App } from '@capacitor/app';
 
-//test
-import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { Capacitor } from '@capacitor/core';
-import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
-
-
-import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
 import { EnviroPost } from '../models/enviro';
 import { Login } from '../models/login';
 
