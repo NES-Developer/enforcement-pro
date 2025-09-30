@@ -58,20 +58,36 @@
     </ion-item>
 
 
-    <ion-item>
-        <ion-row>
-            <ion-col>
-                <button type="button" (click)="navigate('site')" class="mt-4 btn btn-info block">
+    <ion-list>
+        <ion-item>
+            <ion-label>
+                <ion-button expand="block" shape="full" (click)="navigate('site')">
                     <ion-icon name="pencil"></ion-icon> Change
-                </button> 
-            </ion-col>
-            <ion-col>
-                <button type="button" (click)="openOtherApp()" class="mt-4 btn btn-success">
+                </ion-button>
+            </ion-label>
+        </ion-item>
+        <ion-item>
+            <ion-label>
+                <ion-button expand="block" shape="full" (click)="openOtherApp(0)">
                     <ion-icon name="print"></ion-icon> Enforcement Pro Printer
-                </button> 
-            </ion-col>
-        </ion-row>
-    </ion-item>
+                </ion-button>
+            </ion-label>
+        </ion-item>
+        <ion-item>
+            <ion-label>
+                <ion-button expand="block" shape="full" (click)="openOtherApp(1)">
+                    <ion-icon name="print"></ion-icon> Sunmi Printer
+                </ion-button>
+            </ion-label>
+        </ion-item>
+        <ion-item>
+            <ion-label>
+                <ion-button expand="block" shape="full" (click)="fpnDuplicate()">
+                    Remove Duplicate in Queue
+                </ion-button>
+            </ion-label>
+        </ion-item>
+    </ion-list>
 
     <ion-item>
         <ion-row>

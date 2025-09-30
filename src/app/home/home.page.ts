@@ -250,24 +250,30 @@ export class HomePage implements OnInit {
         this.presentAlert('Successful', 'Copied FPN Number to Clipboard')
     }
 
-    async openOtherApp() {
-        try {
-          const canOpen = await AppLauncher.canOpenUrl({
-            url: 'com.example.enforcementproprinter'
-          });
-    
-          if (canOpen.value) {
-            await AppLauncher.openUrl({
-              url: 'com.example.enforcementproprinter'
-            });
-          } else {
-            console.log('Cannot open app');
-            this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-          }
-        } catch (error) {
-          console.error('Error launching app:', error);
-          this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+    async openOtherApp(index: number) {
+        switch (index) {
+            case 0:
+                try {
+                    await AppLauncher.openUrl({
+                        url: 'com.example.enforcementproprinter'
+                    });
+                } catch (error) {
+                    // console.error('Error launching app:', error);
+                    this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+                }
+                break;
+            case 1: 
+            try {
+                  await AppLauncher.openUrl({
+                    url: 'com.ahmedelsayed.sunmiprinterutill'
+                  });
+            } catch (error) {
+                // console.error('Error launching app:', error);
+                this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+            }
+            break;
         }
+        
     }
 
     async presentAlert(header: string, message: string) {
