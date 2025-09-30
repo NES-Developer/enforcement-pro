@@ -63,6 +63,7 @@ export class Step1Component  implements OnInit {
                         app_log.zone_id = response.id;
                         this.selected_zone = response;
                         this.data.setSelectedZone(this.selected_zone);
+                        this.data.setAppLog(app_log);
                         this.fpnPage.presentAlert('Yay', 'We found your zone, device settings have been altered.');
                         this.fpnPage.ping();
                     }
