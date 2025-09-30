@@ -348,35 +348,46 @@ export class ServiceRequestPage implements OnInit {
     }
 
     ZoneDetection() {
-        if (this.app_log.lat !== "0" && this.app_log.lng !== "0" && this.site_id !== 0 ) {
-            let zone_detection = new ZoneDetection();
-            zone_detection.lat = this.app_log.lat;
-            zone_detection.lng = this.app_log.lng;
-            zone_detection.site_id = this.site_id.toString();
-            
-            this.api.zoneDetection(zone_detection).subscribe({
-                next: (response) => {
-                    if (response.success === false){
-                        this.presentAlert('Error', response.message);
-                    } else {
-                        this.selected_zone = response;
-                        this.storeAppLog();
-                        this.data.setSelectedZone(this.selected_zone);
+        this.ping();
+
+        let zone_detection = new ZoneDetection();
+
+        zone_detection.lat = this.app_log.lat;
+        zone_detection.lng = this.app_log.lng;
+
+        let site = this.data.getSelectedSite();
+        zone_detection.site_id = site.id.toString();
+
+        
+
+        this.api.zoneDetection(zone_detection).subscribe({
+            next: (response) => {
+                if (response.success === false){
+
+                    this.presentAlert('Error', response.message);
+                } else {
 
 
-                        this.presentAlert('Success', 'You are at ' + response.name);
+                    this.selected_zone = response;
+                    this.data.setSelectedZone(this.selected_zone);
 
-                        this.ping();
+                    this.app_log.zone_id = response.id;
 
-                    }
-                },
-                error: (error) => {
-                    this.presentAlert('Error', 'Server Error');
+                    this.data.setAppLog(this.app_log);
+
+                    let enviro_data = this.data.getEnviroPost();
+                    enviro_data.zone_id = parseInt(this.app_log.zone_id);
+                    this.data.setEnviroPost(enviro_data);
+
+
+                    this.presentAlert('Success', 'We found your zone, your at: ' + response.name);
+                    this.storeAppLog();
+
+                    this.ping();
+
                 }
-            });
-        } else {
-            this.presentAlert("Error", "Please wait for your location to be loaded. Try again later.")
-        }
+            },
+        });
     }
 
     async presentAlert(header: string, message: string) {

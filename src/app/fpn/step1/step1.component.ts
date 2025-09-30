@@ -8,6 +8,8 @@ import { FPNPage } from '../fpn.page';
 import { OffenceGroup } from '../../models/offence-group';
 import { Site } from '../../models/site';
 import { ZoneDetection } from '../../models/zone-detection';
+import { AppLog } from 'src/app/models/app-log';
+import { Observable, Subscriber } from 'rxjs';
 
 @Component({
   selector: 'app-step1',
@@ -25,6 +27,7 @@ export class Step1Component  implements OnInit {
     zones: Zone[] = [];
     sites: Site[] = [];
 
+    app_log: AppLog;
     offence!: Offence;
 
     enviro_post: EnviroPost = new EnviroPost();
@@ -34,9 +37,16 @@ export class Step1Component  implements OnInit {
         private data:DataService,
         private fpnPage: FPNPage,
     ) {
+        this.app_log = this.data.getAppLog();
+        if (this.app_log == null)
+        {
+            this.app_log = new AppLog();
+        }
+
         if (!this.data.checkFPNData()){
             this.fpnPage.getFPNData();
         }
+
         this.loadData();
     }
 
@@ -45,35 +55,36 @@ export class Step1Component  implements OnInit {
     }
 
     ZoneDetection() {
-        let app_log = this.data.getAppLog();
-        if (this.data.checkAppLog() ) {
+        this.fpnPage.ping();
 
-            let zone_detection = new ZoneDetection();
-            zone_detection.lat = app_log.lat;
-            zone_detection.lng = app_log.lng;
-            zone_detection.site_id = app_log.site_id;
-            
-            this.api.zoneDetection(zone_detection).subscribe({
-                next: (response) => {
-                    if (response.success === false){
+        let zone_detection = new ZoneDetection();
 
-                        this.fpnPage.presentAlert('Error', response.message);
-                    } else {
+        zone_detection.lat = this.app_log.lat;
+        zone_detection.lng = this.app_log.lng;
 
-                        app_log.zone_id = response.id;
-                        this.selected_zone = response;
-                        this.data.setSelectedZone(this.selected_zone);
-                        this.data.setAppLog(app_log);
-                        this.fpnPage.presentAlert('Yay', 'We found your zone, device settings have been altered.');
-                        this.fpnPage.ping();
-                    }
-                },
-            });
-        }
-        else {
+        let site = this.data.getSelectedSite();
+        zone_detection.site_id = site.id.toString();
 
-            this.fpnPage.presentAlert('Error', 'App cannot find your location, try again later.');
-        }
+        this.api.zoneDetection(zone_detection).subscribe({
+            next: (response) => {
+                if (response.success === false){
+
+                    this.fpnPage.presentAlert('Error', response.message);
+                } else {
+
+                    this.app_log.zone_id = response.id;
+                    this.data.setAppLog(this.app_log);
+
+                    this.enviro_post.zone_id = parseInt(this.app_log.zone_id);
+                    this.saveEnviroData();
+
+                    this.selected_zone = response;
+                    this.data.setSelectedZone(this.selected_zone);
+
+                    this.fpnPage.presentAlert('Yay', 'We found your zone, device settings have been altered.');
+                }
+            },
+        });
     }
 
     loadData() {
@@ -129,6 +140,13 @@ export class Step1Component  implements OnInit {
 
     saveEnviroData() {
         this.data.setEnviroPost(this.enviro_post);
+
+        if (this.app_log == null)
+        {
+            this.app_log = new AppLog();
+        }
+        this.app_log.zone_id = this.enviro_post.zone_id.toString();
+        this.data.setAppLog(this.app_log);
     }
 
     getOffenceById(id: number) {        
