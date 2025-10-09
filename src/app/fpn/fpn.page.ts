@@ -9,7 +9,7 @@ import { Weather } from '../models/weather';
 import { Visibility } from '../models/visibility';
 import { POIPrefix } from '../models/poi-prefix';
 import { EnviroPost } from '../models/enviro';
-import { AlertController } from '@ionic/angular';
+import { AlertController, Platform } from '@ionic/angular';
 import { Clipboard } from '@capacitor/clipboard';
 import { AppLog } from '../models/app-log';
 import { AppLauncher } from '@capacitor/app-launcher';
@@ -46,9 +46,15 @@ export class FPNPage implements OnInit {
         private route2: ActivatedRoute,
         private router: Router,
         private loading:LoadingService,
+        private platform: Platform
+
 
     ) {
         this.auth.checkLoggedIn();
+
+        this.platform.ready().then(() => {
+            this.blockBackButton();
+        });
 
         if (this.data.checkSelectedSite() === false) {
             this.navigate('site');
@@ -86,6 +92,10 @@ export class FPNPage implements OnInit {
 
     ngOnInit() {
         this.loadData();
+    }
+
+    blockBackButton() {
+        this.platform.backButton.subscribeWithPriority(9999, () => {});
     }
 
     navigate(route: string){

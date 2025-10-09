@@ -13,7 +13,7 @@ import { Offence } from '../models/offence';
 import { OffenceGroup } from '../models/offence-group';
 import { SiteOffence } from '../models/site-offence';
 import { Observable, Subscriber, interval } from 'rxjs';
-import { AlertController } from '@ionic/angular';
+import { AlertController, Platform } from '@ionic/angular';
 import { Login } from '../models/login';
 import { ZoneDetection } from '../models/zone-detection';
 //import * as L from 'leaflet';
@@ -57,17 +57,26 @@ export class ServiceRequestPage implements OnInit {
         private router: Router,
         private api: ApiService,
         private alertController: AlertController,
-        private constantsService: ConstantsService
+        private constantsService: ConstantsService,
+        private platform: Platform
+
 
     ) {
         this.auth.checkLoggedIn();
 
+        this.platform.ready().then(() => {
+            this.blockBackButton();
+        });
+
         this.app_log = new AppLog;
     }
 
-
     ngOnInit(): void {
         this.init();
+    }
+
+    blockBackButton() {
+        this.platform.backButton.subscribeWithPriority(9999, () => {});
     }
 
     init() {

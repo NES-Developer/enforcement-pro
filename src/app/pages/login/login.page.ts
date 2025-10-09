@@ -2,7 +2,7 @@ import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 // import { ApiService } from 'src/app/services/enforcementpro/api.service';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { AuthService } from '../../services/enforcementpro/auth.service';
-import { AlertController } from '@ionic/angular';
+import { AlertController, Platform } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { DataService } from 'src/app/services/enforcementpro/data.service';
 import { Login } from '../../models/login';
@@ -30,10 +30,15 @@ export class LoginPage implements OnInit {
         private alertController: AlertController,
         private router: Router,
         private loading:LoadingService,
-        private data: DataService
+        private data: DataService,
+        private platform: Platform
         
     ) {
         this.login = new Login();
+
+        this.platform.ready().then(() => {
+            this.blockBackButton();
+        });
     }
 
 
@@ -66,6 +71,10 @@ export class LoginPage implements OnInit {
                 this.presentAlert("Login Attempt Failed", "Server Error: " + error.message)
             }
         );
+    }
+
+    blockBackButton() {
+        this.platform.backButton.subscribeWithPriority(9999, () => {});
     }
 
     async presentAlert(header: string, message: string) {

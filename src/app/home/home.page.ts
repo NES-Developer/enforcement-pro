@@ -7,7 +7,7 @@ import { AppLog } from '../models/app-log';
 import { HttpClient } from '@angular/common/http';
 
 import { Clipboard } from '@capacitor/clipboard';
-import { AlertController } from '@ionic/angular';
+import { AlertController, Platform } from '@ionic/angular';
 import { isEmpty } from 'rxjs';
 
 import { AppLauncher } from '@capacitor/app-launcher';
@@ -48,8 +48,14 @@ export class HomePage implements OnInit {
         private http: HttpClient,
         private alertController: AlertController,
         private loading:LoadingService,
+        private platform: Platform
+
     ) {
         this.auth.checkLoggedIn();
+
+        this.platform.ready().then(() => {
+            this.blockBackButton();
+        });
 
         let user = this.auth.getUser();
 
@@ -72,6 +78,10 @@ export class HomePage implements OnInit {
             this.user = user;
         }
         this.init();
+    }
+
+    blockBackButton() {
+        this.platform.backButton.subscribeWithPriority(9999, () => {});
     }
 
     fpnDuplicate() {
