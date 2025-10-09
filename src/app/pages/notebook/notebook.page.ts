@@ -150,14 +150,14 @@ export class NotebookPage implements OnInit {
             this.presentAlert('Wait!', 'Please provide hair details.');
             return false;
         }
-        if (this.notebook_entries.were == '') {
-            this.presentAlert('Wait!', 'Please provide were details.');
-            return false;
-        }
-        if (this.notebook_entries.did == '') {
-            this.presentAlert('Wait!', 'Please provide did details.');
-            return false;
-        }
+        // if (this.notebook_entries.were == '') {
+        //     this.presentAlert('Wait!', 'Please provide were details.');
+        //     return false;
+        // }
+        // if (this.notebook_entries.did == '') {
+        //     this.presentAlert('Wait!', 'Please provide did details.');
+        //     return false;
+        // }
         if (this.notebook_entries.gender == '') {
             this.presentAlert('Wait!', 'Please provide offender Gender.');
             return false;

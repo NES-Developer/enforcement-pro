@@ -273,14 +273,14 @@ export class HomePage implements OnInit {
                 }
                 break;
             case 1: 
-            try {
-                  await AppLauncher.openUrl({
-                    url: 'com.ahmedelsayed.sunmiprinterutill'
-                  });
-            } catch (error) {
-                // console.error('Error launching app:', error);
-                this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-            }
+                try {
+                    await AppLauncher.openUrl({
+                        url: 'com.ahmedelsayed.sunmiprinterapp'
+                    });
+                } catch (error) {
+                    // console.error('Error launching app:', error);
+                    this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
+                }
             break;
         }
         

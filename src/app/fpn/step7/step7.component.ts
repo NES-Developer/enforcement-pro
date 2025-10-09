@@ -66,7 +66,7 @@ export class Step7Component  implements OnInit {
 
     saveEnviroData() {
         this.onInputChange();
-        if (this.enviro_post.notebook_entries.hair !== 0 && this.enviro_post.notebook_entries.were !== '' && this.enviro_post.notebook_entries.did !== '' && this.enviro_post.notebook_entries.is_fpn_advised !== '' && this.enviro_post.notebook_entries.is_fpn_handed !== '')
+        if (this.enviro_post.notebook_entries.hair !== 0 && this.enviro_post.notebook_entries.is_fpn_advised !== '' && this.enviro_post.notebook_entries.is_fpn_handed !== '')
         {
             this.data.setEnviroPost(this.enviro_post);
         }

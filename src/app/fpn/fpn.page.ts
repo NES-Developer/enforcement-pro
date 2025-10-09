@@ -320,14 +320,14 @@ export class FPNPage implements OnInit {
                     this.presentAlert('Wait!', 'Please provide hair details.');
                     return false;
                 }
-                if (this.enviro_post.notebook_entries.were == '') {
-                    this.presentAlert('Wait!', 'Please provide were details.');
-                    return false;
-                }
-                if (this.enviro_post.notebook_entries.did == '') {
-                    this.presentAlert('Wait!', 'Please provide did details.');
-                    return false;
-                }
+                // if (this.enviro_post.notebook_entries.were == '') {
+                //     this.presentAlert('Wait!', 'Please provide were details.');
+                //     return false;
+                // }
+                // if (this.enviro_post.notebook_entries.did == '') {
+                //     this.presentAlert('Wait!', 'Please provide did details.');
+                //     return false;
+                // }
                 if (this.enviro_post.notebook_entries.gender == '') {
                     this.presentAlert('Wait!', 'Please provide offender Gender.');
                     return false;
@@ -376,6 +376,12 @@ export class FPNPage implements OnInit {
         if (this.isSubmitting) {
             return;
         }
+
+        this.getCurrentPosition()
+        .subscribe((position: any) => {
+            this.enviro_post.lat = position.latitude;
+            this.enviro_post.lng = position.longitude;
+        });
 
         let checker = this.validator();
         if (checker) {
@@ -578,6 +584,12 @@ export class FPNPage implements OnInit {
         if (this.isSubmitting) {
             return;
         }
+
+        this.getCurrentPosition()
+        .subscribe((position: any) => {
+            this.enviro_post.lat = position.latitude;
+            this.enviro_post.lng = position.longitude;
+        });
 
         let checker = this.validator();
 
