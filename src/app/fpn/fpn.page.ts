@@ -425,18 +425,17 @@ export class FPNPage implements OnInit {
                         this.presentAlert('Error', message);
                     } else {
                         this.fpn = response.data;
-                        this.enviro_post = new EnviroPost();
-                        this.data.setEnviroPost(this.enviro_post);
+                        
                         Clipboard.write({
                             string: this.fpn.fpn_number
                         });
 
-                        this.currentStep = 1;
-
                         this.isSubmitting = false;
                         this.loading.hideLoading();
                         
-                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + ' has been copied to your clipboard. Remember to capture Notebook');     
+                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + ' has been copied to your clipboard. Remember to capture Notebook'); 
+                        
+                        this.cancel();
                     }
 
                 },
@@ -494,7 +493,6 @@ export class FPNPage implements OnInit {
         let primary_button_title: string = 'Ok';
         let secondary_button_title: string = 'Cancel';
         if (header == "Success") {
-            primary_button_title = "Finish"
             secondary_button_title = "Print"
         }
         const alert = await this.alertController.create({
@@ -502,20 +500,20 @@ export class FPNPage implements OnInit {
             message: message,
             buttons: [
                 {
-                    text: 'Okay',
+                    text: primary_button_title,
                     handler: () => {
                         window.location.reload();
 
                     }
                 },
-                // {
-                //     text: secondary_button_title,
-                //     handler: () => {
-                //         if (header == "Success") {
-                //             this.openOtherApp();
-                //         }
-                //     }
-                // }
+                {
+                    text: secondary_button_title,
+                    handler: () => {
+                        if (header == "Success") {
+                            this.openOtherApp();
+                        }
+                    }
+                }
             ],
         });
         await alert.present();
@@ -576,8 +574,6 @@ export class FPNPage implements OnInit {
         });
     }
 
-    
-
     async openOtherApp() {
         try {
             try {
@@ -586,7 +582,7 @@ export class FPNPage implements OnInit {
                 });
             } catch (error) {
                 await AppLauncher.openUrl({
-                    url: 'com.ahmedelsayed.sunmiprinterapp'
+                    url: 'com.ahmedelsayed.sunmiprinterapp.test'
                 });
             }
         } catch (error) {
@@ -601,10 +597,10 @@ export class FPNPage implements OnInit {
         }
 
         this.getCurrentPosition()
-        .subscribe((position: any) => {
-            this.enviro_post.lat = position.latitude;
-            this.enviro_post.lng = position.longitude;
-        });
+            .subscribe((position: any) => {
+                this.enviro_post.lat = position.latitude;
+                this.enviro_post.lng = position.longitude;
+            });
 
         let checker = this.validator();
 
@@ -617,8 +613,9 @@ export class FPNPage implements OnInit {
                 this.offenceSwitcherForserver();
                 this.assignOfficerId();
                 this.data.pushEnviroQue();
-                this.enviro_post = new EnviroPost();
-                this.currentStep = 1;
+                
+                this.cancel();
+
                 this.loading.hideLoading();
             } else {
                 this.loading.hideLoading();

@@ -272,28 +272,23 @@ export class HomePage implements OnInit {
         this.presentAlert('Successful', 'Copied FPN Number to Clipboard')
     }
 
-    async openOtherApp(index: number) {
-        switch (index) {
-            case 0:
+    async openOtherApp() {
+
+        try {
+            try {
+                await AppLauncher.openUrl({
+                    url: 'com.example.enforcementproprinter'
+                });
+            } catch (error) {
                 try {
                     await AppLauncher.openUrl({
-                        url: 'com.example.enforcementproprinter'
+                        url: 'com.ahmedelsayed.sunmiprinterapp.test'
                     });
-                } catch (error) {
-                    // console.error('Error launching app:', error);
+                }
+                catch (error) {
                     this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
                 }
-                break;
-            case 1: 
-                try {
-                    await AppLauncher.openUrl({
-                        url: 'com.ahmedelsayed.sunmiprinterapp'
-                    });
-                } catch (error) {
-                    // console.error('Error launching app:', error);
-                    this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-                }
-            break;
+            }
         }
         
     }
