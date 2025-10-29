@@ -43,9 +43,9 @@ export class TicketService {
         let enviro_holder = enviro_post;
 
         let fpn_numbers_and_barcode = this.data.getFPNNumberOfflinePrinter();
-        if (fpn_numbers_and_barcode) {
-            fpn_numbers_and_barcode = fpn_numbers_and_barcode as FPNBarcode[];
-        }
+        // if (fpn_numbers_and_barcode) {
+        //     fpn_numbers_and_barcode = fpn_numbers_and_barcode as FPNBarcode[];
+        // }
         
 
         console.log(11,fpn_numbers_and_barcode);

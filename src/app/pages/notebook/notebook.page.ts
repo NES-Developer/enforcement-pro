@@ -321,6 +321,9 @@ export class NotebookPage implements OnInit {
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
 
+                let fpn_number_and_barcode = data.data.fpn_number_offline_printer;
+                this.data.setFPNNumberOfflinePrinter(fpn_number_and_barcode);
+
                 this.builds = data.data.builds;
                 this.data.setBuilds(this.builds);
 

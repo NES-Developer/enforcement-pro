@@ -121,6 +121,9 @@ export class SitePage implements OnInit {
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
 
+                let fpn_number_and_barcode = data.data.fpn_number_offline_printer;
+                this.data.setFPNNumberOfflinePrinter(fpn_number_and_barcode);
+
                 let builds = data.data.builds;
                 console.log(data);
                 this.data.setBuilds(builds);

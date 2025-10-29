@@ -19,6 +19,8 @@ import { App } from '@capacitor/app';
 import { Login } from '../models/login';
 import { EnviroPost } from '../models/enviro';
 
+import { App as CapacitorApp } from '@capacitor/app';
+import { OnDestroy } from '@angular/core';
 
 
 @Component({
@@ -27,6 +29,8 @@ import { EnviroPost } from '../models/enviro';
   styleUrls: ['home.page.scss']
 })
 export class HomePage implements OnInit {
+
+     appStateListener: any;
 
     app_log: AppLog;
     name: string = '';
@@ -72,6 +76,14 @@ export class HomePage implements OnInit {
     }
 
     ngOnInit(): void {
+
+         // Listen for when app comes back to foreground
+         this.appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                window.location.reload();
+            }
+        });
+
         let user = this.auth.getUser();
         if (user) 
         {

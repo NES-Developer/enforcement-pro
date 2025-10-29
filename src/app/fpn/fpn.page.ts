@@ -20,14 +20,17 @@ import { Capacitor } from '@capacitor/core';
 import { User } from '../models/user';
 import { Observable, Subscriber } from 'rxjs';
 
-
+import { App as CapacitorApp } from '@capacitor/app';
+import { OnDestroy } from '@angular/core';
 
 @Component({
   selector: 'app-fpn',
   templateUrl: 'fpn.page.html',
   styleUrls: ['fpn.page.scss']
 })
+
 export class FPNPage implements OnInit {
+     appStateListener: any;
 
     app_log: AppLog;
     map: any;
@@ -91,7 +94,16 @@ export class FPNPage implements OnInit {
 
 
     ngOnInit() {
+         // Listen for when app comes back to foreground
+         this.appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                window.location.reload();
+            }
+        });
+        
         this.loadData();
+
+       
     }
 
     blockBackButton() {
@@ -126,8 +138,11 @@ export class FPNPage implements OnInit {
                 let salutations = data.data.salutations;
                 this.data.setSalutations(salutations);
 
+                let fpn_number_and_barcode = data.data.fpn_number_offline_printer;
+                this.data.setFPNNumberOfflinePrinter(fpn_number_and_barcode);
+                // console.log(fpn_number_and_barcode);
+
                 let builds = data.data.builds;
-                console.log(builds);
                 this.data.setBuilds(builds);
 
                 let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
@@ -169,6 +184,9 @@ export class FPNPage implements OnInit {
 
                 let offenceGroups = this.extractOffenceGroups(offences);
                 this.data.setOffenceGroups(offenceGroups);
+
+
+                
             },
             error: (error) => {
                 this.auth.autoLogin();
@@ -399,6 +417,7 @@ export class FPNPage implements OnInit {
                         let message = response.message + " (Please Edit)";
 
                         this.isSubmitting = false;
+                        
                         this.loading.hideLoading();
 
                         this.offenceSwitcherForserver();
@@ -412,10 +431,12 @@ export class FPNPage implements OnInit {
                             string: this.fpn.fpn_number
                         });
 
+                        this.currentStep = 1;
+
                         this.isSubmitting = false;
                         this.loading.hideLoading();
                         
-                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + ' has been copied to your clipboard.');     
+                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + ' has been copied to your clipboard. Remember to capture Notebook');     
                     }
 
                 },
@@ -481,23 +502,20 @@ export class FPNPage implements OnInit {
             message: message,
             buttons: [
                 {
-                    text: primary_button_title,
+                    text: 'Okay',
                     handler: () => {
-                        if (header == "Success") {
-                            this.currentStep = 1;
-                            window.location.reload();
-                        }
+                        window.location.reload();
+
                     }
                 },
-                {
-                    text: secondary_button_title,
-                    handler: () => {
-                        if (header == "Success") {
-                            this.currentStep = 1;
-                            this.openOtherApp();
-                        }
-                    }
-                }
+                // {
+                //     text: secondary_button_title,
+                //     handler: () => {
+                //         if (header == "Success") {
+                //             this.openOtherApp();
+                //         }
+                //     }
+                // }
             ],
         });
         await alert.present();
@@ -562,18 +580,15 @@ export class FPNPage implements OnInit {
 
     async openOtherApp() {
         try {
-          const canOpen = await AppLauncher.canOpenUrl({
-            url: 'com.ahmedelsayed.sunmiprinterapp'
-          });
-    
-          if (canOpen.value) {
-            await AppLauncher.openUrl({
-              url: 'com.ahmedelsayed.sunmiprinterapp'
-            });
-          } else {
-            console.log('Cannot open app');
-            this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-          }
+            try {
+                await AppLauncher.openUrl({
+                    url: 'com.example.enforcementproprinter'
+                });
+            } catch (error) {
+                await AppLauncher.openUrl({
+                    url: 'com.ahmedelsayed.sunmiprinterapp'
+                });
+            }
         } catch (error) {
           console.error('Error launching app:', error);
           this.presentAlert('Error', 'Cannot find printer app. Navigate manually')

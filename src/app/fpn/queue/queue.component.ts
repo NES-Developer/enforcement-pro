@@ -240,13 +240,77 @@ export class QueueComponent  implements OnInit {
         await alert.present();
     }
 
+    submitFPN(enviro_post: any) {
+      if (this.isSubmitting) {
+        return;
+      }
+      this.isSubmitting = true;
+      this.loading.showLoading();
+
+      this.api.postFPN(enviro_post).subscribe({
+          next: (response) => {
+
+              console.log(1, response);
+
+              // Handle the response here
+              if(response.success === false) 
+              {
+                  let message = response.message + " (Please Edit)";
+                  
+                  this.isSubmitting = false;
+                  this.loading.hideLoading();
+
+                  this.presentAlert('Error', message);
+
+              } else {
+                  let fpn_number = response.data.fpn_number;
+                  this.presentAlert('Success', fpn_number);
+
+                  let fpn = response.data;
+
+                  Clipboard.write({
+                      string: fpn.fpn_number
+                  });
+                  this.isSubmitting = false;
+                  this.loading.hideLoading();
+
+                  this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
+                  this.data.spliceEnviroQue(enviro_post);
+                  this.enviro_que = this.data.getEnviroQue();
+              }
+          },
+          error: (error) => {
+              console.log(2, error);
+              this.isSubmitting = false;
+              this.loading.hideLoading();
+              if (error.status == 401)
+              {
+                  this.presentAlert('Please Await', 'Submission in progress');
+                  //Auto Login
+                  this.auth.autoLogin();
+                  this.submitFPN(enviro_post);
+              }
+              else if (error.status == 500)
+              {
+                  this.presentAlert('Error 500', 'Process Error.');
+              } 
+              else 
+              {
+                  this.presentAlert('Error', error.message);
+              }   
+          }
+      });
+}
+    
+
     generateTicket(enviro_post: EnviroPost) {
 
-        let ticket = this.ticket.generateWelcomeTicket(enviro_post);//Nemo
+
+        let ticket = this.ticket.generateWelcomeTicket(enviro_post);
          
         if (ticket == "refresh") {
             this.presentAlert('Error', 'Please find Network and get latest data. To regenerate new FPN Numbers');
-            return;
+
         }
 
         for (let x = 0; x<this.enviro_que_addition.length; x++) {
@@ -264,6 +328,8 @@ export class QueueComponent  implements OnInit {
         });
     }
 
+    
+
     copyTicketToClipboard(enviro_post: any) {
 
         this.isSubmitting = true;
@@ -278,7 +344,6 @@ export class QueueComponent  implements OnInit {
                 Clipboard.write({
                     string: dataUrl.toString()
                 });
-
 
                 for (let x = 0; x<this.enviro_que_addition.length; x++) { 
                     if (this.enviro_que_addition[x] == enviro_post) 
