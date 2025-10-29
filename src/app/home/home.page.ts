@@ -273,24 +273,20 @@ export class HomePage implements OnInit {
     }
 
     async openOtherApp() {
-
         try {
+            await AppLauncher.openUrl({
+                url: 'com.example.enforcementproprinter'
+            });
+        } catch (error) {
             try {
                 await AppLauncher.openUrl({
-                    url: 'com.example.enforcementproprinter'
+                    url: 'com.ahmedelsayed.sunmiprinterapp.test'
                 });
-            } catch (error) {
-                try {
-                    await AppLauncher.openUrl({
-                        url: 'com.ahmedelsayed.sunmiprinterapp.test'
-                    });
-                }
-                catch (error) {
-                    this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-                }
+            }
+            catch (error) {
+                this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
             }
         }
-        
     }
 
     async presentAlert(header: string, message: string) {

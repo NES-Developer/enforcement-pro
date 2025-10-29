@@ -433,7 +433,7 @@ export class FPNPage implements OnInit {
                         this.isSubmitting = false;
                         this.loading.hideLoading();
                         
-                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + ' has been copied to your clipboard. Remember to capture Notebook'); 
+                        // this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + ' has been copied to your clipboard. Remember to capture Notebook'); 
                         
                         this.cancel();
                     }
@@ -520,10 +520,10 @@ export class FPNPage implements OnInit {
     }
 
     cancel() {
+        this.currentStep = 1;
         this.enviro_post = new EnviroPost();
         this.data.setEnviroPost(this.enviro_post);
-        this.currentStep = 1;
-        window.location.reload();
+        // window.location.reload();
     }
 
     private getCurrentPosition(): any {

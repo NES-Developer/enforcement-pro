@@ -241,6 +241,7 @@ export class QueueComponent  implements OnInit {
     }
 
     submitFPN(enviro_post: any) {
+
       if (this.isSubmitting) {
         return;
       }
@@ -280,24 +281,24 @@ export class QueueComponent  implements OnInit {
               }
           },
           error: (error) => {
-              console.log(2, error);
-              this.isSubmitting = false;
-              this.loading.hideLoading();
-              if (error.status == 401)
-              {
-                  this.presentAlert('Please Await', 'Submission in progress');
-                  //Auto Login
-                  this.auth.autoLogin();
-                  this.submitFPN(enviro_post);
-              }
-              else if (error.status == 500)
-              {
-                  this.presentAlert('Error 500', 'Process Error.');
-              } 
-              else 
-              {
-                  this.presentAlert('Error', error.message);
-              }   
+                console.log(2, error);
+                this.isSubmitting = false;
+                this.loading.hideLoading();
+                if (error.status == 401)
+                {
+                    this.presentAlert('Please Await', 'Submission in progress');
+                    //Auto Login
+                    this.auth.autoLogin();
+                    this.submitFPN(enviro_post);
+                }
+                else if (error.status == 500)
+                {
+                    this.presentAlert('Error 500', 'Process Error.');
+                } 
+                else 
+                {
+                    this.presentAlert('Error', error.message);
+                }   
           }
       });
 }
