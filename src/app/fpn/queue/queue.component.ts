@@ -281,24 +281,26 @@ export class QueueComponent  implements OnInit {
               }
           },
           error: (error) => {
-                console.log(2, error);
                 this.isSubmitting = false;
                 this.loading.hideLoading();
-                if (error.status == 401)
+
+                if (error.status == 500)
                 {
-                    this.presentAlert('Please Await', 'Submission in progress');
-                    //Auto Login
-                    this.auth.autoLogin();
+                    this.presentAlert('Server Error', 'Please place in que and report error.');
+                } 
+                else if (error.status == 401) {
+                    this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
+                    this.auth.autoLogin(); 
                     this.submitFPN(enviro_post);
-                }
-                else if (error.status == 500)
+                } 
+                else if (error.status == 0)
                 {
-                    this.presentAlert('Error 500', 'Process Error.');
+                    this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
                 } 
                 else 
                 {
                     this.presentAlert('Error', error.message);
-                }   
+                } 
           }
       });
 }

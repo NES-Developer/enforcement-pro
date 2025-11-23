@@ -75,17 +75,13 @@ export class AuthService {
       
         this.login(login.id, login.pin).subscribe(
             (response: any) => {
-                if (response.error_code) {
-                    this.logout();
-                } else if (response.access_token !== '' || response.user) {
+                if (response.access_token !== '' || response.user) {
                     this.storeToken(response.access_token);
                     this.storeUser(response.user);
-                } else {
-                    this.logout();
                 }
             },
             (error) => {
-                this.logout();
+                // this.logout();
             }
         );
     }

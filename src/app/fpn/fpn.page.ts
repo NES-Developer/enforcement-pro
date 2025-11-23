@@ -18,7 +18,7 @@ import { LoadingService } from '../services/loading.service';
 // import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { User } from '../models/user';
-import { Observable, Subscriber } from 'rxjs';
+import { Observable, Subscriber, timeout } from 'rxjs';
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { OnDestroy } from '@angular/core';
@@ -57,6 +57,8 @@ export class FPNPage implements OnInit {
 
         this.platform.ready().then(() => {
             this.blockBackButton();
+            // this.listenToAppResume();
+
         });
 
         if (this.data.checkSelectedSite() === false) {
@@ -91,20 +93,24 @@ export class FPNPage implements OnInit {
         this.app_log = new AppLog();
     }
 
-
-
     ngOnInit() {
-         // Listen for when app comes back to foreground
-         this.appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-            if (isActive) {
-                window.location.reload();
-            }
-        });
+        //  this.appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+        //     if (isActive) {
+        //         this.validateStep();
+        //     }
+        // });
         
         this.loadData();
-
-       
     }
+
+    // ngOnDestroy() {
+    //     // 🔹 Always clean up listeners to avoid memory leaks
+    //     if (this.appStateListener) {
+    //       this.appStateListener.remove();
+    //     }
+    //   }
+
+
 
     blockBackButton() {
         this.platform.backButton.subscribeWithPriority(9999, () => {});
@@ -338,14 +344,6 @@ export class FPNPage implements OnInit {
                     this.presentAlert('Wait!', 'Please provide hair details.');
                     return false;
                 }
-                // if (this.enviro_post.notebook_entries.were == '') {
-                //     this.presentAlert('Wait!', 'Please provide were details.');
-                //     return false;
-                // }
-                // if (this.enviro_post.notebook_entries.did == '') {
-                //     this.presentAlert('Wait!', 'Please provide did details.');
-                //     return false;
-                // }
                 if (this.enviro_post.notebook_entries.gender == '') {
                     this.presentAlert('Wait!', 'Please provide offender Gender.');
                     return false;
@@ -367,6 +365,148 @@ export class FPNPage implements OnInit {
         return true;
     }
 
+
+    submitValidator(): boolean {
+        if (this.enviro_post.site_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide your Site. Please navigate on Home Page');
+            this.currentStep = 1;
+            return false;
+        }
+        if (this.enviro_post.zone_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide your Zone.');
+            this.currentStep = 1;
+            return false;
+        }
+        if (this.enviro_post.offence_type_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide the Offence Group.');
+            this.currentStep = 1;
+            return false;
+        }
+        if (this.enviro_post.offence_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide the Offence.');
+            this.currentStep = 1;
+            return false;
+        }
+        if (this.enviro_post.is_bwc_active == '') {
+            this.presentAlert('Wait!', 'Please provide BWC.');
+            this.currentStep = 2;
+            return false;
+        }
+        if (this.enviro_post.salutation == '') {
+            this.presentAlert('Wait!', 'Please provide offender Salutation.');
+            this.currentStep = 2;
+            return false;
+        }
+        if (this.enviro_post.first_name == '') {
+            this.presentAlert('Wait!', 'Please provide offender First Name.');
+            this.currentStep = 2;
+            return false;
+        }
+        if (this.enviro_post.last_name == '') {
+            this.presentAlert('Wait!', 'Please provide offender Last Name.');
+            this.currentStep = 2;
+            return false;
+        }
+        if (this.enviro_post.address == '') {
+            this.presentAlert('Wait!', 'Please provide offender Address.');
+            this.currentStep = 2;
+            return false;
+        }
+        if (this.enviro_post.town == '') {
+            this.presentAlert('Wait!', 'Please provide offender Town.');
+            this.currentStep = 2;
+            return false;
+
+        }
+        if (this.enviro_post.county == '') {
+            this.presentAlert('Wait!', 'Please provide offender Country.');
+            this.currentStep = 2;
+            return false;
+
+        }
+        if (this.enviro_post.post_code == '') {
+            this.presentAlert('Wait!', 'Please provide offender Postal Code.');
+            this.currentStep = 2;
+            return false;
+        }
+        if (this.enviro_post.town == '') {
+            this.presentAlert('Wait!', 'Please provide offender Town.');
+            this.currentStep = 2;
+            return false;
+        }
+        if (this.enviro_post.proof_of_address == '')
+        {
+            this.presentAlert('Wait!', 'Please provide Proof of Address');
+            this.currentStep = 3;
+            return false;
+        }
+        if (this.enviro_post.proof_of_id == '')
+        {
+            this.presentAlert('Wait!', 'Please provide Proof of ID');
+            this.currentStep = 3;
+            return false;
+        }
+        if (this.enviro_post.location_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide Location.');
+            this.currentStep = 4;
+            return false;
+        }
+        if (this.enviro_post.action_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide Action.');
+            this.currentStep = 4;
+            return false;
+        }
+        if (this.enviro_post.language == '') {
+            this.presentAlert('Wait!', 'Please provide Language.');
+            this.currentStep = 4;
+            return false;
+        }
+        if (this.enviro_post.offence_location == '') {
+            this.presentAlert('Wait!', 'Please provide Offence Location');
+            this.currentStep = 5;
+            return false;
+        } 
+        if (this.enviro_post.poi == '') {
+            this.presentAlert('Wait!', 'Please provide POI.');
+            this.currentStep = 5;
+            return false;
+        }
+        if (this.enviro_post.land_type_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide Land Type.');
+            this.currentStep = 5;
+            return false;
+        }
+        // if (!this.enviro_post.offence_datetime) {
+        //     this.presentAlert('Wait!', 'Please provide Offence timestamp.');
+        //     this.currentStep = 5;
+        //     return false;
+        // }
+        // if (!this.enviro_post.issue_datetime) {
+        //     this.presentAlert('Wait!', 'Please provide Issue timestamp.');
+        //     this.currentStep = 5;
+        //     return false;
+        // }
+        if (this.enviro_post.enviro_issued_onspot == '') {
+            this.presentAlert('Wait!', 'Please provide informantion of issue onspot');
+            this.currentStep = 5;
+            return false;
+        }
+        if (this.enviro_post.signature == '') {
+            this.presentAlert('Wait!', 'Please provide Signature.');
+            this.currentStep = 6;
+            return false;
+        }
+        if (this.enviro_post.offence_images.length == 0) {
+            this.presentAlert('Wait!', 'Please provide Offence Images.');
+            this.currentStep = 6;
+            return false;
+        }
+    
+        return true;
+
+        // setTimeout(() => { window.location.reload(); }, 1250);
+    }
+    
     nextStep() {
         let checker = this.validator();
         if (checker) {
@@ -401,7 +541,7 @@ export class FPNPage implements OnInit {
             this.enviro_post.lng = position.longitude;
         });
 
-        let checker = this.validator();
+        let checker = true;//this.submitValidator();
         if (checker) {
             this.isSubmitting = true;
             this.loading.showLoading();
@@ -416,13 +556,14 @@ export class FPNPage implements OnInit {
                     {
                         let message = response.message + " (Please Edit)";
 
-                        this.isSubmitting = false;
                         
                         this.loading.hideLoading();
 
                         this.offenceSwitcherForserver();
-                        
+                        this.isSubmitting = false;
+
                         this.presentAlert('Error', message);
+
                     } else {
                         this.fpn = response.data;
                         
@@ -430,11 +571,14 @@ export class FPNPage implements OnInit {
                             string: this.fpn.fpn_number
                         });
 
-                        this.isSubmitting = false;
+
+                        // Hard reset + go to step 1, and lock form until user starts a new one
+
                         this.loading.hideLoading();
                         
                         // this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + ' has been copied to your clipboard. Remember to capture Notebook'); 
-                        
+                        this.isSubmitting = false;
+
                         this.cancel();
                     }
 
@@ -442,29 +586,29 @@ export class FPNPage implements OnInit {
                 error: (error) => {
                     this.offenceSwitcherForserver();
 
-                    this.isSubmitting = false;
                     this.loading.hideLoading();
 
-                    if (error.status == 401)
+                    if (error.status == 500)
                     {
-                        this.presentAlert('Please Await', 'Submission in progress');
-
-                        //Auto Login
-                        this.auth.autoLogin();
+                        this.presentAlert('Server Error', 'Please place in que and report error.');
+                    } 
+                    else if (error.status == 401) {
+                        this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
+                        this.auth.autoLogin(); 
                         this.submitForm();
-
-                    }
-                    else if (error.status == 500)
+                    } 
+                    else if (error.status == 0)
                     {
-                        this.presentAlert('Error 500', 'Process Error.');
+                        this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
                     } 
                     else 
                     {
                         this.presentAlert('Error', error.message);
                     }   
+
+
                 }
             });
-
 
         }
     }
@@ -520,10 +664,14 @@ export class FPNPage implements OnInit {
     }
 
     cancel() {
-        this.currentStep = 1;
+        this.currentStep = 1;       
+
         this.enviro_post = new EnviroPost();
         this.data.setEnviroPost(this.enviro_post);
-        // window.location.reload();
+
+        this.router.navigate(['/tabs/fpn'], { queryParams: { currentStep: this.currentStep } });
+
+        this.presentAlert('Success', 'Successfully Captured FPN.'); 
     }
 
     private getCurrentPosition(): any {
@@ -602,7 +750,8 @@ export class FPNPage implements OnInit {
                 this.enviro_post.lng = position.longitude;
             });
 
-        let checker = this.validator();
+
+        let checker = this.submitValidator();
 
         if (checker) {
             this.loading.showLoading();
@@ -613,10 +762,11 @@ export class FPNPage implements OnInit {
                 this.offenceSwitcherForserver();
                 this.assignOfficerId();
                 this.data.pushEnviroQue();
+                this.loading.hideLoading();
+
                 
                 this.cancel();
 
-                this.loading.hideLoading();
             } else {
                 this.loading.hideLoading();
                 this.presentAlert('Error', 'Queue has exceeded 9, please submit. Submit some FPNs on queue to increase space.')

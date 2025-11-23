@@ -181,8 +181,26 @@ export class SitePage implements OnInit {
             error: (error) => {
                 this.loading.hideLoading();
 
-                this.presentAlert('Error', error.message);
-                console.error('Error 1:', error);
+                // this.presentAlert('Error', error.message);
+                // console.error('Error 1:', error);
+
+                if (error.status == 500)
+                {
+                    this.presentAlert('Server Error', 'Please report error.');
+                } 
+                else if (error.status == 401) {
+                    this.presentAlert('Wait', 'We are auto-logging you in. Please wait. Th');
+                    this.auth.autoLogin(); 
+                    this.getFPNData();
+                } 
+                else if (error.status == 0)
+                {
+                    this.presentAlert('Network Error', 'No internet connection. Please find better reception and try again.');
+                } 
+                else 
+                {
+                    this.presentAlert('Error', error.message);
+                } 
             }
         });
     }

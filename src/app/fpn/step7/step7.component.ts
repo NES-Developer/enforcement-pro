@@ -41,9 +41,9 @@ export class Step7Component  implements OnInit {
         this.enviro_post.notebook_entries = new NotebookEntry();
 
         let enviro_post =  this.data.getEnviroPost();
-        if (enviro_post !== null) {
+        if (enviro_post) {
             this.enviro_post = enviro_post;
-        }
+        } 
 
      }
 

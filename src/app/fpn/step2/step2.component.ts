@@ -63,14 +63,14 @@ export class Step2Component implements OnInit {
         private validatePerson:ValidatePersonService,
         private alertController: AlertController
     ) {
+        
+    }
+
+    ngOnInit(): void {
         if (!this.data.checkFPNData()){
             this.fpnPage.getFPNData();
         }
         this.loadData();
-    }
-
-    ngOnInit(): void {
-        
     }
     
     filterOffences() {

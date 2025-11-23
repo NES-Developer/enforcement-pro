@@ -4,36 +4,34 @@ import { TabsPage } from './tabs.page';
 
 const routes: Routes = [
   {
-    path: 'tabs',
+    path: '',
     component: TabsPage,
     children: [
-        {
-            path: 'home',
-            loadChildren: () => import('../home/home.module').then(m => m.HomePageModule)
-        },
-        {
-            path: 'service-request',
-            loadChildren: () => import('../service-request/service-request.module').then(m => m.ServiceRequestPageModule)
-        },
-        {
-            path: 'fpn',
-            loadChildren: () => import('../fpn/fpn.module').then(m => m.FPNPageModule)
-        },
-        {
-            path: '',
-            redirectTo: '/tabs/home',
-            pathMatch: 'full'
-        }
+      {
+        path: 'home',
+        loadChildren: () => import('../home/home.module').then(m => m.HomePageModule)
+      },
+      {
+        path: 'fpn',
+        loadChildren: () => import('../fpn/fpn.module').then(m => m.FPNPageModule)
+      },
+      {
+        path: 'service-request',
+        loadChildren: () => import('../service-request/service-request.module').then(m => m.ServiceRequestPageModule)
+      },
+   
+      {
+        path: '',
+        redirectTo: 'home',
+        pathMatch: 'full'
+      }
     ]
-  },
-  {
-    path: '',
-    redirectTo: '/tabs/home',
-    pathMatch: 'full'
-  },
+  }
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule],
+
 })
 export class TabsPageRoutingModule {}

@@ -12,6 +12,7 @@ import { provideHttpClient } from '@angular/common/http'; // New import
 import { LoaderComponent } from './loader/loader.component';
 
 // import { IonicSignaturePadModule,IonicsignaturepadProvider } from 'ionicsignaturepad';
+import { IonicStorageModule } from '@ionic/storage-angular';  // <- correct package
 
 
 // import { Camera } from '@awesome-cordova-plugins/camera/ngx';
@@ -27,6 +28,8 @@ import { LoaderComponent } from './loader/loader.component';
         BrowserModule, 
         IonicModule.forRoot(), 
         AppRoutingModule, 
+        IonicStorageModule.forRoot()   // <-- Register provider only once here
+
         // IonicSignaturePadModule
     ],
     providers: [

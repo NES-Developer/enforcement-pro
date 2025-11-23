@@ -83,6 +83,10 @@ export class Step5Component  implements OnInit, AfterViewInit {
         const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
         this.enviro_post.offence_datetime = defaultDate;
         this.enviro_post.issue_datetime = defaultDate;
+
+        if (this.enviro_post.enviro_issued_onspot !== 'no') {
+            this.enviro_post.enviro_issued_onspot = 'yes';
+        }
     }
 
     onInputChange(){

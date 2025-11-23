@@ -22,11 +22,18 @@ import { NotebookEntry } from '../../models/notebook-entry';
 import { AppLog } from '../../models/app-log';
 import { Login } from '../../models/login';
 
+//Storage
+import { Storage } from '@ionic/storage-angular';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class DataService {
+
+    private _storage: Storage | null = null;
+    private _ready = false;
+
 
     private last_fpn_id: number = 0;
 
@@ -73,7 +80,11 @@ export class DataService {
 
     private fpn_number_offline_printer: any[] = [];
     
-    constructor() {
+    constructor(
+        private storage: Storage
+    ) {
+        this.init();
+
         this.service_request = new ServiceRequest();
         this.enviro_post = new EnviroPost();
         this.app_log = new AppLog();
@@ -82,7 +93,15 @@ export class DataService {
         this.loadFromLocalStorage();
     }
 
-    private loadFromLocalStorage(): void {
+    async init() {
+        if (this._ready) return;
+
+        // IMPORTANT: initialize storage
+        this._storage = await this.storage.create();
+        this._ready = true;
+    }
+
+    private loadFromLocalStorage() {
         // Load each data array from localStorage if available
         this.weather = this.loadArrayFromLocalStorage('weather');
         this.visibility = this.loadArrayFromLocalStorage('visibility');
@@ -105,16 +124,16 @@ export class DataService {
         this.request_types = this.loadArrayFromLocalStorage('request_types');
         this.sr_via = this.loadArrayFromLocalStorage('sr_via');
         this.sites = this.loadArrayFromLocalStorage('sites');
-        this.offence_types = this.loadArrayFromLocalStorage('offence_types')
+        this.offence_types = this.loadArrayFromLocalStorage('offence_types');
         this.fpn_number_offline_printer = this.loadArrayFromLocalStorage('fpn_number_offline_printer');
 
         this.selected_site = this.loadObjectFromLocalStorage('selected_site');
         this.selected_zone = this.loadObjectFromLocalStorage('selected_zone');
         this.login = this.loadObjectFromLocalStorage('login');
         this.service_request = this.loadObjectFromLocalStorage('service_request');
-        this.dynamic_feilds_data = this.loadObjectFromLocalStorage('dynamic_feilds_data')
+        this.dynamic_feilds_data = this.loadObjectFromLocalStorage('dynamic_feilds_data');
         this.enviro_post = this.loadObjectFromLocalStorage('enviro_post');
-        this.app_log = this.loadObjectFromLocalStorage('app_log');//app_log
+        this.app_log = this.loadObjectFromLocalStorage('app_log');
 
         this.api_app_version = this.loadStringFromLocalStorage('api_app_version');
         this.api_app_url = this.loadStringFromLocalStorage('api_app_url');
@@ -122,46 +141,50 @@ export class DataService {
     }
 
     private loadIntFromLocalStorage(key: string): number {
-        let int = localStorage.getItem(key)
-        let data: number = 0;
-        if (int) {
-            data = parseInt(int);
-        }
-        return data;
-    }
+        const raw = localStorage.getItem(key);
+        if (!raw) return 0;
 
+        const num = parseInt(raw, 10);
+        return Number.isNaN(num) ? 0 : num;
+    }
+    
     private loadStringFromLocalStorage(key: string): string {
         const data = localStorage.getItem(key);
-        return data ? data : '';
+        return data ?? '';
     }
-
+    
     private loadObjectFromLocalStorage(key: string): any {
-        const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : null;
-    }
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
 
+        return JSON.parse(raw);
+    }
+    
     private loadArrayFromLocalStorage(key: string): any[] {
-        const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : [];
-    }
+        const raw = localStorage.getItem(key);
+        if (!raw) return [];
 
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    }
 
     private saveIntToLocalStorage(key: string, data: number): void {
         localStorage.setItem(key, data.toString());
     }
-
+    
     private saveStringToLocalStorage(key: string, data: string): void {
-        localStorage.setItem(key, data);
+        localStorage.setItem(key, data ?? '');
     }
-
+    
     private saveObjectToLocalStorage(key: string, data: any): void {
         localStorage.setItem(key, JSON.stringify(data));
-    }
 
+    }
+    
     private saveArrayToLocalStorage(key: string, data: any[]): void {
         localStorage.setItem(key, JSON.stringify(data));
     }
-
+    
     setLastFpnId(last_fpn_id: number): void {
         this.last_fpn_id = last_fpn_id;
         this.saveIntToLocalStorage('last_fpn_id', this.last_fpn_id);

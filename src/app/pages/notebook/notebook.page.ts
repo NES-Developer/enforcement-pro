@@ -260,11 +260,13 @@ export class NotebookPage implements OnInit {
         if (checker)
         {
             this.isSubmitting = true;
+            this.loading.showLoading();
 
             this.notebook_entries.enviro_id = this.id;
             this.api.postNoteBook(this.notebook_entries).subscribe({
                 next: (response) => {
-                    console.log('Response:', response);
+                    this.loading.showLoading();
+
                     // Handle the response here
                     if(response.success === false) 
                     {
@@ -277,6 +279,27 @@ export class NotebookPage implements OnInit {
                         this.route('');
                         
                     }
+                }, error: (error) => {
+
+                    this.loading.hideLoading();
+
+                    if (error.status == 500)
+                    {
+                        this.presentAlert('Server Error', 'Please place in que and report error.');
+                    } 
+                    else if (error.status == 401) {
+                        this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
+                        this.auth.autoLogin(); 
+                        this.submitForm();
+                    } 
+                    else if (error.status == 0)
+                    {
+                        this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
+                    } 
+                    else 
+                    {
+                        this.presentAlert('Error', error.message);
+                    }   
                 }
             });
         }
@@ -370,8 +393,18 @@ export class NotebookPage implements OnInit {
             error: (error) => {
                 this.loadData();
 
-                console.error('Error fetching FPN Data:', error + '. Try see if the backup loader worked.');
-            }
+                if (error.status == 500)
+                {
+                    this.presentAlert('Server Error', 'Please report error.');
+                } 
+                else if (error.status == 0)
+                {
+                    this.presentAlert('Network Error', 'No internet connection. Please find better reception and try again.');
+                } 
+                else 
+                {
+                    this.presentAlert('Error', error.message);
+                }             }
         });
     }
 
