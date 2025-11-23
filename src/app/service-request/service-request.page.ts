@@ -71,7 +71,9 @@ export class ServiceRequestPage implements OnInit {
         this.app_log = new AppLog;
     }
 
-    ngOnInit(): void {
+    async ngOnInit() {
+        await this.data.init();
+
         this.init();
     }
 

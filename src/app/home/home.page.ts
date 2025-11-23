@@ -75,7 +75,9 @@ export class HomePage implements OnInit {
 
     }
 
-    ngOnInit(): void {
+    async ngOnInit() {
+        await this.data.init();
+
 
          // Listen for when app comes back to foreground
          this.appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {

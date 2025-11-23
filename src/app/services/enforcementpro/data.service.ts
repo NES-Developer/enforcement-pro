@@ -101,88 +101,119 @@ export class DataService {
         this._ready = true;
     }
 
-    private loadFromLocalStorage() {
+    private async loadFromLocalStorage() {
         // Load each data array from localStorage if available
-        this.weather = this.loadArrayFromLocalStorage('weather');
-        this.visibility = this.loadArrayFromLocalStorage('visibility');
-        this.poi_prefix = this.loadArrayFromLocalStorage('poi_prefix');
-        this.zones = this.loadArrayFromLocalStorage('zones');
-        this.salutations = this.loadArrayFromLocalStorage('salutations');
-        this.builds = this.loadArrayFromLocalStorage('builds');
-        this.hair_colours = this.loadArrayFromLocalStorage('hair_colours');        
-        this.dynamic_feilds = this.loadArrayFromLocalStorage('dynamic_feilds');
-        this.enviro_que = this.loadArrayFromLocalStorage('enviro_que');
-        this.site_offences = this.loadArrayFromLocalStorage('site_offences');
-        this.offence_how = this.loadArrayFromLocalStorage('offence_how');
-        this.offences = this.loadArrayFromLocalStorage('offences');
-        this.offence_groups = this.loadArrayFromLocalStorage('offence_groups');
-        this.address_verifed_by = this.loadArrayFromLocalStorage('address_verifed_by');
-        this.id_shown = this.loadArrayFromLocalStorage('id_shown');
-        this.offence_location_suffix = this.loadArrayFromLocalStorage('offence_location_suffix');
-        this.ethnicities = this.loadArrayFromLocalStorage('ethnicities');
-        this.officers = this.loadArrayFromLocalStorage('officers');
-        this.request_types = this.loadArrayFromLocalStorage('request_types');
-        this.sr_via = this.loadArrayFromLocalStorage('sr_via');
-        this.sites = this.loadArrayFromLocalStorage('sites');
-        this.offence_types = this.loadArrayFromLocalStorage('offence_types');
-        this.fpn_number_offline_printer = this.loadArrayFromLocalStorage('fpn_number_offline_printer');
+        this.weather = await this.loadArrayFromLocalStorage('weather');
+        this.visibility = await this.loadArrayFromLocalStorage('visibility');
+        this.poi_prefix = await this.loadArrayFromLocalStorage('poi_prefix');
+        this.zones = await this.loadArrayFromLocalStorage('zones');
+        this.salutations = await this.loadArrayFromLocalStorage('salutations');
+        this.builds = await this.loadArrayFromLocalStorage('builds');
+        this.hair_colours = await this.loadArrayFromLocalStorage('hair_colours');        
+        this.dynamic_feilds = await this.loadArrayFromLocalStorage('dynamic_feilds');
+        this.enviro_que = await this.loadArrayFromLocalStorage('enviro_que');
+        this.site_offences = await this.loadArrayFromLocalStorage('site_offences');
+        this.offence_how = await this.loadArrayFromLocalStorage('offence_how');
+        this.offences = await this.loadArrayFromLocalStorage('offences');
+        this.offence_groups = await this.loadArrayFromLocalStorage('offence_groups');
+        this.address_verifed_by = await this.loadArrayFromLocalStorage('address_verifed_by');
+        this.id_shown = await this.loadArrayFromLocalStorage('id_shown');
+        this.offence_location_suffix = await this.loadArrayFromLocalStorage('offence_location_suffix');
+        this.ethnicities = await this.loadArrayFromLocalStorage('ethnicities');
+        this.officers = await this.loadArrayFromLocalStorage('officers');
+        this.request_types = await this.loadArrayFromLocalStorage('request_types');
+        this.sr_via = await this.loadArrayFromLocalStorage('sr_via');
+        this.sites = await this.loadArrayFromLocalStorage('sites');
+        this.offence_types = await this.loadArrayFromLocalStorage('offence_types');
+        this.fpn_number_offline_printer = await this.loadArrayFromLocalStorage('fpn_number_offline_printer');
 
-        this.selected_site = this.loadObjectFromLocalStorage('selected_site');
-        this.selected_zone = this.loadObjectFromLocalStorage('selected_zone');
-        this.login = this.loadObjectFromLocalStorage('login');
-        this.service_request = this.loadObjectFromLocalStorage('service_request');
-        this.dynamic_feilds_data = this.loadObjectFromLocalStorage('dynamic_feilds_data');
-        this.enviro_post = this.loadObjectFromLocalStorage('enviro_post');
-        this.app_log = this.loadObjectFromLocalStorage('app_log');
+        this.selected_site = await this.loadObjectFromLocalStorage('selected_site');
+        this.selected_zone = await this.loadObjectFromLocalStorage('selected_zone');
+        this.login = await this.loadObjectFromLocalStorage('login');
+        this.service_request = await this.loadObjectFromLocalStorage('service_request');
+        this.dynamic_feilds_data = await this.loadObjectFromLocalStorage('dynamic_feilds_data');
+        this.enviro_post = await this.loadObjectFromLocalStorage('enviro_post');
+        this.app_log = await this.loadObjectFromLocalStorage('app_log');
 
-        this.api_app_version = this.loadStringFromLocalStorage('api_app_version');
-        this.api_app_url = this.loadStringFromLocalStorage('api_app_url');
-        this.last_fpn_id = this.loadIntFromLocalStorage('last_fpn_id');
+        this.api_app_version = await this.loadStringFromLocalStorage('api_app_version');
+        this.api_app_url = await this.loadStringFromLocalStorage('api_app_url');
+        this.last_fpn_id = await this.loadIntFromLocalStorage('last_fpn_id');
     }
 
-    private loadIntFromLocalStorage(key: string): number {
-        const raw = localStorage.getItem(key);
+    private async loadIntFromLocalStorage(key: string) {
+        await this.init();  // ensure storage is ready before using it
+
+        // const raw = localStorage.getItem(key);
+        const raw = this._storage?.get(key)
+        
         if (!raw) return 0;
 
-        const num = parseInt(raw, 10);
+        const num = parseInt(await raw, 10);
         return Number.isNaN(num) ? 0 : num;
     }
     
-    private loadStringFromLocalStorage(key: string): string {
-        const data = localStorage.getItem(key);
+    private async loadStringFromLocalStorage(key: string) {
+        await this.init();  // ensure storage is ready before using it
+
+        const data = this._storage?.get(key)
+
+        // const data = localStorage.getItem(key);
         return data ?? '';
     }
     
-    private loadObjectFromLocalStorage(key: string): any {
-        const raw = localStorage.getItem(key);
+    private async loadObjectFromLocalStorage(key: string): Promise<any> {
+        await this.init();  // ensure storage is ready before using it
+
+        // const raw = localStorage.getItem(key);
+        const raw = this._storage?.get(key)
+
         if (!raw) return null;
 
-        return JSON.parse(raw);
+        return JSON.parse(await raw);
     }
     
-    private loadArrayFromLocalStorage(key: string): any[] {
-        const raw = localStorage.getItem(key);
+    private async loadArrayFromLocalStorage(key: string): Promise<any[]> {
+        await this.init();  // ensure storage is ready before using it
+
+        // const raw = localStorage.getItem(key);
+        const raw = this._storage?.get(key)
+
         if (!raw) return [];
 
-        const parsed = JSON.parse(raw);
+        const parsed = JSON.parse(await raw);
         return Array.isArray(parsed) ? parsed : [];
     }
 
-    private saveIntToLocalStorage(key: string, data: number): void {
-        localStorage.setItem(key, data.toString());
-    }
-    
-    private saveStringToLocalStorage(key: string, data: string): void {
-        localStorage.setItem(key, data ?? '');
-    }
-    
-    private saveObjectToLocalStorage(key: string, data: any): void {
-        localStorage.setItem(key, JSON.stringify(data));
+    private async saveIntToLocalStorage(key: string, data: number) {
+        await this.init();  // ensure storage is ready before using it
+
+        // localStorage.setItem(key, data.toString());
+        this._storage?.set(key, data.toString());
 
     }
     
-    private saveArrayToLocalStorage(key: string, data: any[]): void {
-        localStorage.setItem(key, JSON.stringify(data));
+    private async saveStringToLocalStorage(key: string, data: string) {
+        await this.init();  // ensure storage is ready before using it
+
+        // localStorage.setItem(key, data ?? '');
+        this._storage?.set(key, data);
+
+    }
+    
+    private async saveObjectToLocalStorage(key: string, data: any) {
+        await this.init();  // ensure storage is ready before using it
+
+        this._storage?.set(key, JSON.stringify(data));
+        // localStorage.setItem(key, JSON.stringify(data));
+
+    }
+    
+    private async saveArrayToLocalStorage(key: string, data: any[]) {
+        await this.init();  // ensure storage is ready before using it
+
+        this._storage?.set(key, JSON.stringify(data));
+
+        // localStorage.setItem(key, JSON.stringify(data));
     }
     
     setLastFpnId(last_fpn_id: number): void {
@@ -695,6 +726,5 @@ export class DataService {
         localStorage.removeItem('app_log');
         localStorage.removeItem('enviro_que');
         localStorage.removeItem('zones');
-        
     }
 }
