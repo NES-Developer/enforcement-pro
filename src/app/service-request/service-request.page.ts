@@ -47,7 +47,7 @@ export class ServiceRequestPage implements OnInit {
     // zone_id: string = '0';
 
     app_log: AppLog;
-    app_version: string = '';
+    app_version: string = this.constantsService.APP_VERSION;
 
     // app_version: str
 
@@ -99,16 +99,21 @@ export class ServiceRequestPage implements OnInit {
     {
         this.api.getApiVersion().subscribe(
             (response) => {
-                console.log(response);
                 this.api_app_version = response.data.version;
                 this.api_app_url = response.data.url;
                 this.data.setApiAppVersion(this.api_app_version);
-                this.data.setApiAppUrl(this.api_app_url)
+                this.data.setApiAppUrl(this.api_app_url);
+
+                if (this.api_app_version !== this.app_version)
+                {
+                    this.presentAlert("Update Available: " + this.api_app_version, "We will navigate you to assist Update.")
+                    this.downloadFile();
+                }
+
             },
             (error) => {
                 console.log(error);
-
-                this.presentAlert("Failed", "Failed to get app version Network Error")
+                this.presentAlert("Failed", "Failed to get app version")
             }
         );
     }
@@ -132,9 +137,10 @@ export class ServiceRequestPage implements OnInit {
     }
 
     downloadFile() {
-        // Open the file URL in a new tab to trigger download
         window.open(this.api_app_url, '_blank');
     }
+
+    
 
     storeAppLog() {
 
@@ -253,7 +259,13 @@ export class ServiceRequestPage implements OnInit {
         if (this.data.checkAppLog()) {
             this.app_log = this.data.getAppLog();
             this.device_id = this.app_log.device_id;
-            this.selected_zone.id = parseInt(this.app_log.zone_id);
+            // this.selected_zone.id = parseInt(this.app_log.zone_id);
+            if (!this.selected_zone) {
+                this.selected_zone = {} as any;
+              }
+              
+              this.selected_zone.id = parseInt(this.app_log.zone_id);
+              
             
         } 
 
@@ -270,7 +282,7 @@ export class ServiceRequestPage implements OnInit {
                 this.position_lng = position.longitude;
             });
 
-        this.app_version = this.constantsService.APP_VERSION;
+        // this.app_version = this.constantsService.APP_VERSION;
         // console.log('App Version:', this.constantsService.APP_VERSION);
 
     }
@@ -325,8 +337,22 @@ export class ServiceRequestPage implements OnInit {
                 }
             },
             error: (error) => {
-                this.presentAlert('Error', 'Error Pinging. Please wait and try again after 5 Seconds.')
-                this.auth.autoLogin();
+                if (error.status == 500)
+                {
+                    this.presentAlert('Server Error', 'Please report error.');
+                } 
+                else if (error.status == 0)
+                {
+                    this.presentAlert('Network Error', 'No internet connection. Please find better reception and try again.');
+                } 
+                else if (error.status == 401) {
+                    this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
+                    this.auth.autoLogin(); // Optional: auto re-login if your app supports it
+                } 
+                else 
+                {
+                    this.presentAlert('Error', error.message);
+                } 
             }
         });
     }
