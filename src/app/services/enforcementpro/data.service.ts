@@ -23,7 +23,7 @@ import { AppLog } from '../../models/app-log';
 import { Login } from '../../models/login';
 
 //Storage
-import { Storage } from '@ionic/storage-angular';
+import { Storage } from '@ionic/storage';
 
 
 @Injectable({
@@ -31,11 +31,15 @@ import { Storage } from '@ionic/storage-angular';
 })
 export class DataService {
 
-    private _storage: Storage | null = null;
+    // private _storage: Storage | null = null;
+    private _storage!: Storage;
+
     private _ready = false;
 
 
     private last_fpn_id: number = 0;
+
+
 
     private live_url: string = 'https://app.enforcementpro.co.uk';
     private dev_url: string = 'https://app.enforcementpro.co.uk';
@@ -43,6 +47,8 @@ export class DataService {
     private api_app_version: string = '';
     private api_app_url: string = 'https://drive.google.com/file/d/15KLQYvY5-qyyTNBI4WlGiDpPZ6m9yLns/view';
 
+    private token: string = '';
+    private user: any = {};
 
     private dynamic_feilds_data: any = {};
     private enviro_post: EnviroPost;
@@ -83,6 +89,7 @@ export class DataService {
     constructor(
         private storage: Storage
     ) {
+        
         this.init();
 
         this.service_request = new ServiceRequest();
@@ -135,54 +142,59 @@ export class DataService {
         this.enviro_post = await this.loadObjectFromLocalStorage('enviro_post');
         this.app_log = await this.loadObjectFromLocalStorage('app_log');
 
+        this.user = await this.loadObjectFromLocalStorage('user');
+        this.token = await this.loadStringFromLocalStorage('token');
+
         this.api_app_version = await this.loadStringFromLocalStorage('api_app_version');
         this.api_app_url = await this.loadStringFromLocalStorage('api_app_url');
         this.last_fpn_id = await this.loadIntFromLocalStorage('last_fpn_id');
     }
 
     private async loadIntFromLocalStorage(key: string) {
-        await this.init();  // ensure storage is ready before using it
-
-        // const raw = localStorage.getItem(key);
-        const raw = this._storage?.get(key)
-        
-        if (!raw) return 0;
-
-        const num = parseInt(await raw, 10);
-        return Number.isNaN(num) ? 0 : num;
+        await this.init();
+    
+        return this._storage.get(key).then((raw: any) => {
+            if (!raw) return 0;
+            const num = parseInt(raw, 10);
+            return Number.isNaN(num) ? 0 : num;
+        });
     }
     
-    private async loadStringFromLocalStorage(key: string) {
-        await this.init();  // ensure storage is ready before using it
-
-        const data = this._storage?.get(key)
-
-        // const data = localStorage.getItem(key);
-        return data ?? '';
+    private async loadStringFromLocalStorage(key: string): Promise<string> {
+        await this.init();
+    
+        return this._storage.get(key).then((val: any) => {
+            return val ?? '';
+        });
     }
     
     private async loadObjectFromLocalStorage(key: string): Promise<any> {
-        await this.init();  // ensure storage is ready before using it
-
-        // const raw = localStorage.getItem(key);
-        const raw = this._storage?.get(key)
-
-        if (!raw) return null;
-
-        return JSON.parse(await raw);
+        await this.init();
+    
+        return this._storage.get(key).then((raw: any) => {
+            if (!raw) return null;
+            try {
+                return JSON.parse(raw);
+            } catch {
+                return null;
+            }
+        });
     }
     
     private async loadArrayFromLocalStorage(key: string): Promise<any[]> {
-        await this.init();  // ensure storage is ready before using it
-
-        // const raw = localStorage.getItem(key);
-        const raw = this._storage?.get(key)
-
-        if (!raw) return [];
-
-        const parsed = JSON.parse(await raw);
-        return Array.isArray(parsed) ? parsed : [];
+        await this.init();
+    
+        return this._storage.get(key).then((raw: any) => {
+            if (!raw) return [];
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        });
     }
+    
 
     private async saveIntToLocalStorage(key: string, data: number) {
         await this.init();  // ensure storage is ready before using it
@@ -258,8 +270,23 @@ export class DataService {
     }
 
     setLogin(login: any): void {
+
+        // this.token = token;
+        // this.saveObjectToLocalStorage('user', this.token);
+
+        // this.user = user;
+        // this.saveObjectToLocalStorage('user', this.user);
+
         this.login = login;
         this.saveObjectToLocalStorage('login', this.login);
+
+    }
+
+    setUser(user: any): void {
+        
+    }
+    setToken(token: string): void {
+        
     }
 
     setSites(sites: any): void {
@@ -273,7 +300,7 @@ export class DataService {
     }
 
     setSRData(data: any): void {
-        console.log(data);
+        // console.log(data);
 
         this.dynamic_feilds = data.dynamic_fields || [];
         this.saveArrayToLocalStorage('dynamic_feilds', this.dynamic_feilds);
@@ -293,6 +320,8 @@ export class DataService {
         // this.sites = data.sites;
         // this.saveArrayToLocalStorage('sites', this.sites);
     }
+
+    
 
     setSalutations(salutations: Salutation[]): void {
         this.salutations = salutations;
@@ -521,6 +550,14 @@ export class DataService {
 
     getLogin(): Login {
         return this.login;
+    }
+
+    getToken(): string {
+        return this.token;
+    }
+
+    getUser(): any {
+        return this.user;
     }
 
     getServiceRequest(): ServiceRequest {
