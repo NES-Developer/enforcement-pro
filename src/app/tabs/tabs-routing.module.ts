@@ -25,7 +25,14 @@ const routes: Routes = [
         redirectTo: 'home',
         pathMatch: 'full'
       }
+      
     ]
+  },
+   // Without this — it stays blank
+   {
+    path: '',
+    redirectTo: 'home',
+    pathMatch: 'full'
   }
 ];
 
