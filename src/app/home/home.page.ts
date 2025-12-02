@@ -57,6 +57,12 @@ export class HomePage implements OnInit {
     ) {
         this.auth.checkLoggedIn();
 
+        let selected_site: any = this.data.getSelectedSite();
+        if (!selected_site)
+        {
+            this.route('site');
+        }
+
         this.platform.ready().then(() => {
             this.blockBackButton();
         });
@@ -80,11 +86,11 @@ export class HomePage implements OnInit {
 
 
          // Listen for when app comes back to foreground
-         this.appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-            if (isActive) {
-                window.location.reload();
-            }
-        });
+        //  this.appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+        //     if (isActive) {
+        //         window.location.reload();
+        //     }
+        // });
 
         let user = this.auth.getUser();
         if (user) 
@@ -104,7 +110,6 @@ export class HomePage implements OnInit {
         
         for (let i=0; i < this.recent_fpns.length; i++) {
             for (let x=0; x < enviro_que.length; x++) {
-              
                 if (
                     this.recent_fpns[i].offender.town == enviro_que[x].town &&
                     this.recent_fpns[i].offender.first_name == enviro_que[x].first_name &&
