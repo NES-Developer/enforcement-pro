@@ -151,83 +151,175 @@ export class DataService {
         this.last_fpn_id = await this.loadIntFromLocalStorage('last_fpn_id');
     }
 
+    /* ------------------------ LOAD FUNCTIONS ------------------------ */
+
     private async loadIntFromLocalStorage(key: string) {
         await this.init();
-    
-        return this._storage.get(key).then((raw: any) => {
-            if (!raw) return 0;
-            const num = parseInt(raw, 10);
-            return Number.isNaN(num) ? 0 : num;
-        });
+
+        const storage = this._storage;
+        let val: any = null;
+
+        if (storage) {
+            val = await storage.get(key);
+        }
+
+        if (val === null || val === undefined) {
+            // fallback to browser localStorage
+            val = localStorage.getItem(key);
+        }
+
+        if (val === null || val === undefined || val === '') return 0;
+
+        const num = parseInt(val, 10);
+        return Number.isNaN(num) ? 0 : num;
     }
-    
+
     private async loadStringFromLocalStorage(key: string): Promise<string> {
         await this.init();
-    
-        return this._storage.get(key).then((val: any) => {
-            return val ?? '';
-        });
+
+        const storage = this._storage;
+        let val: any = null;
+
+        if (storage) {
+            val = await storage.get(key);
+        }
+
+        if (val === null || val === undefined) {
+            val = localStorage.getItem(key);
+        }
+
+        return val ?? '';
     }
-    
+
     private async loadObjectFromLocalStorage(key: string): Promise<any> {
         await this.init();
-    
-        return this._storage.get(key).then((raw: any) => {
-            if (!raw) return null;
-            try {
-                return JSON.parse(raw);
-            } catch {
-                return null;
+
+        const storage = this._storage;
+        let raw: any = null;
+
+        if (storage) {
+            raw = await storage.get(key);
+        }
+
+        if (!raw) {
+            raw = localStorage.getItem(key);
+        }
+        if (!raw) return null;
+
+        try {
+            // If Ionic stored a real object already, just return it
+            if (typeof raw === 'object') {
+                return raw;
             }
-        });
+
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
     }
-    
+
     private async loadArrayFromLocalStorage(key: string): Promise<any[]> {
         await this.init();
-    
-        return this._storage.get(key).then((raw: any) => {
-            if (!raw) return [];
-            try {
-                const parsed = JSON.parse(raw);
-                return Array.isArray(parsed) ? parsed : [];
-            } catch {
-                return [];
+
+        const storage = this._storage;
+        let raw: any = null;
+
+        if (storage) {
+            raw = await storage.get(key);
+        }
+
+        if (!raw) {
+            raw = localStorage.getItem(key);
+        }
+        if (!raw) return [];
+
+        try {
+            if (Array.isArray(raw)) {
+                return raw;
             }
-        });
+
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            return [];
+        }
     }
-    
+
+    /* ------------------------ SAVE FUNCTIONS ------------------------ */
 
     private async saveIntToLocalStorage(key: string, data: number) {
-        await this.init();  // ensure storage is ready before using it
+        await this.init();
 
-        // localStorage.setItem(key, data.toString());
-        this._storage?.set(key, data.toString());
+        const storage = this._storage;
+        const str = data.toString();
 
+        if (storage) {
+            await storage.set(key, str);
+        }
+
+        // best-effort browser mirror
+        this.safeSetLocalStorage(key, str);
     }
-    
+
     private async saveStringToLocalStorage(key: string, data: string) {
-        await this.init();  // ensure storage is ready before using it
+        await this.init();
 
-        // localStorage.setItem(key, data ?? '');
-        this._storage?.set(key, data);
+        const storage = this._storage;
+        const value = data ?? '';
 
+        if (storage) {
+            await storage.set(key, value);
+        }
+
+        this.safeSetLocalStorage(key, value);
     }
-    
+
     private async saveObjectToLocalStorage(key: string, data: any) {
-        await this.init();  // ensure storage is ready before using it
+        await this.init();
 
-        this._storage?.set(key, JSON.stringify(data));
-        // localStorage.setItem(key, JSON.stringify(data));
+        const storage = this._storage;
+        const json = JSON.stringify(data);
 
+        if (storage) {
+            await storage.set(key, data); // you can store object directly in Ionic
+        }
+
+        // localStorage only understands strings
+        this.safeSetLocalStorage(key, json);
+    }
+
+    private async saveArrayToLocalStorage(key: string, data: any[]) {
+        await this.init();
+
+        const storage = this._storage;
+        const json = JSON.stringify(data);
+
+        if (storage) {
+            await storage.set(key, data); // store array directly
+        }
+
+        this.safeSetLocalStorage(key, json);
+    }
+
+
+    /* ------------------------ Config FUNCTIONS ------------------------ */
+
+    private safeSetLocalStorage(key: string, value: string | null | undefined) {
+        try {
+            if (value === null || value === undefined) {
+                localStorage.removeItem(key);
+            } else {
+                localStorage.setItem(key, value);
+            }
+        } catch (e) {
+            // QuotaExceededError or other localStorage problems
+            console.warn('localStorage set failed for key:', key, e);
+        }
     }
     
-    private async saveArrayToLocalStorage(key: string, data: any[]) {
-        await this.init();  // ensure storage is ready before using it
 
-        this._storage?.set(key, JSON.stringify(data));
 
-        // localStorage.setItem(key, JSON.stringify(data));
-    }
+
     
     setLastFpnId(last_fpn_id: number): void {
         this.last_fpn_id = last_fpn_id;

@@ -88,18 +88,22 @@ export class AuthService {
       
     
     handleLoginResponse(response: any): void {
+
         this.storeToken(response.access_token);
-        console.log(11, response.user, this.user);
         this.storeUser(response.user);
 
-        this.router.navigateByUrl('').then(() => {
-            window.location.reload();
-        });
+        // this.storeToken();
+        // console.log(11, response.user, this.user);
+        // this.storeUser();
+
+        this.router.navigate(['/site']);
     }
 
     storeToken(token: string) {
         this.token = token;
-        localStorage.setItem('token', this.token);
+
+        this.data.setToken(this.token)
+
     }
 
     storeUser(user: any) {
@@ -110,45 +114,54 @@ export class AuthService {
         this.user.last_name = user.last_name;
         this.user.operator_number = user.operator_number;
         this.user.role = user.role;
-        // console.log(111, this.user);
-        localStorage.setItem('user', JSON.stringify(this.user));
+
+       this.data.setUser(this.user);
     }
 
     getToken(): String {
-        if (this.token === '') {
-            let token = localStorage.getItem('token');
-            if(token === null) {
-                return '';
-            }
-            this.token = token;
-        }
-        return this.token;
+        let token: string = this.data.getToken();
+
+        return token;
+
+        // if (this.token === '') {
+        //     let token = localStorage.getItem('token');
+        //     if(token === null) {
+        //         return '';
+        //     }
+        //     this.token = token;
+        // }
+        // return this.token;
     }
 
     getUser(): User | null {
-        if (this.user.id == 0) {
-            let userJson = localStorage.getItem('user');
-            if (userJson) {
-                this.user = JSON.parse(userJson); // Convert JSON string to object
-            }
-            else {
-                if (this.getToken() === '')
-                {
-                    this.logout();
-                } 
+        let user: any = this.data.getUser();
+
+        return user;
+
+        // if (this.user.id == 0) {
+        //     let userJson = localStorage.getItem('user');
+        //     if (userJson) {
+        //         this.user = JSON.parse(userJson); // Convert JSON string to object
+        //     }
+        //     else {
+        //         if (this.getToken() === '')
+        //         {
+        //             this.logout();
+        //         } 
                 
-                return null;
-            }
-        }
-        return this.user;
+        //         return null;
+        //     }
+        // }
+        // return this.user;
     }
 
     checkLoggedIn() {
-        if (this.getToken() === '' || this.getUser() === null) {
+        if (this.getToken() === '') {
+
             this.logout();
         } 
 
-        this.autoLogin();
+        // this.autoLogin();
     }
       
 
