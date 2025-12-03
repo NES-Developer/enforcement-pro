@@ -6,11 +6,12 @@ const routes: Routes = [
   {
     path: '',
     component: ServiceRequestPage,
-  }
+  },
+  
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
-})
+}) 
 export class ServiceRequestPageRoutingModule {}

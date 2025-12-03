@@ -43,7 +43,7 @@ export class LoginPage implements OnInit {
 
 
     ngOnInit() {
-        this.auth.checkLoggedIn();
+        // this.auth.checkLoggedIn();
         this.loading.hideLoading();
         //alert(this.auth.userLoggedIn());
     }

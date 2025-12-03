@@ -29,7 +29,7 @@ export class ApiService {
 
     private getHeaders(): HttpHeaders {
         // Create headers with authentication token
-        const token = this.auth.getToken();
+        const token = this.data.getToken();
         return new HttpHeaders({
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`

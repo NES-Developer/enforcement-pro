@@ -1,0 +1,128 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+      <ion-row>
+          <ion-col>
+              <ion-button (click)="route('/queue')">
+                  <ion-icon name="time"></ion-icon>
+              </ion-button>
+              <ion-button (click)="init()">
+                  <ion-icon name="refresh"></ion-icon>
+              </ion-button>
+          </ion-col>
+          <ion-col>
+              <ion-button (click)="logout()">
+                  <ion-icon name="log-out"></ion-icon>
+              </ion-button>
+          </ion-col>
+      </ion-row>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <ion-item>
+      <h2>
+          {{ user.name }}
+      </h2>
+  </ion-item>
+
+  <ion-item>
+      <p>
+          Welcome to the Enforcement Pro Mobile Application. 
+      </p>
+  </ion-item>
+
+  <ion-item>
+      <ion-label>Your Current Site is:</ion-label>
+  </ion-item>
+  <ion-item>
+      <div class="row">
+          <div class="col-4">
+              <img [src]="getImageUrl(selected_site.logo)" height="40px" />
+          </div>
+          <div class="col-8">
+              <ion-label>{{ selected_site.name }}</ion-label>
+          </div>
+      </div>
+  </ion-item>
+
+
+<ion-list>
+
+    <ion-item>
+        <ion-label>
+            <ion-button expand="block" shape="full" (click)="navigate('enviro')">
+                <ion-icon name="leaf"></ion-icon> FPN
+            </ion-button>
+        </ion-label>
+    </ion-item>
+
+    <ion-item>
+        <ion-label>
+            <ion-button expand="block" shape="full" (click)="navigate('setting')">
+                <ion-icon name="person"></ion-icon> Settings
+            </ion-button>
+        </ion-label>
+    </ion-item>
+
+      <ion-item>
+          <ion-label>
+              <ion-button expand="block" shape="full" (click)="navigate('site')">
+                  <ion-icon name="pencil"></ion-icon> Change Site
+              </ion-button>
+          </ion-label>
+      </ion-item>
+      <ion-item>
+          <ion-label>
+              <ion-button expand="block" shape="full" (click)="openOtherApp()">
+                  <ion-icon name="print"></ion-icon> Open Printer
+              </ion-button>
+          </ion-label>
+      </ion-item>
+      <ion-item>
+          <ion-label>
+              <ion-button expand="block" shape="full" (click)="fpnDuplicate()">
+                  Remove Duplicate in Queue
+              </ion-button>
+          </ion-label>
+      </ion-item>
+</ion-list>
+
+  <ion-list>
+      <div>
+          <ion-item *ngFor="let fpn of recent_fpns">
+              <ion-grid>
+                  <ion-row>
+                      <ion-col size="6">
+                          <ion-item>
+                              <ion-label>FPN Number: {{ fpn.fpn_number }}</ion-label>
+                          </ion-item>
+                      </ion-col>
+                  
+                      <ion-col size="6">
+                          <ion-item>
+                              <ion-label>Offender: {{ fpn.offender?.first_name }} {{ fpn.offender?.last_name }}</ion-label>
+                          </ion-item>
+                      </ion-col>
+                  </ion-row>
+                  
+                  <ion-row>
+                      <ion-col size="12">
+                          <ion-item>
+                              <ion-badge *ngIf="!notebookEntryIsEmpty(fpn)" color="primary">Notebook Found</ion-badge>
+                              <ion-button *ngIf="notebookEntryIsEmpty(fpn)" (click)="notebookEntry(fpn)" color="dark">NoteBook Entry</ion-button>
+                              <ion-button (click)="copyFPNNumber(fpn.fpn_number)" color="dark">Copy</ion-button>
+                          </ion-item>
+                      </ion-col>
+                  </ion-row>
+                  
+              </ion-grid>
+          </ion-item>
+      </div>
+      
+  </ion-list>
+
+</ion-content>
+
+
+

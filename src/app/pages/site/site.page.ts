@@ -18,7 +18,8 @@ import { EnviroPost } from 'src/app/models/enviro';
   templateUrl: './site.page.html',
   styleUrls: ['./site.page.scss'],
 })
-export class SitePage implements OnInit {
+export class SitePage implements OnInit 
+{
 
     sites: any[] = [];
     user: any = null;
@@ -37,7 +38,8 @@ export class SitePage implements OnInit {
         private alertController: AlertController,
         private loading:LoadingService
     ) {
-        
+        this.loadData();
+
     }
     ngOnInit(): void {
         this.init();      
@@ -55,19 +57,19 @@ export class SitePage implements OnInit {
         }
     }
 
-    init() {
-        this.auth.checkLoggedIn();
+    init() 
+    {
+        // this.auth.checkLoggedIn();
         this.user = this.auth.getUser();
 
         if (this.data.checkSites() === false) {
             this.getSites();
         } 
         
-        this.loadData();
     }
 
     refresh() {
-        window.location.reload();
+        this.getSites();
     }
 
     getSites(): void {
@@ -88,6 +90,8 @@ export class SitePage implements OnInit {
         this.sites = this.data.getSites();
         this.selected_site = this.data.getSelectedSite() || null;
         this.url = this.data.getUrl();
+
+        console.log(this.data.getLogin());
     }
 
     getImageUrl(prefix: string) { 
@@ -111,8 +115,15 @@ export class SitePage implements OnInit {
     getFPNData(): void {
         this.loading.showLoading();
 
-        let site: any = this.data.getSelectedSite();
-        let site_id: number = site.id;
+        let site_id: number = 0;
+
+        if (this.selected_site) {
+            site_id = this.selected_site.id
+        } else {
+           let site: any = this.data.getSelectedSite();
+            site_id = site.id; 
+        }
+
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
 
@@ -173,9 +184,8 @@ export class SitePage implements OnInit {
 
                 this.loading.hideLoading();
 
-                this.router.navigate(['']).then(() => {
-                    window.location.reload();
-                });
+                // this.router.navigate(['/dashboard']);
+                this.navigate('/dashboard');
                 
             },
             error: (error) => {
@@ -189,7 +199,7 @@ export class SitePage implements OnInit {
                     this.presentAlert('Server Error', 'Please report error.');
                 } 
                 else if (error.status == 401) {
-                    this.presentAlert('Wait', 'We are auto-logging you in. Please wait. Th');
+                    this.presentAlert('Processing', 'Retrieving site data.');
                     this.auth.autoLogin(); 
                     this.getFPNData();
                 } 
@@ -229,32 +239,29 @@ export class SitePage implements OnInit {
     }
 
     async presentAlert(header: string, message: string) {
-        let button_title: string = 'Ok';
-        let button_retry: string = '';
-        let message_display: string = 'Please Click Okay.';
-        if (header == "Error") {
-            message_display = message + ". Please attempt to logout and log back in.";
-            button_retry = 'Retry';
+        // let button_title: string = 'Ok';
+        // let button_retry: string = 'Retry';
+        // let message_display: string = 'Please Click Okay.';
+        // if (header == "Error") {
+        //     message_display = message + ". Please attempt to logout and log back in.";
+        //     button_retry = 'Retry';
 
-        }
+        // }
         const alert = await this.alertController.create({
             header: header,
-            message: message_display,
-            buttons: [
-                {
-                    text: button_title
-                },
-                {
-                    text: button_retry,
-                    handler: () => {
-                        if (header == "Error") {
-                            this.getFPNData();
-                        }
-                    }
-                }
-            ],
+            message: message,
         });
         await alert.present();
+
+        let timeout: number = 3000;
+
+        if (header == 'Processing')
+        {
+           setTimeout(() => {
+                alert.dismiss();
+            }, timeout); 
+        }
+        
     }
 
 }

@@ -48,7 +48,7 @@ export class Step1Component implements OnInit {
     }
 
     init() {
-        this.auth.checkLoggedIn();
+        // this.auth.checkLoggedIn();
 
         if (this.data.checkSelectedSite() == false) {
             this.navigate('site');

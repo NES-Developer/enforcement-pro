@@ -186,7 +186,7 @@ export class NotebookPage implements OnInit {
             this.data.setEnviroPost(this.enviro_post);
         }
 
-        if (route == "/fpn/queue")
+        if (route == "/queue")
         {
             this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
         } 

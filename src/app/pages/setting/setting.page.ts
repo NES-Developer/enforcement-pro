@@ -1,33 +1,33 @@
 import { Component, OnInit } from '@angular/core';
-import { AuthService } from '../services/enforcementpro/auth.service';
-import { DataService } from '../services/enforcementpro/data.service';
+
+import { AuthService } from '../../services/enforcementpro/auth.service';
+import { DataService } from '../../services/enforcementpro/data.service';
 import { Router } from '@angular/router';
-import { Site } from '../models/site';
-import { Zone } from '../models/zone';
-import { AppLog } from '../models/app-log';
-import { ApiService } from '../services/enforcementpro/api.service';
-import { Weather } from '../models/weather';
-import { POIPrefix } from '../models/poi-prefix';
-import { Visibility } from '../models/visibility';
-import { Offence } from '../models/offence';
-import { OffenceGroup } from '../models/offence-group';
-import { SiteOffence } from '../models/site-offence';
+import { Site } from '../../models/site';
+import { Zone } from '../../models/zone';
+import { AppLog } from '../../models/app-log';
+import { ApiService } from '../../services/enforcementpro/api.service';
+import { Weather } from '../../models/weather';
+import { POIPrefix } from '../../models/poi-prefix';
+import { Visibility } from '../../models/visibility';
+import { Offence } from '../../models/offence';
+import { OffenceGroup } from '../../models/offence-group';
+import { SiteOffence } from '../../models/site-offence';
 import { Observable, Subscriber, interval } from 'rxjs';
 import { AlertController, Platform } from '@ionic/angular';
-import { Login } from '../models/login';
-import { ZoneDetection } from '../models/zone-detection';
+import { Login } from '../../models/login';
+import { ZoneDetection } from '../../models/zone-detection';
 //import * as L from 'leaflet';
-import { ConstantsService } from '../services/constants.service';
-import { User } from '../models/user';
+import { ConstantsService } from '../../services/constants.service';
+import { User } from '../../models/user';
 import { App } from '@capacitor/app';
 
-
 @Component({
-  selector: 'app-service-request',
-  templateUrl: 'service-request.page.html',
-  styleUrls: ['service-request.page.scss']
+    selector: 'app-setting',
+    templateUrl: './setting.page.html',
+    styleUrls: ['./setting.page.scss'],
 })
-export class ServiceRequestPage implements OnInit {
+export class SettingPage implements OnInit {
 
     api_app_version: string = "";
     api_app_url: string = "";
@@ -438,3 +438,7 @@ export class ServiceRequestPage implements OnInit {
     }
 
 }
+
+
+
+

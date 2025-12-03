@@ -1,0 +1,56 @@
+import { Component, OnInit } from '@angular/core';
+import { ApiService } from '../../../services/enforcementpro/api.service';
+import { DataService } from '../../../services/enforcementpro/data.service';
+import { OffenceLocationSuffix } from '../../../models/offence-location-suffix';
+import { OffenceHow } from '../../../models/offence-how';
+import { EnviroPost } from 'src/app/models/enviro';
+import { UpperCaseWords } from 'src/app/helpers/utils'
+import { EnviroPage } from '../enviro.page';
+
+@Component({
+  selector: 'app-step4',
+  templateUrl: './step4.component.html',
+  styleUrls: ['./step4.component.scss'],
+})
+export class Step4Component  implements OnInit {
+
+    ethnicities: Location[] = [];
+    offence_location_suffix: OffenceLocationSuffix[] = [];
+    offence_how: OffenceHow[] = [];
+    enviro_post: EnviroPost = new EnviroPost();
+    // address_verified_by: AddressVerifiedBy[] = [];
+
+    constructor(
+        private api: ApiService,
+        private data: DataService,
+        private fpnPage: EnviroPage
+    ) {
+        if (!this.data.checkFPNData()){
+            this.fpnPage.getFPNData();
+        }
+        this.loadData();
+    }
+
+    ngOnInit() {
+
+    }
+
+    loadData() {
+        this.offence_location_suffix = this.data.getOffenceLocationSuffix();
+        this.offence_how = this.data.getOffenceHow();
+        let enviro_post =  this.data.getEnviroPost();
+        if (enviro_post !== null) {
+            this.enviro_post = enviro_post;
+        }
+    }
+
+    onInputChange(){
+        UpperCaseWords(this.enviro_post); 
+    }
+
+    saveEnviroData() {
+        this.onInputChange();
+        this.data.setEnviroPost(this.enviro_post);
+    } 
+
+}
