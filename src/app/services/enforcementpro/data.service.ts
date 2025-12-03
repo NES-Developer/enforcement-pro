@@ -23,7 +23,9 @@ import { AppLog } from '../../models/app-log';
 import { Login } from '../../models/login';
 
 //Storage
-import { Storage } from '@ionic/storage';
+// import { Storage } from '@ionic/storage';
+import { Storage } from '@ionic/storage-angular';
+
 import { User } from 'src/app/models/user';
 
 
@@ -105,7 +107,8 @@ export class DataService {
         if (this._ready) return;
 
         // IMPORTANT: initialize storage
-        this._storage = await this.storage.create();
+        const storage = await this.storage.create();
+        this._storage = storage;
         this._ready = true;
     }
 

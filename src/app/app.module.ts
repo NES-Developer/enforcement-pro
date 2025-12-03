@@ -13,6 +13,8 @@ import { LoaderComponent } from './loader/loader.component';
 
 // import { IonicSignaturePadModule,IonicsignaturepadProvider } from 'ionicsignaturepad';
 import { IonicStorageModule } from '@ionic/storage-angular';  // <- correct package
+import { Drivers, Storage } from '@ionic/storage';
+// import { SQLiteService } from './services/sqlite.service'; // we will create this
 
 
 // import { Camera } from '@awesome-cordova-plugins/camera/ngx';
@@ -25,6 +27,17 @@ import { IonicStorageModule } from '@ionic/storage-angular';  // <- correct pack
         LoaderComponent
     ],
     imports: [
+
+        // IonicStorageModule.forRoot({
+        //     name: '__mydb',
+        //     driverOrder: [Drivers.IndexedDB, Drivers.LocalStorage]
+        // }),
+
+        IonicStorageModule.forRoot({
+            name: '__mydb',         // whatever name you like
+            driverOrder: ['sqlite', 'indexeddb', 'localstorage']
+        }),
+
         BrowserModule, 
         IonicModule.forRoot(), 
         AppRoutingModule, 

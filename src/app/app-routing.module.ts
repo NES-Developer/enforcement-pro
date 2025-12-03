@@ -1,49 +1,62 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
-import { PhotoComponent } from './fpn/photo/photo.component';
-import { QueueComponent } from './fpn/queue/queue.component';
+// import { PhotoComponent } from './pages/enviro/photo/photo.component';
+// import { QueueComponent } from './pages/enviro/queue/queue.component';
+
 
 const routes: Routes = [
-  // Tabs is app root (so /home => TabsPage -> home child)
+  // default → tabs/home
   {
     path: '',
-    loadChildren: () => import('./tabs/tabs.module').then(m => m.TabsPageModule)
+    redirectTo: 'dashboard',
+    pathMatch: 'full'
   },
-
-  // If you want FPN as its own top-level module (not a tab), keep this:
+  // tabs root
   // {
-  //   path: 'fpns',
-  //   loadChildren: () => import('./fpn/fpn.module').then( m => m.FPNPageModule )
-  // },
-
-  // {
-  //   path: 'settings',
-  //   loadChildren: () => import('./service-request/service-request.module').then( m => m.ServiceRequestPageModule)
+  //   path: 'tabs',
+  //   loadChildren: () => import('./tabs/tabs.module').then(m => m.TabsPageModule)
   // },
   {
+    path: 'dashboard',
+    loadChildren: () => import('./pages/dashboard/dashboard.module').then(m => m.DashboardPageModule)
+  },
+  {
+    path: 'enviro',
+    loadChildren: () => import('./pages/enviro/enviro.module').then(m => m.EnviroPageModule)
+  },
+  {
+    path: 'photo',
+    loadChildren: () => import('./pages/photo/photo.module').then(m => m.PhotoPageModule)
+  },
+  {
+    path: 'setting',
+    loadChildren: () => import('./pages/setting/setting.module').then(m => m.SettingPageModule)
+  },
+  {
+    path: 'queue',
+    loadChildren: () => import('./pages/queue/queue.module').then(m => m.QueuePageModule)
+  },
+  {
     path: 'login',
-    loadChildren: () => import('./pages/login/login.module').then( m => m.LoginPageModule)
+    loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule)
   },
   {
     path: 'site',
-    loadChildren: () => import('./pages/site/site.module').then( m => m.SitePageModule)
+    loadChildren: () => import('./pages/site/site.module').then(m => m.SitePageModule)
   },
   {
     path: 'notebook/:id',
     loadChildren: () => import('./pages/notebook/notebook.module').then(m => m.NotebookPageModule)
   },
-
-  // fallback
+  // fallback → tabs/home
   {
     path: '**',
-    redirectTo: ''
+    redirectTo: 'dashboard'
   }
 ];
 
 @NgModule({
-  imports: [
-    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })
-  ],
+  imports: [RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })],
   exports: [RouterModule]
 })
 export class AppRoutingModule {}

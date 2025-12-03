@@ -156,7 +156,7 @@ export class AuthService {
     }
 
     checkLoggedIn() {
-        if (this.getToken() === '') {
+        if (this.data.getToken() === '') {
 
             this.logout();
         } 
