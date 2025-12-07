@@ -88,7 +88,7 @@ export class Step2Component implements OnInit {
           // Format as yyyy/mm/dd and assign to date_of_birth
           const formattedDate = `${this.birthYear.toString().padStart(4, '0')}/${this.birthMonth.toString().padStart(2, '0')}/${this.birthDay.toString().padStart(2, '0')}`;
           this.enviro_post.date_of_birth = formattedDate;
-          this.data.setEnviroPost(this.enviro_post);
+          this.saveEnviroData();
         }
     } 
 

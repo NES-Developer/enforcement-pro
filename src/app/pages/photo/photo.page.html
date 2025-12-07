@@ -52,23 +52,18 @@
     </ion-item> 
 
     <ion-item>
-        <div style="width: 100%" *ngIf="!error">
-            <canvas [class.show]="isCaptured" [class.hide]="!isCaptured" #canvas id="canvas" 
-                [height]="HEIGHT"></canvas>
-        </div>
-    </ion-item> 
-
-    <ion-item>
         <div class="row" style="display: block; margin-left: auto; margin-right: auto">
-            <button class="btn btn-dark w-100" *ngIf="!isCaptured" (click)="capture()">
+            <button class="btn btn-dark w-100" (click)="capture()">
                 <ion-icon name="camera"></ion-icon>
             </button>
-            <button class="btn btn-warning" *ngIf="isCaptured" (click)="removeCurrent()">
-                x
-            </button>
+            
             
         </div>
     </ion-item>
+
+ 
+
+    
 
     <ion-item>
         <div class="snap-container">
@@ -101,5 +96,17 @@
             Photo Count: {{ enviro_post.offence_images.length }}
         </ion-badge>
     </ion-item>
+
+    <ion-item>
+        <ion-label>Preview:</ion-label>
+        <br/>
+        <button class="btn btn-warning" *ngIf="isCaptured" (click)="removeCurrent()">
+            x
+        </button>
+        <div style="width: 100%" *ngIf="!error">
+            <canvas [class.show]="isCaptured" [class.hide]="!isCaptured" #canvas id="canvas" 
+                [height]="HEIGHT"></canvas>
+        </div>
+    </ion-item> 
 
 </ion-content>

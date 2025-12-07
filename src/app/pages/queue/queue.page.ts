@@ -244,6 +244,7 @@ export class QueuePage implements OnInit {
       if (this.isSubmitting) {
         return;
       }
+
       this.isSubmitting = true;
       this.loading.showLoading();
 
@@ -289,8 +290,8 @@ export class QueuePage implements OnInit {
                 } 
                 else if (error.status == 401) {
                     this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
-                    this.auth.autoLogin(); 
-                    this.submitFPN(enviro_post);
+                    this.authFail(enviro_post); 
+                    // this.submitFPN(enviro_post);
                 } 
                 else if (error.status == 0)
                 {
@@ -300,9 +301,15 @@ export class QueuePage implements OnInit {
                 {
                     this.presentAlert('Error', error.message);
                 } 
-          }
-      });
-}
+            }
+        });
+    }
+
+    authFail(enviro_post: any)
+    {
+        this.auth.autoLogin();
+        this.submitFPN(enviro_post);
+    }
     
 
     generateTicket(enviro_post: EnviroPost) {

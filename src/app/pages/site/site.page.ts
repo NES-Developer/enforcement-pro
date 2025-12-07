@@ -28,6 +28,8 @@ export class SitePage implements OnInit
     url: string = '';
     filteredSites: any[] = [];
     searchQuery: string = '';
+    is_logged_in: boolean = true;
+    token: string = '';
 
 
     constructor(
@@ -38,6 +40,10 @@ export class SitePage implements OnInit
         private alertController: AlertController,
         private loading:LoadingService
     ) {
+        this.token = this.data.getToken();
+        this.sites = this.data.getSites();
+        
+
         this.loadData();
 
     }
@@ -58,14 +64,25 @@ export class SitePage implements OnInit
     }
 
     init() 
-    {
-        // this.auth.checkLoggedIn();
+    {        
+        this.checkLoggedIn();
+
         this.user = this.auth.getUser();
 
-        if (this.data.checkSites() === false) {
+        if (this.sites.length == 0) {
             this.getSites();
         } 
         
+    }
+
+    checkLoggedIn() 
+    {
+        if (this.token == '') {
+            // this.auth.autoLogin(); 
+            this.router.navigate(['/login']);
+        } else {
+
+        }
     }
 
     refresh() {
@@ -79,9 +96,27 @@ export class SitePage implements OnInit
                 this.loadData();
             },
             error: (error) => {
-                console.error('Error fetching sites Data:', error);
-                this.presentAlert("Error", error.error.message)
-                // Handle error as needed
+                if (error.status == 500)
+                {
+                    this.presentAlert('Server Error', 'Please report error.');
+                } 
+                else if (error.status == 401) {
+                    this.presentAlert('Processing', 'Retrieving site data.');
+
+                    this.checkLoggedIn();
+
+                    
+                    this.getSites();
+                    this.getFPNData();
+                } 
+                else if (error.status == 0)
+                {
+                    this.presentAlert('Network Error', 'No internet connection. Please find better reception and try again.');
+                } 
+                else 
+                {
+                    this.presentAlert('Error', error.message);
+                } 
             }
         });
     }
@@ -101,6 +136,8 @@ export class SitePage implements OnInit
     }
 
     setSite(site_id: any) {
+
+        this.loading.showLoading();
 
         let enviro_post = new EnviroPost();
         this.data.setEnviroPost(enviro_post);
@@ -185,6 +222,7 @@ export class SitePage implements OnInit
                 this.loading.hideLoading();
 
                 // this.router.navigate(['/dashboard']);
+
                 this.navigate('/dashboard');
                 
             },

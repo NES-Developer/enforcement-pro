@@ -31,7 +31,8 @@ import { OnDestroy } from '@angular/core';
   })
   export class EnviroPage implements OnInit {
 
-     appStateListener: any;
+     
+    appStateListener: any;
 
     app_log: AppLog;
     map: any;
@@ -41,6 +42,8 @@ import { OnDestroy } from '@angular/core';
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
     id: any;
     isSubmitting: boolean = false;
+
+    user: User;
 
     constructor(
         private auth: AuthService,
@@ -54,6 +57,10 @@ import { OnDestroy } from '@angular/core';
 
 
     ) {
+        this.user = new User();
+        this.app_log = new AppLog();
+
+        this.assignOfficerId();
         // this.auth.checkLoggedIn();
 
         this.platform.ready().then(() => {
@@ -62,9 +69,10 @@ import { OnDestroy } from '@angular/core';
 
         });
 
-        if (this.data.checkSelectedSite() === false) {
-            this.navigate('site');
-        } 
+
+        // if (this.data.checkSelectedSite() === false) {
+        //     this.navigate('site');
+        // } 
 
         if (!this.data.checkFPNData()){
             this.getFPNData();
@@ -525,16 +533,21 @@ import { OnDestroy } from '@angular/core';
         }
     }
 
-    async assignOfficerId() {
-        // let user = this.auth.getUser();
-        // if (await user !== '')
-        // {
-        //     this.enviro_post.officer_id = user.id;
-        // }
-
-        let user: any = this.auth.getUser();
-        if (user !== '') {
-            this.app_log.user_id = user.id.toString();
+    assignOfficerId() 
+    {
+        if (this.enviro_post.officer_id == 0) {
+            if (this.user && this.user.id > 0) {
+                this.app_log.user_id = this.user.id.toString();
+                this.enviro_post.officer_id = this.user.id;
+            } else {
+                this.user = this.data.getUser();
+                if (this.user.id > 0) {
+                    this.app_log.user_id = this.user.id.toString();
+                    this.enviro_post.officer_id = this.user.id;
+                }
+            }
+            this.data.setAppLog(this.app_log);
+            this.data.setEnviroPost(this.enviro_post);
         }
     }
 
@@ -607,7 +620,19 @@ import { OnDestroy } from '@angular/core';
                     } 
                     else if (error.status == 0)
                     {
-                        this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
+                        
+                        if (this.enviro_post.offence_images.length > 1)
+                        {
+                            let offence_images_length = this.enviro_post.offence_images.length;
+                            this.presentAlert('Processing', 'please Wait! Network error, we are compressing your image');
+                            this.data.spliceOffenceImageEnviroPost(this.enviro_post.offence_images[offence_images_length - 1])
+                            this.submitForm();
+                        } else if (this.enviro_post.offence_images.length == 1) {
+                            //Compress the image as its base64
+                            this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
+
+                        }
+                        // this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
                     } 
                     else 
                     {
@@ -766,7 +791,7 @@ import { OnDestroy } from '@angular/core';
             //this.assignOfficerId();
             let queue = this.data.getEnviroQue();
 
-            if (queue.length < 100) {            
+            if (queue.length < 20) {            
                 this.offenceSwitcherForserver();
                 this.assignOfficerId();
                 this.data.pushEnviroQue();
@@ -777,7 +802,7 @@ import { OnDestroy } from '@angular/core';
 
             } else {
                 this.loading.hideLoading();
-                this.presentAlert('Error', 'Queue has exceeded 100, please submit. Submit some FPNs on queue to increase space.')
+                this.presentAlert('Error', 'Queue has exceeded 20, please submit. Submit some FPNs on queue to increase space.')
             }
         }
     }

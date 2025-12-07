@@ -10,14 +10,16 @@ import { Router } from '@angular/router'; // Import Router
 import { DataService } from './data.service';
 import { LoadingService } from '../loading.service';
 import { Login } from '../../models/login';
+// import { Site as SiteObj } from '../../models/site';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
     private token: string = '';
-    
+    private login_detail: Login;
     private user: User;
+    private selected_site: any = null;
 
     private baseUrl: string = 'https://app.enforcementpro.co.uk/api/app';
 
@@ -30,6 +32,8 @@ export class AuthService {
 
     ) {
         this.user = new User();
+        this.login_detail = new Login();
+        // this.selected_site = new SiteObj();
     }
 
     private getCurrentPosition(): any {
@@ -71,9 +75,9 @@ export class AuthService {
 
     
     autoLogin() {
-        let login: Login = this.data.getLogin();
-      
-        this.login(login.id, login.pin).subscribe(
+        this.login_detail = this.data.getLogin();
+        
+        this.login(this.login_detail.id, this.login_detail.pin).subscribe(
             (response: any) => {
                 if (response.access_token !== '' || response.user) {
                     this.storeToken(response.access_token);
@@ -84,7 +88,54 @@ export class AuthService {
                 // this.logout();
             }
         );
+        
+      
+        
     }
+
+    isLoggedIn()
+    {
+        if (this.token !== '')
+        {
+            return false;
+        } 
+        return true;
+    }
+
+
+    authChecker() 
+    {
+
+        if (this.token !== '')
+        {
+            alert(1);
+            this.token = this.data.getToken();
+            let hasSite: boolean = this.data.checkSites();
+            // this.user = this.data.getUser();
+
+
+
+            if (this.token == '')
+            {
+                this.router.navigate(['/login']);
+            } else {
+                if (hasSite)
+                {
+                    if (this.selected_site == null)
+                    {
+                        this.selected_site = this.data.getSelectedSite();
+                    }
+                }
+                else
+                {
+                    this.router.navigate(['/site']);
+                }
+            }
+            
+        }
+    }
+
+
       
     
     handleLoginResponse(response: any): void {

@@ -23,6 +23,7 @@ export class LoginPage implements OnInit {
     @ViewChild('pinInput') pinInput!: ElementRef;
 
     login: Login;
+    token: string = '';
 
     constructor(
         private apiService: ApiService,
@@ -36,16 +37,26 @@ export class LoginPage implements OnInit {
     ) {
         this.login = new Login();
 
+        this.token = this.data.getToken();
+
         this.platform.ready().then(() => {
             this.blockBackButton();
         });
+
+        
     }
 
-
     ngOnInit() {
-        // this.auth.checkLoggedIn();
+        // this.auth.isLoggedIn();
         this.loading.hideLoading();
         //alert(this.auth.userLoggedIn());
+    }
+
+    init() {
+        if (this.token !== '')
+        {
+            this.router.navigate(['/dashboard']);
+        }
     }
 
     onSubmit(event: Event) {

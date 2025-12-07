@@ -80,8 +80,9 @@ export class TicketService {
         let site: Site = this.data.getSelectedSite();
         let selected_site_offence: SiteOffence | undefined = this.data.findSiteOffence(enviro_post.offence_id);
         let offence = this.data.findOffenceById(enviro_post.offence_id);
-        let user = this.auth.getUser();
 
+
+        let user: any = this.auth.getUser();
     
         // QR Code Generation
         const qrCodeCanvas = document.createElement('canvas');

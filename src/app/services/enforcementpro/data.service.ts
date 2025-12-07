@@ -537,6 +537,14 @@ export class DataService {
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
 
+    spliceOffenceImageEnviroPost(enviro_image: string): void {
+        const index = this.enviro_post.offence_images.indexOf(enviro_image);
+        if (index > -1) {
+          this.enviro_post.offence_images.splice(index, 1);
+        }
+        this.saveObjectToLocalStorage('enviro_post', this.enviro_post);
+    }
+
     spliceFPNNumberOfflinePrinter(fpn_number_and_barcode: any): void {
         const index = this.fpn_number_offline_printer.indexOf(fpn_number_and_barcode);
         if (index > -1) {
@@ -564,7 +572,7 @@ export class DataService {
     }
       
     checkSelectedSite(): boolean {
-        return this.selected_site !== null;
+        return this.selected_site?.id !== null;
     }
 
     checkSelectedZone(): boolean {
@@ -788,6 +796,8 @@ export class DataService {
         this.zones = [];
         this.offence_types = [];
 
+        // now clear everything from Ionic Storage
+
         this.setSalutations(this.salutations);
         this.setBuilds(this.builds);
         this.setHairColors(this.hair_colours);
@@ -838,6 +848,8 @@ export class DataService {
 
         this.zones = [];
 
+        // this.wipeIonicStorage();
+
         // Clear localStorage
         this.setSelectedSite(this.selected_site);
         this.setLogin(this.login);
@@ -865,4 +877,10 @@ export class DataService {
         this.setOffences(this.offences);
         this.setZones(this.zones);
     }
+
+    // async wipeIonicStorage()
+    // {
+    //     // now clear everything from Ionic Storage
+    //     await this._storage?.clear();
+    // }
 }

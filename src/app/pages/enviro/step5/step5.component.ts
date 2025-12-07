@@ -102,7 +102,7 @@ export class Step5Component  implements OnInit, AfterViewInit {
         this.enviro_post.issue_datetime = moment(this.enviro_post.issue_datetime)
             .format('YYYY-MM-DDTHH:mm:ss');
 
-        console.log(this.enviro_post.issue_datetime, this.enviro_post.offence_datetime)
+        // console.log(this.enviro_post.issue_datetime, this.enviro_post.offence_datetime)
 
         this.data.setEnviroPost(this.enviro_post);
     }

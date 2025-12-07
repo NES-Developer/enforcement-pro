@@ -18,6 +18,7 @@ import { OffenceGroup } from '../../models/offence-group';
 import { SiteOffence } from '../../models/site-offence';
 import { Ethnicity } from '../../models/ethnicity';
 import { LoadingService } from '../../services/loading.service';
+import { User } from 'src/app/models/user';
 
 
 @Component({
@@ -28,13 +29,17 @@ import { LoadingService } from '../../services/loading.service';
 
 export class NotebookPage implements OnInit {
     
+    fpn_number: string = "";
+
     id: any;
     isSubmitting: boolean = false;
     currentStep: number = 1;
     enviro_post: EnviroPost;
     notebook_entries: NotebookEntry; 
     app_log: AppLog;
-    fpn_number: string = "";
+    user: User;
+
+
     ethnicities: Ethnicity[] = [];
     weather: Weather[] = [];
     visibility: Visibility[] = [];
@@ -53,6 +58,9 @@ export class NotebookPage implements OnInit {
     ) 
     {
         this.id = this.route2.snapshot.paramMap.get('id');
+
+        this.user = new User();
+        this.user = this.data.getUser();
 
         if (!this.data.checkFPNData()){
             this.getFPNData();
@@ -206,6 +214,24 @@ export class NotebookPage implements OnInit {
             }
         }
     }
+
+    // assignOfficerId() 
+    // {
+    //     if (this.enviro_post.officer_id == 0) {
+    //         if (this.user && this.user.id > 0) {
+    //             this.app_log.user_id = this.user.id.toString();
+    //             this.enviro_post.officer_id = this.user.id;
+    //         } else {
+    //             this.user = this.data.getUser();
+    //             if (this.user.id > 0) {
+    //                 this.app_log.user_id = this.user.id.toString();
+    //                 this.enviro_post.officer_id = this.user.id;
+    //             }
+    //         }
+    //         this.data.setAppLog(this.app_log);
+    //         this.data.setEnviroPost(this.enviro_post);
+    //     }
+    // }
 
     submitFpn() {
         if (this.isSubmitting) {

@@ -23,6 +23,7 @@ import { EnviroPost } from '../../models/enviro';
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { OnDestroy } from '@angular/core';
+import { Site } from 'src/app/models/site';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,11 +38,12 @@ export class DashboardPage implements OnInit {
     app_log: AppLog;
     name: string = '';
     url: string = '';
+    token: string = '';
 
     recent_fpns: any [] = [];
 
     user: User;
-    selected_site: any; // Variable to hold selected site
+    selected_site: any = null; // Variable to hold selected site
 
     sites: any[] = [];
 
@@ -57,19 +59,38 @@ export class DashboardPage implements OnInit {
         private platform: Platform
 
     ) {
-        // this.auth.checkLoggedIn();
+        this.app_log = new AppLog();
 
-        let selected_site: any = this.data.getSelectedSite();
-        if (!selected_site)
-        {
-            this.route('site');
-        }
+
+        this.token = this.data.getToken();
+        // this.sites = this.data.getSites();
+        this.url = this.data.getUrl();
+
+        this.selected_site = this.data.getSelectedSite();
+        this.user = this.data.getUser();
+        this.app_log = this.data.getAppLog();
+
+
+
+        // let is_logged_in = this.auth.isLoggedIn();
+        // if (is_logged_in == false) {
+        //     this.router.navigate(['/login']);
+        // }
+
+        // let has_site: boolean = this.data.checkSelectedSite();
+        // if (!has_site)
+        // {
+        //     this.route('site');
+        // }
+        // else {
+        //     this.selected_site = this.data.getSelectedSite();
+        // }
+
 
         this.platform.ready().then(() => {
             this.blockBackButton();
         });
 
-        this.user = this.data.getUser();
 
         // if (user) 
         // {
@@ -77,8 +98,7 @@ export class DashboardPage implements OnInit {
         // } else {
         //     this.user = new User();
         // }
-        console.log(this.user)
-        this.app_log = new AppLog();
+        // console.log(this.user)
 
 
     }
@@ -94,11 +114,10 @@ export class DashboardPage implements OnInit {
         //     }
         // });
 
-        let user = this.auth.getUser();
-        if (user) 
-        {
-            this.user = user;
-        }
+        // if (user) 
+        // {
+        //     this.user = user;
+        // }
         this.init();
     }
 
@@ -140,19 +159,33 @@ export class DashboardPage implements OnInit {
     init() {
         // this.auth.checkLoggedIn();
 
-        if (this.data.checkSelectedSite() === false) {
-            this.navigate('site');
-        } 
+        // if (this.data.checkSelectedSite() === false) {
+        //     this.navigate('site');
+        // } 
         
         this.loadData();
+
+        if (this.token == '') {
+            this.router.navigate(['/login']);
+        }
+
+        // this.user = this.auth.getUser(); 
+
+        if (!this.selected_site?.id) {
+            this.router.navigate(['/site']);
+        } 
     }
 
     refresh () {
-        if (this.data.checkSelectedSite() === false) {
-            this.navigate('site');
-        } 
+        this.getRecentFPN();
+        this.user = this.data.getUser();
+        this.selected_site = this.data.getSelectedSite();
 
-        window.location.reload();
+        // if (this.data.checkSelectedSite() === false) {
+        //     this.navigate('site');
+        // } 
+
+        // window.location.reload();
     }
 
     getImageUrl(prefix: string) { 
@@ -161,7 +194,6 @@ export class DashboardPage implements OnInit {
     }
 
     loadData() {
-        this.app_log = this.data.getAppLog();
         // this.user = this.data.getuser
 
         if(this.data.checkAppLog()) {
@@ -173,9 +205,8 @@ export class DashboardPage implements OnInit {
 
         this.getRecentFPN();
 
-        this.selected_site = this.data.getSelectedSite() || null;
-        console.log(this.selected_site);
-        this.url = this.data.getUrl();
+        // this.selected_site = this.data.getSelectedSite() || null;
+        // console.log(this.selected_site);
     }
 
     ping() {

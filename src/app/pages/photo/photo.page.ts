@@ -72,7 +72,101 @@ export class PhotoPage implements OnInit {
         this.captures.push(capturedImage);
         this.enviro_post.offence_images.push(capturedImage);
         this.saveEnviroData();
+
+        // 🔹 New: check if last image is > 5MB, then compress
+        this.checkAndCompressLastOffenceImage();
     }
+
+    // 🔹 Check the last offence image and compress if bigger than 5MB
+    private async checkAndCompressLastOffenceImage(): Promise<void> {
+        const images = this.enviro_post.offence_images;
+        if (!images || images.length === 0) {
+            return;
+        }
+
+        const lastIndex = images.length - 1;
+        const lastImage = images[lastIndex];
+
+        const sizeInMB = this.getBase64SizeInMB(lastImage);
+
+        console.log('Captured image size (MB):', sizeInMB);
+
+        // Only compress if > 5MB
+        if (sizeInMB > 5) {
+            // Optional: tell user what's happening
+            // if (this.presentAlert) {
+                // this.presentAlert('Processing', 'Compressing your image, please wait...');
+            // }
+
+            try {
+                const compressed = await this.compressBase64(lastImage, 0.6); // quality 0.6
+
+                // Update both arrays so they stay in sync
+                this.enviro_post.offence_images[lastIndex] = compressed;
+
+                if (this.captures && this.captures.length > 0) {
+                    this.captures[this.captures.length - 1] = compressed;
+                }
+
+                // Re-save after compression
+                this.saveEnviroData();
+            } catch (e) {
+                console.error('Error compressing image', e);
+            }
+        }
+    }
+
+
+    // 🔹 Calculate size of base64 dataURL in MB
+    private getBase64SizeInMB(dataUrl: string): number {
+        // Strip "data:image/xxx;base64," if present
+        const base64 = dataUrl.includes(',')
+            ? dataUrl.split(',')[1]
+            : dataUrl;
+
+        // Calculate padding
+        const paddingMatches = base64.match(/=+$/);
+        const padding = paddingMatches ? paddingMatches[0].length : 0;
+
+        // Base64 → bytes
+        const sizeInBytes = (base64.length * 3) / 4 - padding;
+
+        // Bytes → MB
+        return sizeInBytes / (1024 * 1024);
+    }
+
+    // 🔹 Compress a base64 image using an offscreen canvas
+    private compressBase64(base64: string, quality: number = 0.6): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                if (!ctx) {
+                    reject('Canvas 2D context not available');
+                    return;
+                }
+
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                // Export as JPEG to reduce size (even if original is PNG)
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                resolve(compressedDataUrl);
+            };
+
+            img.onerror = (err) => {
+                reject(err);
+            };
+
+            img.src = base64;
+        });
+    }
+
+
 
     route (route: string) {
         if (route == "/tabs/fpn")
