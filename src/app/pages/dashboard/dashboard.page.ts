@@ -163,11 +163,11 @@ export class DashboardPage implements OnInit {
         //     this.navigate('site');
         // } 
         
+
+        this.checkLoggedIn();
+
         this.loadData();
 
-        if (this.token == '') {
-            this.router.navigate(['/login']);
-        }
 
         // this.user = this.auth.getUser(); 
 
@@ -175,6 +175,13 @@ export class DashboardPage implements OnInit {
             this.router.navigate(['/site']);
         } 
     }
+
+
+    checkLoggedIn() 
+    {
+        this.auth.autoLogin();
+    }
+
 
     refresh () {
         this.getRecentFPN();

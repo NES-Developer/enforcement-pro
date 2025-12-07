@@ -545,6 +545,25 @@ export class DataService {
         this.saveObjectToLocalStorage('enviro_post', this.enviro_post);
     }
 
+    spliceOffenceImageEnviroQue(enviro_data: EnviroPost): EnviroPost {
+
+        this.spliceEnviroQue(enviro_data);
+
+        let delete_image = enviro_data.offence_images[enviro_data.offence_images.length - 1]
+
+        const index = enviro_data.offence_images.indexOf(delete_image);
+
+        if (index > -1) {
+            enviro_data.offence_images.splice(index, 1);
+        }
+
+        this.enviro_que.push(enviro_data);
+
+        this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
+
+        return enviro_data;
+    }
+
     spliceFPNNumberOfflinePrinter(fpn_number_and_barcode: any): void {
         const index = this.fpn_number_offline_printer.indexOf(fpn_number_and_barcode);
         if (index > -1) {
@@ -875,7 +894,8 @@ export class DataService {
         this.setSiteOffences(this.site_offences);
         this.setOffenceGroups(this.offence_groups);
         this.setOffences(this.offences);
-        this.setZones(this.zones);
+        this.setLastFpnId(0);
+
     }
 
     // async wipeIonicStorage()

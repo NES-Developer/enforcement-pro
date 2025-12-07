@@ -186,9 +186,18 @@ export class QueuePage implements OnInit {
     // }
       
 
-    // refresh() {
-    //     window.location.reload();
-    // }
+    refresh() {
+        this.enviro_que = this.data.getEnviroQue();
+        this.enviro_que_addition = this.enviro_que;
+        for (let x=0; x<this.enviro_que.length; x++) {
+            const rawHtml = `` // Assuming the raw HTML exists in ``
+            this.enviro_que_addition[x] = {
+                ...this.enviro_que_addition[x], // Retain existing properties
+                html_bool: false, // Add html_bool
+                html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
+            };
+        }
+    }
     
     // Web: Trigger file download in the browser
     downloadFileWeb(data: string, fileName: string) {
@@ -205,11 +214,11 @@ export class QueuePage implements OnInit {
     ping() {
         this.api.postTrack(this.app_log).subscribe({
             next: (response) => {
-                console.log('Response:', response);
+                // console.log('Response:', response);
                 
             },
             error: (error) => {
-                console.error('Error:', error);
+                // console.error('Error:', error);
             }
         });
     }
@@ -249,38 +258,36 @@ export class QueuePage implements OnInit {
       this.loading.showLoading();
 
       this.api.postFPN(enviro_post).subscribe({
-          next: (response) => {
+            next: (response) => {
 
-              console.log(1, response);
+                // Handle the response here
+                if(response.success === false) 
+                {
+                    let message = response.message + " (Please Edit)";
+                    
+                    this.isSubmitting = false;
+                    this.loading.hideLoading();
 
-              // Handle the response here
-              if(response.success === false) 
-              {
-                  let message = response.message + " (Please Edit)";
-                  
-                  this.isSubmitting = false;
-                  this.loading.hideLoading();
+                    this.presentAlert('Error', message);
 
-                  this.presentAlert('Error', message);
+                } else {
+                    let fpn_number = response.data.fpn_number;
+                    this.presentAlert('Success', fpn_number);
 
-              } else {
-                  let fpn_number = response.data.fpn_number;
-                  this.presentAlert('Success', fpn_number);
+                    let fpn = response.data;
 
-                  let fpn = response.data;
+                    Clipboard.write({
+                        string: fpn.fpn_number
+                    });
+                    this.isSubmitting = false;
+                    this.loading.hideLoading();
 
-                  Clipboard.write({
-                      string: fpn.fpn_number
-                  });
-                  this.isSubmitting = false;
-                  this.loading.hideLoading();
-
-                  this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
-                  this.data.spliceEnviroQue(enviro_post);
-                  this.enviro_que = this.data.getEnviroQue();
-              }
-          },
-          error: (error) => {
+                    this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
+                    this.data.spliceEnviroQue(enviro_post);
+                    this.enviro_que = this.data.getEnviroQue();
+                }
+            },
+            error: (error) => {
                 this.isSubmitting = false;
                 this.loading.hideLoading();
 
@@ -295,7 +302,20 @@ export class QueuePage implements OnInit {
                 } 
                 else if (error.status == 0)
                 {
-                    this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
+                    if (enviro_post.offence_images.length > 1)
+                    {
+                        // let offence_images_length = enviro_post.offence_images.length;
+                        this.presentAlert('Processing', 'please Wait! Network error, we are compressing your image');
+                        
+                        enviro_post = this.data.spliceOffenceImageEnviroQue(enviro_post)
+                        
+                        this.submitFPN(enviro_post);
+
+
+                    } else if (enviro_post.offence_images.length == 1) {
+                        this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
+
+                    }
                 } 
                 else 
                 {
@@ -313,7 +333,6 @@ export class QueuePage implements OnInit {
     
 
     generateTicket(enviro_post: EnviroPost) {
-
 
         let ticket = this.ticket.generateWelcomeTicket(enviro_post);
          

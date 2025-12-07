@@ -60,7 +60,8 @@ import { OnDestroy } from '@angular/core';
         this.user = new User();
         this.app_log = new AppLog();
 
-        this.assignOfficerId();
+
+        // this.assignOfficerId();
         // this.auth.checkLoggedIn();
 
         this.platform.ready().then(() => {
@@ -78,7 +79,12 @@ import { OnDestroy } from '@angular/core';
             this.getFPNData();
         }
 
+        this.enviro_post = new EnviroPost();
+
+        this.currentStep = 1;
+
         let enviro_post = this.data.getEnviroPost();
+
         if (enviro_post) {
             this.enviro_post = enviro_post;
 
@@ -93,13 +99,10 @@ import { OnDestroy } from '@angular/core';
                 }
             });
             
-        } else {
-            this.enviro_post = new EnviroPost();
+        } 
 
-            this.currentStep = 1;
-        }
+        this.assignOfficerId();
 
-        this.app_log = new AppLog();
     }
 
     async ngOnInit() {
@@ -562,7 +565,7 @@ import { OnDestroy } from '@angular/core';
             this.enviro_post.lng = position.longitude;
         });
 
-        let checker = true;//this.submitValidator();
+        let checker = this.submitValidator();
         if (checker) {
             this.isSubmitting = true;
             this.loading.showLoading();
@@ -783,7 +786,6 @@ import { OnDestroy } from '@angular/core';
                 this.enviro_post.lng = position.longitude;
             });
 
-
         let checker = this.submitValidator();
 
         if (checker) {
@@ -794,6 +796,9 @@ import { OnDestroy } from '@angular/core';
             if (queue.length < 20) {            
                 this.offenceSwitcherForserver();
                 this.assignOfficerId();
+
+                this.data.setEnviroPost(this.enviro_post);
+
                 this.data.pushEnviroQue();
                 this.loading.hideLoading();
 

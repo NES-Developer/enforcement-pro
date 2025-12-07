@@ -2,6 +2,7 @@ import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angula
 import { EnviroPost } from '../../models/enviro';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-photo',
@@ -30,6 +31,7 @@ export class PhotoPage implements OnInit {
     constructor(
         private data: DataService,
         private router: Router,
+        private alertController: AlertController,
         private route2: ActivatedRoute
         ) {
             this.route2.queryParams.subscribe(params => {
@@ -67,6 +69,11 @@ export class PhotoPage implements OnInit {
     }
 
     capture() {
+        // If already 5 images, block adding more
+        if (this.enviro_post.offence_images.length >= 5) {
+            this.presentAlert('Limit Exceeded', 'FPN images cannot exceed 5.');
+            return;
+        }
         this.drawImageToCanvas(this.video.nativeElement);
         const capturedImage = this.canvas.nativeElement.toDataURL('image/png');
         this.captures.push(capturedImage);
@@ -75,6 +82,7 @@ export class PhotoPage implements OnInit {
 
         // 🔹 New: check if last image is > 5MB, then compress
         this.checkAndCompressLastOffenceImage();
+        
     }
 
     // 🔹 Check the last offence image and compress if bigger than 5MB
@@ -213,5 +221,19 @@ export class PhotoPage implements OnInit {
 
     saveEnviroData() {
         this.data.setEnviroPost(this.enviro_post);
+    }
+
+    async presentAlert(header: string, message: string) {
+  
+        const alert = await this.alertController.create({
+            header: header,
+            message: message,
+            buttons: [
+                {
+                    text: 'Okay'
+                }
+            ],
+        });
+        await alert.present();
     }
 }

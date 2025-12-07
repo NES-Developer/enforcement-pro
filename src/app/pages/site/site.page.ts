@@ -12,6 +12,7 @@ import { SiteOffence } from '../../models/site-offence';
 import { Visibility } from '../../models/visibility';
 import { Weather } from '../../models/weather';
 import { EnviroPost } from 'src/app/models/enviro';
+import { interval } from 'rxjs';
 
 @Component({
   selector: 'app-site',
@@ -40,13 +41,13 @@ export class SitePage implements OnInit
         private alertController: AlertController,
         private loading:LoadingService
     ) {
-        this.token = this.data.getToken();
-        this.sites = this.data.getSites();
-        
+        this.checkLoggedIn();
 
-        this.loadData();
+        this.sites = this.data.getSites();
+    
 
     }
+
     ngOnInit(): void {
         this.init();      
     }
@@ -65,24 +66,13 @@ export class SitePage implements OnInit
 
     init() 
     {        
-        this.checkLoggedIn();
-
-        this.user = this.auth.getUser();
-
-        if (this.sites.length == 0) {
-            this.getSites();
-        } 
+        this.loadData();
         
     }
 
     checkLoggedIn() 
     {
-        if (this.token == '') {
-            // this.auth.autoLogin(); 
-            this.router.navigate(['/login']);
-        } else {
-
-        }
+        this.auth.autoLogin();
     }
 
     refresh() {
@@ -90,10 +80,14 @@ export class SitePage implements OnInit
     }
 
     getSites(): void {
+        
         this.api.getSites().subscribe({
             next: (data) => {
-                this.data.setSites(data.data);
-                this.loadData();
+                this.sites = data.data;
+                this.data.setSites(this.sites);
+                this.selected_site = this.data.getSelectedSite() || null;
+                this.url = this.data.getUrl();
+                // this.loadData();
             },
             error: (error) => {
                 if (error.status == 500)
@@ -101,13 +95,16 @@ export class SitePage implements OnInit
                     this.presentAlert('Server Error', 'Please report error.');
                 } 
                 else if (error.status == 401) {
-                    this.presentAlert('Processing', 'Retrieving site data.');
+                    this.presentAlert('Processing', 'Retrieving data.');
 
                     this.checkLoggedIn();
 
-                    
-                    this.getSites();
-                    this.getFPNData();
+                    if (this.auth.isLoggedIn())
+                    {
+                        this.loadData();
+                    } else {
+                        this.checkLoggedIn();
+                    }
                 } 
                 else if (error.status == 0)
                 {
@@ -122,11 +119,30 @@ export class SitePage implements OnInit
     }
 
     loadData() {
-        this.sites = this.data.getSites();
+        let has_sites: boolean = false;
+
+        this.user = this.auth.getUser();
         this.selected_site = this.data.getSelectedSite() || null;
         this.url = this.data.getUrl();
 
-        console.log(this.data.getLogin());
+        if (this.sites.length == 0) 
+        {
+            this.sites = this.data.getSites();
+
+            if (this.sites.length == 0)
+            {
+                has_sites = false;
+            } else {
+                has_sites = true;
+            }
+
+           
+        } 
+        
+        if (!has_sites) {
+
+            this.getSites();
+        }
     }
 
     getImageUrl(prefix: string) { 
@@ -140,12 +156,15 @@ export class SitePage implements OnInit
         this.loading.showLoading();
 
         let enviro_post = new EnviroPost();
-        this.data.setEnviroPost(enviro_post);
 
         this.selected_site = this.sites.find((site) => site.id === site_id);
 
+        enviro_post.site_id = this.selected_site.id;
 
         this.data.setSelectedSite(this.selected_site);
+
+        this.data.setEnviroPost(enviro_post);
+
         this.getFPNData();
     }
 

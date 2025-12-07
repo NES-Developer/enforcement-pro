@@ -75,31 +75,80 @@ export class AuthService {
 
     
     autoLogin() {
-        this.login_detail = this.data.getLogin();
-        
-        this.login(this.login_detail.id, this.login_detail.pin).subscribe(
-            (response: any) => {
-                if (response.access_token !== '' || response.user) {
-                    this.storeToken(response.access_token);
-                    this.storeUser(response.user);
+
+        if (this.token == '')
+        {
+            this.token = this.getToken();
+            this.user = this.getUser() ?? new User();
+
+            if (this.token == '')
+            {
+                this.login_detail = this.data.getLogin();
+
+                if (this.login_detail.id == '' && this.login_detail.pin == '')
+                {
+                    this.logout();
+                } 
+                else 
+                {
+                    this.login(this.login_detail.id, this.login_detail.pin).subscribe(
+                        (response: any) => {
+                            if (response.access_token !== '') 
+                            {
+                                this.token = response.access_token;
+                                this.user = response.access_user;
+
+                                this.storeToken(this.token);
+                                this.storeUser(this.user);
+
+                                // return false;
+                            }
+                            else 
+                            {
+                                this.logout();
+
+                                // return false;
+                            }
+                        },
+                        (error) => {
+                            this.autoLogin();
+                            // this.logout();
+                        }
+                    );
                 }
-            },
-            (error) => {
-                // this.logout();
             }
-        );
-        
-      
-        
+            else 
+            {
+                // return true;
+            }
+        } else {
+            // return true;
+        }
     }
 
     isLoggedIn()
     {
-        if (this.token !== '')
-        {
-            return false;
-        } 
-        return true;
+        if (this.token == '') {
+
+            this.token = this.getToken();
+
+            if (this.token == '') {
+
+                this.login_detail = this.data.getLogin();
+
+                if (this.login_detail.id == '' && this.login_detail.pin == '')
+                {
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+
+        } else {
+            return true;
+        }
     }
 
 
@@ -169,41 +218,16 @@ export class AuthService {
        this.data.setUser(this.user);
     }
 
-    getToken(): String {
+    getToken(): string {
         let token: string = this.data.getToken();
 
         return token;
-
-        // if (this.token === '') {
-        //     let token = localStorage.getItem('token');
-        //     if(token === null) {
-        //         return '';
-        //     }
-        //     this.token = token;
-        // }
-        // return this.token;
     }
 
     getUser(): User | null {
         let user: any = this.data.getUser();
 
         return user;
-
-        // if (this.user.id == 0) {
-        //     let userJson = localStorage.getItem('user');
-        //     if (userJson) {
-        //         this.user = JSON.parse(userJson); // Convert JSON string to object
-        //     }
-        //     else {
-        //         if (this.getToken() === '')
-        //         {
-        //             this.logout();
-        //         } 
-                
-        //         return null;
-        //     }
-        // }
-        // return this.user;
     }
 
     checkLoggedIn() {
