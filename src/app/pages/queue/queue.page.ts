@@ -75,7 +75,7 @@ export class QueuePage implements OnInit {
         this.ping();
         setInterval(() => {
             this.ping();
-        }, 60000); // 1 minutes in milliseconds
+        }, 30000); // 30 seconds in milliseconds
     }
 
     async exportEnviroQue(enviro_post: any) {
@@ -304,7 +304,6 @@ export class QueuePage implements OnInit {
                 {
                     if (enviro_post.offence_images.length > 1)
                     {
-                        // let offence_images_length = enviro_post.offence_images.length;
                         this.presentAlert('Processing', 'please Wait! Network error, we are compressing your image');
                         
                         enviro_post = this.data.spliceOffenceImageEnviroQue(enviro_post)
@@ -327,8 +326,14 @@ export class QueuePage implements OnInit {
 
     authFail(enviro_post: any)
     {
-        this.auth.autoLogin();
+
+        if (this.auth.isLoggedIn() == false)
+        {
+            this.auth.autoLogin();
+        }
+                    
         this.submitFPN(enviro_post);
+
     }
     
 

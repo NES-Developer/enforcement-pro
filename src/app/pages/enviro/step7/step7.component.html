@@ -37,7 +37,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" [(ngModel)]="enviro_post.notebook_entries.height_in_feet" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="text" maxlength="250" [(ngModel)]="enviro_post.notebook_entries.height_in_feet" (ionChange)="saveEnviroData()"></ion-input>
 </ion-item>
 
 <!-- Height in Inch Text -->
@@ -47,7 +47,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" [(ngModel)]="enviro_post.notebook_entries.height_in_inch" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="text" maxlength="250" [(ngModel)]="enviro_post.notebook_entries.height_in_inch" (ionChange)="saveEnviroData()"></ion-input>
 </ion-item>
 
 <!-- Build Select -->
@@ -85,7 +85,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" [(ngModel)]="enviro_post.notebook_entries.distance_from_offender" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="text" maxlength="250" [(ngModel)]="enviro_post.notebook_entries.distance_from_offender" (ionChange)="saveEnviroData()"></ion-input>
 </ion-item>
 
 <!-- Distinguishing Features Text -->
@@ -95,7 +95,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" [(ngModel)]="enviro_post.notebook_entries.distinguishing_features" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="text" maxlength="250" [(ngModel)]="enviro_post.notebook_entries.distinguishing_features" (ionChange)="saveEnviroData()"></ion-input>
 </ion-item>
 
 <!-- Nearest bin Text -->
@@ -105,7 +105,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" [(ngModel)]="enviro_post.notebook_entries.nearest_bin" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="text" maxlength="250" [(ngModel)]="enviro_post.notebook_entries.nearest_bin" (ionChange)="saveEnviroData()"></ion-input>
 </ion-item>
 
 <!-- were Text -->
@@ -141,7 +141,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" [(ngModel)]="enviro_post.notebook_entries.offender_comments" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="text" maxlength="250" [(ngModel)]="enviro_post.notebook_entries.offender_comments" (ionChange)="saveEnviroData()"></ion-input>
 </ion-item>
 
 <!-- Police Comments Text -->
@@ -151,7 +151,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" [(ngModel)]="enviro_post.notebook_entries.police_comments" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="text" maxlength="250" [(ngModel)]="enviro_post.notebook_entries.police_comments" (ionChange)="saveEnviroData()"></ion-input>
 </ion-item>
 
 <!-- BWC Assest Text -->
@@ -161,7 +161,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" [(ngModel)]="enviro_post.notebook_entries.bwv_assest" (ionChange)="saveEnviroData()"></ion-input>
+    <ion-input type="text" maxlength="250" [(ngModel)]="enviro_post.notebook_entries.bwv_assest" (ionChange)="saveEnviroData()"></ion-input>
 </ion-item>
 
 <hr>
@@ -264,8 +264,8 @@
     </ion-label>
 </ion-item>
 <ion-item *ngIf="enviro_post.notebook_entries.is_witness_available === 'Yes'">
-    <ion-input type="text"  (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.notebook_entries.witness_name"></ion-input>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.notebook_entries.witness_phone"></ion-input>
+    <ion-input type="text" maxlength="250"  (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.notebook_entries.witness_name"></ion-input>
+    <ion-input type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.notebook_entries.witness_phone"></ion-input>
 </ion-item>
 
 <!-- Witness Detail 2 Text -->
@@ -275,7 +275,7 @@
     </ion-label>
 </ion-item>
 <ion-item *ngIf="enviro_post.notebook_entries.is_witness_available === 'Yes'">
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.notebook_entries.witness_address"></ion-input>
+    <ion-input type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.notebook_entries.witness_address"></ion-input>
 </ion-item>
 
 <!-- Witness Statement Select -->

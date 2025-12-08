@@ -21,6 +21,7 @@ import { ZoneDetection } from '../../models/zone-detection';
 import { ConstantsService } from '../../services/constants.service';
 import { User } from '../../models/user';
 import { App } from '@capacitor/app';
+import { EnviroPost } from 'src/app/models/enviro';
 
 @Component({
     selector: 'app-setting',
@@ -75,6 +76,11 @@ export class SettingPage implements OnInit {
         await this.data.init();
 
         this.init();
+
+        this.ping();
+        setInterval(() => {
+            this.ping();
+        }, 30000); // 30 seconds in milliseconds
     }
 
     blockBackButton() {
@@ -252,12 +258,10 @@ export class SettingPage implements OnInit {
 
         this.api_app_version = this.data.getApiAppVersion();
         this.api_app_url = this.data.getApiAppVersion();
-        // console.log(this.site_id);
 
         this.sites = this.data.getSites();
         this.zones = this.data.getZones();
 
-        // console.log(this.app_log.device_id );
         if (this.data.checkAppLog()) {
             this.app_log = this.data.getAppLog();
             this.device_id = this.app_log.device_id;
@@ -376,8 +380,18 @@ export class SettingPage implements OnInit {
         App.exitApp(); // Force closes the app
     }
 
+    cancelEnvio() {
+        let enviro_post = new EnviroPost();
+        this.data.setEnviroPost(enviro_post);
+    }
+
+    getEnviroSizeInBytes(): number {
+        let enviro_data = this.data.getEnviroPost();
+        const json = JSON.stringify(enviro_data);
+        return new Blob([json]).size; // gives exact byte size
+    }    
+
     ZoneDetection() {
-        this.ping();
 
         let zone_detection = new ZoneDetection();
 

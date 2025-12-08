@@ -144,7 +144,7 @@ import { OnDestroy } from '@angular/core';
         this.ping();
         setInterval(() => {
             this.ping();
-        }, 60000); // 1 minutes in milliseconds
+        }, 30000); // 30 seconds in milliseconds
     }
 
     getFPNData(): void {
@@ -595,12 +595,8 @@ import { OnDestroy } from '@angular/core';
                             string: this.fpn.fpn_number
                         });
 
-
-                        // Hard reset + go to step 1, and lock form until user starts a new one
-
                         this.loading.hideLoading();
                         
-                        // this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + this.fpn.fpn_number + ' has been copied to your clipboard. Remember to capture Notebook'); 
                         this.isSubmitting = false;
 
                         this.cancel();
@@ -635,7 +631,6 @@ import { OnDestroy } from '@angular/core';
                             this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
 
                         }
-                        // this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
                     } 
                     else 
                     {

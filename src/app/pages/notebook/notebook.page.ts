@@ -142,7 +142,7 @@ export class NotebookPage implements OnInit {
         this.ping();
         setInterval(() => {
             this.ping();
-        }, 60000); // 1 minutes in milliseconds
+        }, 30000); // 30 seconds in milliseconds
     }
 
     validator(): boolean {

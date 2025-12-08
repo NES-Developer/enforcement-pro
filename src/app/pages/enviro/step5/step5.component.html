@@ -33,7 +33,7 @@
       </div>
   </ion-content>
 <ion-item> 
-    <ion-input #firstInput type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_location"></ion-input>
+    <ion-input #firstInput type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_location"></ion-input>
 </ion-item>
 
 <ion-item>
@@ -64,7 +64,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town_area"></ion-input>
+    <ion-input type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town_area"></ion-input>
 </ion-item>
 
 <!-- POI Text -->
@@ -74,7 +74,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-input #firstInput type="text" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi"></ion-input>
+    <ion-input #firstInput type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi"></ion-input>
 </ion-item>
 
   <!-- Poi Prefix Select -->
