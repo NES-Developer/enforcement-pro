@@ -36,27 +36,39 @@ export class LoginPage implements OnInit {
         
     ) {
         this.login = new Login();
+        this.loadData();
 
-        this.token = this.data.getToken();
 
         this.platform.ready().then(() => {
             this.blockBackButton();
-        });
-
-        
+        });   
     }
 
-    ngOnInit() {
-        // this.auth.isLoggedIn();
+    loadData()
+    {
+        this.token = this.data.getToken();
+    }
+
+    async ngOnInit() {
+        this.loading.showLoading();
+
+        await this.data.init();
+
+
+        this.init();
+
         this.loading.hideLoading();
-        //alert(this.auth.userLoggedIn());
+
     }
 
     init() {
-        if (this.token !== '')
-        {
-            this.router.navigate(['/dashboard']);
-        }
+        // setTimeout(() => {
+            // if (this.token !== '')
+            // {
+            //     this.router.navigate(['/site']);
+            // }
+        // }, 5000);
+
     }
 
     onSubmit(event: Event) {

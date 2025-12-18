@@ -117,13 +117,15 @@ export class AuthService {
                     );
                 }
             }
-            else 
-            {
-                // return true;
-            }
-        } else {
-            // return true;
+            // else 
+            // {
+            //     // return true;
+            // }
         }
+        //  else 
+        //  {
+        //     // return true;
+        // }
     }
 
     isLoggedIn()

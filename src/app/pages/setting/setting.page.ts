@@ -321,33 +321,10 @@ export class SettingPage implements OnInit {
     ping() {
         this.api.postTrack(this.app_log).subscribe({
             next: (response) => {
-                // console.log('Response:', response);
-                // Handle the response here
-                if(response.success === false) 
-                {
-                    let message = response.message + " (Please Edit)";
-                    this.presentAlert('Error', 'Try ensurng Device details are provided. If still unsuccessful attempt Auto-Login.');
-                } else {
-                    this.presentAlert('Success', 'Pinged');
-                }
+                
             },
             error: (error) => {
-                if (error.status == 500)
-                {
-                    this.presentAlert('Server Error', 'Please report error.');
-                } 
-                else if (error.status == 0)
-                {
-                    this.presentAlert('Network Error', 'No internet connection. Please find better reception and try again.');
-                } 
-                else if (error.status == 401) {
-                    this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
-                    this.auth.autoLogin(); // Optional: auto re-login if your app supports it
-                } 
-                else 
-                {
-                    this.presentAlert('Error', error.message);
-                } 
+                
             }
         });
     }

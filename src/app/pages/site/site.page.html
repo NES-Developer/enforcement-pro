@@ -18,22 +18,14 @@
     <ion-item>
         <ion-row>
             <ion-col>
-                <ion-button (click)="refresh()">
-                    <ion-icon name="refresh"></ion-icon> Refresh
+                <ion-button *ngIf="selected_site" (click)="navigate('/dashboard')">
+                    <ion-icon name="home"></ion-icon>
                 </ion-button>
-            <!-- <ion-col>
-                <ion-button (click)="navigate('/dashboard')">
-                    <ion-icon name="home"></ion-icon> Home
-                </ion-button>
-            </ion-col> -->
                 <ion-button (click)="logout()">
                     <ion-icon name="log-out"></ion-icon>
                 </ion-button>
             </ion-col>
         </ion-row>
-
-        
-
     </ion-item>
   
     <!-- Search Bar -->

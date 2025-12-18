@@ -839,6 +839,7 @@ export class DataService {
 
     removeAllData(): void {
         // Clear all private arrays
+        this.token = '';
         this.selected_site = null;
         this.selected_zone = null;
 
@@ -852,6 +853,8 @@ export class DataService {
         this.enviro_post = new EnviroPost();
         this.app_log = new AppLog();
         this.login = new Login();
+        this.user = new User();
+        
 
         this.enviro_que = [];
         this.address_verifed_by = [];
@@ -895,6 +898,9 @@ export class DataService {
         this.setOffenceGroups(this.offence_groups);
         this.setOffences(this.offences);
         this.setLastFpnId(0);
+
+        this.setToken(this.token);
+        this.setUser(this.user);
 
     }
 

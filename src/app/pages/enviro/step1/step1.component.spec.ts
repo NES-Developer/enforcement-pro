@@ -14,7 +14,7 @@ describe('Step1Component', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(Step1Component);
-    component = fixture.componentInstance;
+    component = fixture.componentInstance;city
     fixture.detectChanges();
   }));
 

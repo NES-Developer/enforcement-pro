@@ -10,7 +10,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { Clipboard } from '@capacitor/clipboard';
 import { AlertController, Platform } from '@ionic/angular';
-import { isEmpty } from 'rxjs';
+import { Observable, Subscriber, isEmpty } from 'rxjs';
 
 import { AppLauncher } from '@capacitor/app-launcher';
 import { LoadingService } from '../../services/loading.service';
@@ -23,7 +23,7 @@ import { EnviroPost } from '../../models/enviro';
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { OnDestroy } from '@angular/core';
-import { Site } from 'src/app/models/site';
+import { Site } from '../../models/site';
 
 @Component({
   selector: 'app-dashboard',
@@ -31,7 +31,11 @@ import { Site } from 'src/app/models/site';
   styleUrls: ['./dashboard.page.scss'],
 })
 
-export class DashboardPage implements OnInit {
+export class DashboardPage implements OnInit, OnDestroy {
+
+    private checkLoginTimeoutId: any;
+    private refreshIntervalId: any;
+    private pingIntervalId: any;
 
     appStateListener: any;
 
@@ -45,7 +49,6 @@ export class DashboardPage implements OnInit {
     user: User;
     selected_site: any = null; // Variable to hold selected site
 
-    sites: any[] = [];
 
 
     constructor(
@@ -60,65 +63,38 @@ export class DashboardPage implements OnInit {
 
     ) {
         this.app_log = new AppLog();
+        this.user = new User();
 
-
-        this.token = this.data.getToken();
-        // this.sites = this.data.getSites();
-        this.url = this.data.getUrl();
-
-        this.selected_site = this.data.getSelectedSite();
-        this.user = this.data.getUser();
-        this.app_log = this.data.getAppLog();
-
-
-
-        // let is_logged_in = this.auth.isLoggedIn();
-        // if (is_logged_in == false) {
-        //     this.router.navigate(['/login']);
-        // }
-
-        // let has_site: boolean = this.data.checkSelectedSite();
-        // if (!has_site)
-        // {
-        //     this.route('site');
-        // }
-        // else {
-        //     this.selected_site = this.data.getSelectedSite();
-        // }
-
+        this.loadData();
 
         this.platform.ready().then(() => {
             this.blockBackButton();
         });
 
 
-        // if (user) 
-        // {
-        //     this.user = user;
-        // } else {
-        //     this.user = new User();
-        // }
-        // console.log(this.user)
+    }
 
+    loadData() {
+        this.user = this.data.getUser();
+        this.token = this.data.getToken();
+        this.url = this.data.getUrl();
+        this.selected_site = this.data.getSelectedSite();
+        this.app_log = this.data.getAppLog();
 
+        this.getRecentFPN();
+
+        // this.selected_site = this.data.getSelectedSite() || null;
+        // console.log(this.selected_site);
     }
 
     async ngOnInit() {
+        this.loading.showLoading();
+
         await this.data.init();
-
-
-         // Listen for when app comes back to foreground
-        //  this.appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-        //     if (isActive) {
-        //         window.location.reload();
-        //     }
-        // });
-
-        // if (user) 
-        // {
-        //     this.user = user;
-        // }
+ 
         this.init();
+
+        this.loading.hideLoading();
     }
 
     blockBackButton() {
@@ -157,42 +133,79 @@ export class DashboardPage implements OnInit {
 
 
     init() {
-        // this.auth.checkLoggedIn();
 
-        // if (this.data.checkSelectedSite() === false) {
-        //     this.navigate('site');
-        // } 
+        this.checkLoginTimeoutId = setTimeout(() => {
+            this.checkLoggedIn();
+        }, 4000);
         
+        this.refreshIntervalId = setTimeout(() => {
+            this.refresh();
+        }, 5000);
 
-        this.checkLoggedIn();
+        this.pingIntervalId = setInterval(() => {
+            this.refresh();
+            this.ping();
+        }, 30000);
 
-        this.loadData();
+    }
 
+    ngOnDestroy() {
+        this.clearTimers();
+    }
+    
+    ionViewWillLeave() {
+        // Ionic lifecycle: also clear when leaving this page
+        this.clearTimers();
+    }
 
-        // this.user = this.auth.getUser(); 
+    private clearTimers() {
+        if (this.checkLoginTimeoutId) {
+            clearTimeout(this.checkLoginTimeoutId);
+            this.checkLoginTimeoutId = null;
+        }
 
-        if (!this.selected_site?.id) {
-            this.router.navigate(['/site']);
-        } 
+        if (this.refreshIntervalId) {
+            clearInterval(this.refreshIntervalId);
+            this.refreshIntervalId = null;
+        }
+
+        if (this.pingIntervalId) {
+            clearInterval(this.pingIntervalId);
+            this.pingIntervalId = null;
+        }
+    }
+
+    checkSelectedSite() {
+        if (this.selected_site == null)
+        {
+            this.selected_site = this.data.getSelectedSite() || null;
+
+            if (this.selected_site == null)
+            {
+                this.checkLoggedIn();
+                this.route('/site');
+            }
+        }
     }
 
 
     checkLoggedIn() 
     {
-        this.auth.autoLogin();
+        if (this.token == '')
+        {
+            this.token = this.data.getToken();
+
+            if (this.token == '')
+            {
+                this.logout();
+
+            }
+        }
     }
 
 
     refresh () {
-        this.getRecentFPN();
-        this.user = this.data.getUser();
-        this.selected_site = this.data.getSelectedSite();
-
-        // if (this.data.checkSelectedSite() === false) {
-        //     this.navigate('site');
-        // } 
-
-        // window.location.reload();
+        this.loadData();
     }
 
     getImageUrl(prefix: string) { 
@@ -200,49 +213,56 @@ export class DashboardPage implements OnInit {
         return url;
     }
 
-    loadData() {
-        // this.user = this.data.getuser
-
-        if(this.data.checkAppLog()) {
-            this.ping();
-            setInterval(() => {
-                this.ping();
-            }, 60000); // 1 minutes in milliseconds
+    private getCurrentPosition(): any {
+        return new Observable((observer: Subscriber<any>) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position: any) => {
+            observer.next({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            });
+            observer.complete();
+            });
+        } else {
+            observer.error();
         }
-
-        this.getRecentFPN();
-
-        // this.selected_site = this.data.getSelectedSite() || null;
-        // console.log(this.selected_site);
+        });
     }
+    
 
     ping() {
-        if (this.data.checkAppLog()) {
+        if (this.token !== '') {
+
+            this.getCurrentPosition()
+            .subscribe((position: any) => {
+                this.app_log.lat = position.latitude;
+                this.app_log.lng = position.longitude;
+            });
+
+            this.app_log.user_id = this.user.id.toString();
+            this.app_log.type = 'ping';
+
             this.api.postTrack(this.app_log).subscribe({
                 next: (response) => {
-                    console.log('Response:', response);
+                    // console.log('Response:', response);
                 },
                 error: (error) => {
-                    console.error('Error:', error);
+                    // console.error('Error:', error);
                 }
             });
-        }
+        } 
     }
 
     getRecentFPN() {
-        this.loading.showLoading();
-        let user = this.auth.getUser();
-        if (user) {
-            this.api.getRecentFPNs(user.id).subscribe({
+        if (this.user.id > 0) {
+            this.api.getRecentFPNs(this.user.id).subscribe({
                 next: (response) => {
                     this.recent_fpns = response.data;
-                    console.log('Response:', response);
-                    this.loading.hideLoading();
+                    // console.log('Response:', response);
                 },
-                error: (error) => {
-                    console.error('Error:', error);
-                    this.loading.hideLoading();
-                }
+                // error: (error) => {
+                    // console.error('Error:', error);
+                // }
             });
         }
         
@@ -280,10 +300,6 @@ export class DashboardPage implements OnInit {
         this.data.setSelectedSite(this.selected_site);
     }
 
-    navigate(route: string){
-        this.router.navigate([route]);
-    }
-
     route(route: string) {
         this.router.navigate([route]);
     }
@@ -297,6 +313,7 @@ export class DashboardPage implements OnInit {
     
         if (queue.length == 0 && !outstandingNotebookEntries) {
             // Proceed with logout if there are no outstanding notebook entries
+            // this.clearTimers();
             this.loading.hideLoading();
             this.auth.logout();
         } else if (outstandingNotebookEntries) {

@@ -31,6 +31,8 @@ import { OnDestroy } from '@angular/core';
   })
   export class EnviroPage implements OnInit {
 
+    selected_site: any = null;
+
      
     appStateListener: any;
 
@@ -59,10 +61,7 @@ import { OnDestroy } from '@angular/core';
     ) {
         this.user = new User();
         this.app_log = new AppLog();
-
-
-        // this.assignOfficerId();
-        // this.auth.checkLoggedIn();
+        this.enviro_post = new EnviroPost();
 
         this.platform.ready().then(() => {
             this.blockBackButton();
@@ -70,61 +69,42 @@ import { OnDestroy } from '@angular/core';
 
         });
 
+        this.loadData();
 
-        // if (this.data.checkSelectedSite() === false) {
-        //     this.navigate('site');
-        // } 
 
-        if (!this.data.checkFPNData()){
-            this.getFPNData();
-        }
+        this.route2.queryParams.subscribe(params => {
+            let currentStep = params['currentStep'] ?? 1; // Fallback to 1 if null or undefined
 
-        this.enviro_post = new EnviroPost();
-
-        this.currentStep = 1;
-
-        let enviro_post = this.data.getEnviroPost();
-
-        if (enviro_post) {
-            this.enviro_post = enviro_post;
-
-            this.route2.queryParams.subscribe(params => {
-                let currentStep = params['currentStep'] ?? 1; // Fallback to 1 if null or undefined
-
-                if (currentStep !== 1)
-                {
-                    this.currentStep = parseInt(currentStep);
-                } else {
-                    this.currentStep = 1;
-                }
-            });
+            if (currentStep !== 1)
+            {
+                this.currentStep = parseInt(currentStep);
+            } 
+        });
             
-        } 
 
-        this.assignOfficerId();
 
     }
 
     async ngOnInit() {
-        await this.data.init();
+        this.loading.showLoading();
 
-        //  this.appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-        //     if (isActive) {
-        //         this.validateStep();
-        //     }
-        // });
-        
-        this.loadData();
+        await this.data.init();
+    
+        this.init();
+
+        this.loading.hideLoading();
+
     }
 
-    // ngOnDestroy() {
-    //     // 🔹 Always clean up listeners to avoid memory leaks
-    //     if (this.appStateListener) {
-    //       this.appStateListener.remove();
-    //     }
-    //   }
+    init() {
+        setTimeout(() => {
+            this.refresh();
+        }, 5000);
 
-
+        setInterval(() => {
+            this.ping();
+        }, 30000); // 30 seconds in milliseconds
+    }
 
     blockBackButton() {
         this.platform.backButton.subscribeWithPriority(9999, () => {});
@@ -139,18 +119,20 @@ import { OnDestroy } from '@angular/core';
     }
 
     loadData() {
+        this.selected_site = this.data.getSelectedSite();
+        this.enviro_post = this.data.getEnviroPost();
+        this.user = this.data.getUser();
+        this.assignOfficerId();
         this.app_log = this.data.getAppLog();
-
-        this.ping();
-        setInterval(() => {
-            this.ping();
-        }, 30000); // 30 seconds in milliseconds
+       
+        if (!this.data.checkFPNData()){
+            this.getFPNData();
+        } 
     }
 
     getFPNData(): void {
-        let site: any = this.data.getSelectedSite();
-        let site_id: number = site.id;
-        this.api.getFPNData(site_id).subscribe({
+        
+        this.api.getFPNData(this.selected_site.id).subscribe({
             next: (data) => {
 
                 this.data.removeEnviroLookUps();
@@ -209,10 +191,27 @@ import { OnDestroy } from '@angular/core';
                 
             },
             error: (error) => {
-                this.auth.autoLogin();
-                this.presentAlert('Error', 'Error refreshing data. Please try again after 5 Seconds.')
+
+                if (error.status == 500)
+                {
+                    this.presentAlert('Server Error', 'Please contact support');
+                } 
+                else if (error.status == 401) {
+                    this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
+                    this.auth.autoLogin(); 
+                    this.getFPNData();
+                } 
+                else if (error.status == 0)
+                {
+                    this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
+                } 
+                else 
+                {
+                    this.presentAlert('Error', error.message);
+                }  
             }
         });
+
     }
 
     extractOffence(site_offences: SiteOffence[]): Offence[] {
@@ -490,16 +489,6 @@ import { OnDestroy } from '@angular/core';
             this.currentStep = 5;
             return false;
         }
-        // if (!this.enviro_post.offence_datetime) {
-        //     this.presentAlert('Wait!', 'Please provide Offence timestamp.');
-        //     this.currentStep = 5;
-        //     return false;
-        // }
-        // if (!this.enviro_post.issue_datetime) {
-        //     this.presentAlert('Wait!', 'Please provide Issue timestamp.');
-        //     this.currentStep = 5;
-        //     return false;
-        // }
         if (this.enviro_post.enviro_issued_onspot == '') {
             this.presentAlert('Wait!', 'Please provide informantion of issue onspot');
             this.currentStep = 5;
@@ -515,10 +504,18 @@ import { OnDestroy } from '@angular/core';
             this.currentStep = 6;
             return false;
         }
+
+        //Set the officer as current logged in user
+        if (this.enviro_post.officer_id == 0)
+        {
+            if (this.user.id == 0)
+            {
+                this.user = this.data.getUser();
+            }
+            this.enviro_post.officer_id = this.user.id;
+        }
     
         return true;
-
-        // setTimeout(() => { window.location.reload(); }, 1250);
     }
     
     nextStep() {
@@ -599,6 +596,8 @@ import { OnDestroy } from '@angular/core';
                         
                         this.isSubmitting = false;
 
+                        this.presentAlert('Success', 'FPN submitted successfully.');
+
                         this.cancel();
                     }
 
@@ -613,9 +612,9 @@ import { OnDestroy } from '@angular/core';
                         this.presentAlert('Server Error', 'Please place in que and report error.');
                     } 
                     else if (error.status == 401) {
-                        this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
-                        this.auth.autoLogin(); 
-                        this.submitForm();
+                        this.presentAlert('Auth Failed', 'Please try auto-logging you in.');
+                        // this.auth.autoLogin(); 
+                        // this.submitForm();
                     } 
                     else if (error.status == 0)
                     {
@@ -636,8 +635,6 @@ import { OnDestroy } from '@angular/core';
                     {
                         this.presentAlert('Error', error.message);
                     }   
-
-
                 }
             });
 
@@ -653,15 +650,7 @@ import { OnDestroy } from '@angular/core';
     }
 
     refresh() {
-        this.loading.showLoading();
-
-        this.enviro_post = this.data.getEnviroPost();
-
-        this.getFPNData();
-
-        this.loading.hideLoading();
-
-        // this.ping();
+        this.loadData();
     }
 
     async presentAlert(header: string, message: string) {
@@ -674,13 +663,7 @@ import { OnDestroy } from '@angular/core';
             header: header,
             message: message,
             buttons: [
-                // {
-                //     text: primary_button_title,
-                //     handler: () => {
-                //         window.location.reload();
-
-                //     }
-                // },
+                
                 {
                     text: secondary_button_title,
                     handler: () => {
@@ -701,8 +684,6 @@ import { OnDestroy } from '@angular/core';
         this.data.setEnviroPost(this.enviro_post);
 
         this.router.navigate(['/tabs/fpn'], { queryParams: { currentStep: this.currentStep } });
-
-        this.presentAlert('Success', 'Successfully Captured FPN.'); 
     }
 
     private getCurrentPosition(): any {
@@ -722,17 +703,24 @@ import { OnDestroy } from '@angular/core';
     }
 
     ping() {
-        this.app_log = this.data.getAppLog();
         if (this.app_log == null) {
-            this.app_log = new AppLog();
+            this.app_log = this.data.getAppLog();
+            if (this.app_log == null) {
+                this.app_log = new AppLog();
+            }
         }
 
-        let user: any = this.auth.getUser();
+        if (this.app_log.user_id)
+        {
+            this.app_log.user_id = this.user.id.toString();
+        }
+        
+        if (this.app_log.site_id)
+        {
+            this.app_log.site_id = this.selected_site.id.toString();
+        }
 
-        this.app_log.user_id = user.id.toString();
-
-        let site = this.data.getSelectedSite();
-        this.app_log.site_id = site.id.toString();
+        this.app_log.zone_id = this.enviro_post.zone_id.toString();
 
         this.getCurrentPosition()
             .subscribe((position: any) => {
@@ -788,7 +776,7 @@ import { OnDestroy } from '@angular/core';
             //this.assignOfficerId();
             let queue = this.data.getEnviroQue();
 
-            if (queue.length < 20) {            
+            if (queue.length < 25) {            
                 this.offenceSwitcherForserver();
                 this.assignOfficerId();
 
@@ -797,12 +785,13 @@ import { OnDestroy } from '@angular/core';
                 this.data.pushEnviroQue();
                 this.loading.hideLoading();
 
-                
+                this.presentAlert('Saved', 'FPN has been captured in Queue');
+
                 this.cancel();
 
             } else {
                 this.loading.hideLoading();
-                this.presentAlert('Error', 'Queue has exceeded 20, please submit. Submit some FPNs on queue to increase space.')
+                this.presentAlert('Error', 'Queue has exceeded 25, please submit. Submit some FPNs on queue to increase space.')
             }
         }
     }

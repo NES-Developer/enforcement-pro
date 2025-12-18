@@ -57,35 +57,20 @@ export class NotebookPage implements OnInit {
         private loading: LoadingService,
     ) 
     {
-        this.id = this.route2.snapshot.paramMap.get('id');
 
         this.user = new User();
-        this.user = this.data.getUser();
-
-        if (!this.data.checkFPNData()){
-            this.getFPNData();
-        }
+        this.enviro_post = new EnviroPost();
+        this.enviro_post.notebook_entries = new NotebookEntry();
+        this.notebook_entries = new NotebookEntry();
+        this.app_log = new AppLog();
 
         this.loadData();
 
+        this.id = this.route2.snapshot.paramMap.get('id');
+
         if (this.id == 0)
         {
-            let enviro_post = this.data.getEnviroPost();
-            if (enviro_post) 
-            {
-                this.enviro_post = enviro_post;
-            } 
-            else 
-            {
-                this.enviro_post = new EnviroPost();
-            }
-
-            if (this.enviro_post.notebook_entries == undefined || this.enviro_post.notebook_entries == null) 
-            {
-                this.enviro_post.notebook_entries = new NotebookEntry();
-                this.notebook_entries = new NotebookEntry();
-            }
-            else
+            if (this.enviro_post.notebook_entries !== undefined || this.enviro_post.notebook_entries !== null) 
             {
                 this.notebook_entries = this.enviro_post.notebook_entries;
             }
@@ -94,40 +79,42 @@ export class NotebookPage implements OnInit {
                 this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
             });
 
-
         } else
         {
-            this.notebook_entries = new NotebookEntry();
-            this.enviro_post = new EnviroPost();
-
             this.route2.queryParams.subscribe(params => {
                 this.fpn_number = params['fpn_number']; // Fallback to null if not present
             });
         }
-
-        // this.loadData();
         
-        this.app_log = new AppLog();
-
      }
 
-     ngOnInit(): void {
-
-        
+    async ngOnInit() {
+        await this.data.init();
+        this.init();
+    
     }
 
     ping() {
         if (this.data.checkAppLog()) {
             this.api.postTrack(this.app_log).subscribe({
                 next: (response) => {
-                    console.log('Response:', response);
                     
                 },
                 error: (error) => {
-                    console.error('Error:', error);
                 }
             });
         }
+    }
+
+    init()
+    {
+        setInterval(() => {
+            this.refresh();
+        }, 5000);
+
+        setInterval(() => {
+            this.ping();
+        }, 30000);
     }
 
     loadData() {
@@ -138,11 +125,11 @@ export class NotebookPage implements OnInit {
         this.ethnicities = this.data.getEthnicities();
         this.weather = this.data.getWeather();
         this.visibility = this.data.getVisibility();
+        this.user = this.data.getUser();                
 
-        this.ping();
-        setInterval(() => {
-            this.ping();
-        }, 30000); // 30 seconds in milliseconds
+        if (!this.data.checkFPNData()){
+            this.getFPNData();
+        }
     }
 
     validator(): boolean {
@@ -158,14 +145,6 @@ export class NotebookPage implements OnInit {
             this.presentAlert('Wait!', 'Please provide hair details.');
             return false;
         }
-        // if (this.notebook_entries.were == '') {
-        //     this.presentAlert('Wait!', 'Please provide were details.');
-        //     return false;
-        // }
-        // if (this.notebook_entries.did == '') {
-        //     this.presentAlert('Wait!', 'Please provide did details.');
-        //     return false;
-        // }
         if (this.notebook_entries.gender == '') {
             this.presentAlert('Wait!', 'Please provide offender Gender.');
             return false;
@@ -271,6 +250,41 @@ export class NotebookPage implements OnInit {
 
                         this.route('/tabs/fpn');
                     }
+                }, error: (error) => {
+
+                    // this.loading.hideLoading();
+                    this.isSubmitting = false;
+
+
+                    if (error.status == 500)
+                    {
+                        this.presentAlert('Server Error', 'Please place in que and report error.');
+                    } 
+                    else if (error.status == 401) 
+                    {
+                        this.presentAlert('Auth Failed', 'Please try auto-login.');
+                    } 
+                    else if (error.status == 0)
+                    {
+                        if (this.enviro_post.offence_images.length > 1)
+                        {
+                            let offence_images_length = this.enviro_post.offence_images.length;
+                            this.presentAlert('Processing', 'please Wait! Network error, we are compressing your image');
+                            this.data.spliceOffenceImageEnviroPost(this.enviro_post.offence_images[offence_images_length - 1]);
+                            this.enviro_post = this.data.getEnviroPost();
+
+                            this.submitFpn();
+                        } else if (this.enviro_post.offence_images.length == 1) 
+                        {
+                            //Compress the image as its base64
+                            this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
+
+                        }
+                    } 
+                    else 
+                    {
+                        this.presentAlert('Error', error.message);
+                    }   
                 }
             });
         }
@@ -302,7 +316,7 @@ export class NotebookPage implements OnInit {
                     } else {
                         this.isSubmitting = false;
                         this.presentAlert('Success', 'Notebook entry captured');
-                        this.route('');
+                        this.route('dashboard');
                         
                     }
                 }, error: (error) => {
@@ -320,7 +334,9 @@ export class NotebookPage implements OnInit {
                     } 
                     else if (error.status == 0)
                     {
-                        this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
+                        
+                        this.presentAlert('Network Error', 'No internet connection. Please find better reception and try again.');
+
                     } 
                     else 
                     {
@@ -354,9 +370,9 @@ export class NotebookPage implements OnInit {
     }
 
     refresh() {
-        this.loading.showLoading();
-        this.getFPNData();
-        this.loading.hideLoading();
+        // this.loading.showLoading();
+        this.loadData();
+        // this.loading.hideLoading();
         // window.location.reload();
     }
 
@@ -417,7 +433,7 @@ export class NotebookPage implements OnInit {
 
             },
             error: (error) => {
-                this.loadData();
+                // this.loadData();
 
                 if (error.status == 500)
                 {
@@ -430,7 +446,8 @@ export class NotebookPage implements OnInit {
                 else 
                 {
                     this.presentAlert('Error', error.message);
-                }             }
+                }             
+            }
         });
     }
 

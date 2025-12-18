@@ -22,7 +22,8 @@ export class Step1Component  implements OnInit {
     filteredOffences: Offence[] = [];
     offenceGroups: OffenceGroup[] = [];
 
-    selected_zone: any;
+    selected_site: any = null;
+    selected_zone: any = null;
 
     zones: Zone[] = [];
     sites: Site[] = [];
@@ -37,21 +38,24 @@ export class Step1Component  implements OnInit {
         private data:DataService,
         private fpnPage: EnviroPage,
     ) {
-        this.app_log = this.data.getAppLog();
-        if (this.app_log == null)
-        {
-            this.app_log = new AppLog();
-        }
-
-        if (!this.data.checkFPNData()){
-            this.fpnPage.getFPNData();
-        }
+        this.app_log = new AppLog();
 
         this.loadData();
     }
 
-    ngOnInit(): void {
-        
+    async ngOnInit() {
+        this.init();
+    }
+
+    init() {
+        this.enviro_post.site_id = this.selected_site.id;
+        this.enviro_post.zone_id = this.selected_zone.id;
+        this.app_log.zone_id = this.selected_zone.id;
+        this.data.setAppLog(this.app_log);
+
+        if (this.offences && this.enviro_post && this.enviro_post.offence_type_id) {
+            this.filterOffences();
+        }   
     }
 
     ZoneDetection() {
@@ -88,31 +92,28 @@ export class Step1Component  implements OnInit {
     }
 
     loadData() {
-        let enviro_post =  this.data.getEnviroPost();
-        this.selected_zone = this.data.getSelectedZone();
 
-        // this.enviro_post
+        this.enviro_post =  this.data.getEnviroPost();
+        this.selected_site = this.data.getSelectedSite();
+        
+        this.selected_zone = this.data.getSelectedZone();
+        
+
+        this.app_log = this.data.getAppLog();
+        
+
+        if (!this.data.checkFPNData()){
+            this.fpnPage.getFPNData();
+        }
 
         this.offenceGroups = this.data.getOffenceGroup();
         this.offences = this.data.getOffence();
         this.zones = this.data.getZones();
         this.sites = this.data.getSites();
 
-        if (enviro_post !== null) {
-            this.enviro_post = enviro_post;
-        }
-
-        let selected_site: Site = this.data.getSelectedSite();
-        this.enviro_post.site_id = selected_site.id;
-
-        if (this.offences && this.enviro_post && this.enviro_post.offence_type_id) {
-            this.filterOffences();
-        }    
-
-        // if (this.enviro_post.)
+         
 
         this.getOffenceById(this.enviro_post.offence_id);
-        console.log(0);
 
     }
 
@@ -141,10 +142,7 @@ export class Step1Component  implements OnInit {
     saveEnviroData() {
         this.data.setEnviroPost(this.enviro_post);
 
-        if (this.app_log == null)
-        {
-            this.app_log = new AppLog();
-        }
+        
         this.app_log.zone_id = this.enviro_post.zone_id.toString();
         this.data.setAppLog(this.app_log);
     }

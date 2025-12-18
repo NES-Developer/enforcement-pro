@@ -13,6 +13,7 @@ import { TicketService } from 'src/app/Service/ticket.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
+import { User } from 'src/app/models/user';
 
 @Component({
   selector: 'app-queue',
@@ -30,6 +31,7 @@ export class QueuePage implements OnInit {
     app_log: AppLog;
     isSubmitting: boolean = false;
 
+    user: User;
     html_bool: boolean = false;//xx
     html_string: SafeHtml = "";//xx
 
@@ -48,6 +50,9 @@ export class QueuePage implements OnInit {
         // this.auth.checkLoggedIn();
 
         this.app_log = new AppLog();
+        this.user = new User();
+
+        this.loadData();
 
         this.route2.queryParams.subscribe(params => {
             this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
@@ -55,13 +60,26 @@ export class QueuePage implements OnInit {
 
     }
 
-    ngOnInit(): void {
-        this.loadData();
+    async ngOnInit() {
+
+        this.loading.showLoading();
+
+        await this.data.init();
+
+        this.init();
+
+        this.loading.hideLoading();
+        
     }
 
-    loadData() {
+    loadData()
+    {
         this.enviro_que =  this.data.getEnviroQue();
+        this.user = this.data.getUser();
+        this.app_log = this.data.getAppLog();
+    }
 
+    init() {
         this.enviro_que_addition = this.enviro_que;
         for (let x=0; x<this.enviro_que.length; x++) {
             const rawHtml = `` // Assuming the raw HTML exists in ``
@@ -257,6 +275,12 @@ export class QueuePage implements OnInit {
       this.isSubmitting = true;
       this.loading.showLoading();
 
+      //last validation before submission
+      if (enviro_post.officer_id == 0 )
+      {
+        enviro_post.officer_id = this.user.id;
+      }
+
       this.api.postFPN(enviro_post).subscribe({
             next: (response) => {
 
@@ -296,8 +320,8 @@ export class QueuePage implements OnInit {
                     this.presentAlert('Server Error', 'Please place in que and report error.');
                 } 
                 else if (error.status == 401) {
-                    this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
-                    this.authFail(enviro_post); 
+                    this.presentAlert('Auth Failed', 'Server has logged you off. Please Auto Login.');
+                    // this.authFail(enviro_post); 
                     // this.submitFPN(enviro_post);
                 } 
                 else if (error.status == 0)

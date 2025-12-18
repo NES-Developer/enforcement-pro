@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AuthService } from '../../services/enforcementpro/auth.service';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { Router } from '@angular/router';
-import { AlertController } from '@ionic/angular';
+import { AlertController, Platform } from '@ionic/angular';
 import { LoadingService } from '../../services/loading.service';
 import { Offence } from '../../models/offence';
 import { OffenceGroup } from '../../models/offence-group';
@@ -13,18 +13,23 @@ import { Visibility } from '../../models/visibility';
 import { Weather } from '../../models/weather';
 import { EnviroPost } from 'src/app/models/enviro';
 import { interval } from 'rxjs';
+import {Site  } from '../../models/site';
+import { User } from 'src/app/models/user';
 
 @Component({
   selector: 'app-site',
   templateUrl: './site.page.html',
   styleUrls: ['./site.page.scss'],
 })
-export class SitePage implements OnInit 
+export class SitePage implements OnInit, OnDestroy 
 {
 
+    private checkLoginTimeoutId: any;
+    private refreshIntervalId: any;
+
     sites: any[] = [];
-    user: any = null;
-    selected_site: any; // Variable to hold selected site
+    user: User;
+    selected_site!: Site; // Variable to hold selected site
     search_site: string = '';
     url: string = '';
     filteredSites: any[] = [];
@@ -39,17 +44,34 @@ export class SitePage implements OnInit
         private data: DataService,
         private router: Router,
         private alertController: AlertController,
-        private loading:LoadingService
-    ) {
-        this.checkLoggedIn();
+        private loading:LoadingService,
+        private platform: Platform
 
-        this.sites = this.data.getSites();
-    
+    ) {
+
+        this.user = new User();
+        // this.selected_site = new Site();
+        this.loadData();
+
+        this.platform.ready().then(() => {
+            this.blockBackButton();
+        });
+
 
     }
 
-    ngOnInit(): void {
-        this.init();      
+    async ngOnInit() {
+        this.loading.showLoading();
+
+        await this.data.init();
+        this.init();
+
+        this.loading.hideLoading();
+
+    }
+
+    blockBackButton() {
+        this.platform.backButton.subscribeWithPriority(9999, () => {});
     }
 
     logout(): void {
@@ -64,19 +86,64 @@ export class SitePage implements OnInit
         }
     }
 
-    init() 
-    {        
-        this.loadData();
+    init() {
+
+        // setTimeout(() => {
+        //     this.checkLoggedIn();
+        // }, 4000);
+
+        // setInterval(() => {
+        //     this.refresh();
+        // }, 5000);
+
+
+        this.checkLoginTimeoutId = setTimeout(() => {
+            this.checkLoggedIn();
+        }, 4000);
         
+        this.refreshIntervalId = setInterval(() => {
+            this.refresh();
+        }, 5000);
+
     }
+
+    ngOnDestroy() {
+        this.clearTimers();
+    }
+    
+    ionViewWillLeave() {
+        // Ionic lifecycle: also clear when leaving this page
+        this.clearTimers();
+    }
+
+    private clearTimers() {
+        if (this.checkLoginTimeoutId) {
+            clearTimeout(this.checkLoginTimeoutId);
+            this.checkLoginTimeoutId = null;
+        }
+
+        if (this.refreshIntervalId) {
+            clearInterval(this.refreshIntervalId);
+            this.refreshIntervalId = null;
+        }
+    }
+
 
     checkLoggedIn() 
     {
-        this.auth.autoLogin();
+        if (this.token == '')
+        {
+            this.token = this.data.getToken();
+
+            if (this.token == '')
+            {
+                this.logout();
+            }
+        }
     }
 
     refresh() {
-        this.getSites();
+        this.loadData();
     }
 
     getSites(): void {
@@ -85,8 +152,8 @@ export class SitePage implements OnInit
             next: (data) => {
                 this.sites = data.data;
                 this.data.setSites(this.sites);
-                this.selected_site = this.data.getSelectedSite() || null;
-                this.url = this.data.getUrl();
+                // this.selected_site = this.data.getSelectedSite();
+                // this.url = this.data.getUrl();
                 // this.loadData();
             },
             error: (error) => {
@@ -94,17 +161,16 @@ export class SitePage implements OnInit
                 {
                     this.presentAlert('Server Error', 'Please report error.');
                 } 
-                else if (error.status == 401) {
-                    this.presentAlert('Processing', 'Retrieving data.');
+                else if (error.status == 401) 
+                {
+                    // this.presentAlert('Processing', 'Retrieving data. '+this.token);
 
-                    this.checkLoggedIn();
-
-                    if (this.auth.isLoggedIn())
+                    // this.auth.autoLogin();
+                    if (this.token == '')
                     {
-                        this.loadData();
-                    } else {
-                        this.checkLoggedIn();
+                        this.auth.autoLogin();
                     }
+                    
                 } 
                 else if (error.status == 0)
                 {
@@ -119,11 +185,18 @@ export class SitePage implements OnInit
     }
 
     loadData() {
-        let has_sites: boolean = false;
 
-        this.user = this.auth.getUser();
+        this.token = this.data.getToken();
+        this.user = this.auth.getUser() || new User();
         this.selected_site = this.data.getSelectedSite() || null;
         this.url = this.data.getUrl();
+        this.assignSites();
+
+    }
+
+    assignSites() {
+
+        let has_sites: boolean = false;
 
         if (this.sites.length == 0) 
         {
@@ -134,16 +207,18 @@ export class SitePage implements OnInit
                 has_sites = false;
             } else {
                 has_sites = true;
-            }
-
-           
-        } 
+            }       
+        } else {
+            has_sites = true;
+        }
         
         if (!has_sites) {
 
             this.getSites();
         }
     }
+
+
 
     getImageUrl(prefix: string) { 
         let url: string = this.url + '/' + prefix;
@@ -166,10 +241,11 @@ export class SitePage implements OnInit
         this.data.setEnviroPost(enviro_post);
 
         this.getFPNData();
+
+        this.loading.hideLoading();
     }
 
     getFPNData(): void {
-        this.loading.showLoading();
 
         let site_id: number = 0;
 
@@ -238,7 +314,6 @@ export class SitePage implements OnInit
                 enviro_post.site_id = site_id;
                 this.data.setEnviroPost(enviro_post);
 
-                this.loading.hideLoading();
 
                 // this.router.navigate(['/dashboard']);
 
@@ -246,7 +321,6 @@ export class SitePage implements OnInit
                 
             },
             error: (error) => {
-                this.loading.hideLoading();
 
                 // this.presentAlert('Error', error.message);
                 // console.error('Error 1:', error);
@@ -255,10 +329,10 @@ export class SitePage implements OnInit
                 {
                     this.presentAlert('Server Error', 'Please report error.');
                 } 
-                else if (error.status == 401) {
-                    this.presentAlert('Processing', 'Retrieving site data.');
-                    this.auth.autoLogin(); 
-                    this.getFPNData();
+                else if (error.status == 401) 
+                {
+                    this.presentAlert('Auth Failed', 'Please try Auto Login.');
+                    // this.getFPNData();
                 } 
                 else if (error.status == 0)
                 {
