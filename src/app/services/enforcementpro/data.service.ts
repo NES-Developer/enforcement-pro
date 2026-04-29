@@ -837,7 +837,7 @@ export class DataService {
 
     }
 
-    removeAllData(): void {
+    async removeAllData(): Promise<void> {
         // Clear all private arrays
         this.token = '';
         this.selected_site = null;
@@ -870,43 +870,12 @@ export class DataService {
 
         this.zones = [];
 
-        // this.wipeIonicStorage();
-
-        // Clear localStorage
-        this.setSelectedSite(this.selected_site);
-        this.setLogin(this.login);
-        this.setDynamicFeildData(this.dynamic_feilds);
-        this.setSites(this.sites);
-        this.setServiceRequest(this.service_request);
-        this.setOffenceType(this.offence_types);
-        this.setAppLog(this.app_log);
-        this.setEnviroPost(this.enviro_post);
-        this.setEnviroQue(this.enviro_que);
-        this.setSalutations(this.salutations);
-        this.setBuilds(this.builds);
-        this.setHairColors(this.hair_colours);
-        this.setZones(this.zones);
-        this.setOffenceHow(this.offence_how);
-        this.setOffenceLocationSuffix(this.offence_location_suffix);
-        this.setAddressVerifiedBy(this.address_verifed_by);
-        this.setEthnicities(this.ethnicities);
-        this.setIDShown(this.id_shown);
-        this.setWeather(this.weather);
-        this.setVisibility(this.visibility);
-        this.setPOIPrefix(this.poi_prefix);
-        this.setSiteOffences(this.site_offences);
-        this.setOffenceGroups(this.offence_groups);
-        this.setOffences(this.offences);
-        this.setLastFpnId(0);
-
-        this.setToken(this.token);
-        this.setUser(this.user);
-
+        await this.clearSessionData();
     }
 
-    // async wipeIonicStorage()
-    // {
-    //     // now clear everything from Ionic Storage
-    //     await this._storage?.clear();
-    // }
+    async clearSessionData(): Promise<void> {
+        localStorage.clear();
+        sessionStorage.clear();
+        await this._storage?.clear();
+    }
 }

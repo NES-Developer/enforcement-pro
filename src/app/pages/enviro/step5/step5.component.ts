@@ -84,8 +84,8 @@ export class Step5Component  implements OnInit, AfterViewInit {
         this.enviro_post.offence_datetime = defaultDate;
         this.enviro_post.issue_datetime = defaultDate;
 
-        if (this.enviro_post.enviro_issued_onspot !== 'no') {
-            this.enviro_post.enviro_issued_onspot = 'yes';
+        if (this.enviro_post.fpn_issued !== 0) {
+            this.enviro_post.fpn_issued = 1;
         }
     }
 

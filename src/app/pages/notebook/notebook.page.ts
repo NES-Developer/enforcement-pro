@@ -19,7 +19,10 @@ import { SiteOffence } from '../../models/site-offence';
 import { Ethnicity } from '../../models/ethnicity';
 import { LoadingService } from '../../services/loading.service';
 import { User } from 'src/app/models/user';
-
+import { CapacitorConfig } from '@capacitor/cli';
+import { AlignmentModeEnum, SunmiPrinter } from '@kduma-autoid/capacitor-sunmi-printer';
+import { CapacitorHttp, HttpResponse } from '@capacitor/core';
+import { BackgroundTaskService } from '../../services/background-task.service';
 
 @Component({
   selector: 'app-notebook',
@@ -39,6 +42,7 @@ export class NotebookPage implements OnInit {
     app_log: AppLog;
     user: User;
 
+    baseUrl: string = 'https://app.enforcementpro.co.uk/';
 
     ethnicities: Ethnicity[] = [];
     weather: Weather[] = [];
@@ -55,6 +59,7 @@ export class NotebookPage implements OnInit {
         private route2: ActivatedRoute,
         private router: Router,
         private loading: LoadingService,
+        private backgroundTasks: BackgroundTaskService,
     ) 
     {
 
@@ -108,11 +113,11 @@ export class NotebookPage implements OnInit {
 
     init()
     {
-        setInterval(() => {
+        this.backgroundTasks.setInterval(() => {
             this.refresh();
         }, 5000);
 
-        setInterval(() => {
+        this.backgroundTasks.setInterval(() => {
             this.ping();
         }, 30000);
     }
@@ -194,25 +199,81 @@ export class NotebookPage implements OnInit {
         }
     }
 
-    // assignOfficerId() 
-    // {
-    //     if (this.enviro_post.officer_id == 0) {
-    //         if (this.user && this.user.id > 0) {
-    //             this.app_log.user_id = this.user.id.toString();
-    //             this.enviro_post.officer_id = this.user.id;
-    //         } else {
-    //             this.user = this.data.getUser();
-    //             if (this.user.id > 0) {
-    //                 this.app_log.user_id = this.user.id.toString();
-    //                 this.enviro_post.officer_id = this.user.id;
-    //             }
-    //         }
-    //         this.data.setAppLog(this.app_log);
-    //         this.data.setEnviroPost(this.enviro_post);
-    //     }
-    // }
+    async printImageFromUrl(imageUrl: string) {
+        try {
+            // 1. Initialize the printer
+            await SunmiPrinter.printerInit();
+            console.log("Printer initialized...");
+    
+            // 2. Fetch the image via Native HTTP (Bypasses CORS)
+            // We use 'arraybuffer' to get the raw binary data of the image
+            const options = {
+                url: imageUrl,
+                responseType: 'arraybuffer' as const
+            };
+    
+            const response: HttpResponse = await CapacitorHttp.get(options);
+    
+            if (response.status !== 200) {
+                throw new Error(`Failed to download image. Status: ${response.status}`);
+            }
+    
+            // 3. Convert ArrayBuffer to Base64 for the Image object
+            // This allows us to load the image into a canvas for resizing
+            const base64String = response.data; // CapacitorHttp returns base64 for arraybuffer
+            const dataUrl = `data:image/png;base64,${base64String}`;
+    
+            // 4. Load the image into a hidden HTML Image element
+            const img = new Image();
+            img.src = dataUrl;
+    
+            await new Promise((resolve, reject) => {
+                img.onload = () => resolve(true);
+                img.onerror = (err) => reject(new Error("Canvas failed to load native image data"));
+            });
+    
+            // 5. Setup Canvas for Resizing (Strict 384px for Sunmi 58mm)
+            const canvas = document.createElement('canvas');
+            const TARGET_WIDTH = 384; 
+            const scaleFactor = TARGET_WIDTH / img.width;
+            
+            canvas.width = TARGET_WIDTH;
+            canvas.height = img.height * scaleFactor;
+    
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error("Could not create 2D Canvas context");
+    
+            // Use high-quality image smoothing
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+    
+            // 6. Draw/Resize the image
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+            // 7. Extract the final clean Base64 (No prefix)
+            const finalBase64 = canvas.toDataURL('image/png').split(',')[1];
+    
+            // 8. Execute Printing
+            await SunmiPrinter.setAlignment({ 
+                alignment: AlignmentModeEnum.CENTER 
+            });
+    
+            await SunmiPrinter.printBitmap({
+                bitmap: finalBase64
+            });
+    
+            // Feed paper so the user can tear it off
+            await SunmiPrinter.lineWrap({ lines: 4 });
+            
+            console.log("Printing completed successfully");
+    
+        } catch (error: any) {
+            console.error("Complete Print Error:", error);
+            // alert("Print Error: " + (error.message || "Unknown error"));
+        }
+    }
 
-    submitFpn() {
+    submitFpn(print: boolean) {
         if (this.isSubmitting) {
             return;
         }
@@ -241,6 +302,13 @@ export class NotebookPage implements OnInit {
                         Clipboard.write({
                             string: fpn.ticket
                         });
+
+                        if (print == true)
+                        {
+                            let ticket_image = this.baseUrl + fpn.ticket;
+
+                            this.printImageFromUrl(ticket_image);
+                        }
                         
                         this.data.spliceEnviroQue(this.enviro_post);
                         this.enviro_post = new EnviroPost();
@@ -273,7 +341,7 @@ export class NotebookPage implements OnInit {
                             this.data.spliceOffenceImageEnviroPost(this.enviro_post.offence_images[offence_images_length - 1]);
                             this.enviro_post = this.data.getEnviroPost();
 
-                            this.submitFpn();
+                            this.submitFpn(print);
                         } else if (this.enviro_post.offence_images.length == 1) 
                         {
                             //Compress the image as its base64
@@ -288,6 +356,20 @@ export class NotebookPage implements OnInit {
                 }
             });
         }
+    }
+
+    // Helper function to convert Blob to Base64 string
+    private blobToBase64(blob: Blob): Promise<string> {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64String = reader.result as string;
+            // Remove the data:image/png;base64, prefix if the plugin requires raw base64
+            resolve(base64String.split(',')[1]); 
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
     }
 
     submitForm () {
@@ -316,7 +398,7 @@ export class NotebookPage implements OnInit {
                     } else {
                         this.isSubmitting = false;
                         this.presentAlert('Success', 'Notebook entry captured');
-                        this.route('dashboard');
+                        this.route('/dashboard');
                         
                     }
                 }, error: (error) => {

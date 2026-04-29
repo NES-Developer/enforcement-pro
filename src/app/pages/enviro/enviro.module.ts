@@ -15,6 +15,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 // import { FPNPage } from '../../fpn.page';
 import { ExploreContainerComponentModule } from '../../explore-container/explore-container.module';
+import { NavBarModule } from '../../components/nav-bar/nav-bar.module';
 
 // import { SignaturePadModule } from '@lemonadejs/signature';
 // import SignaturePadModule from '@lemonadejs/signature';
@@ -36,6 +37,7 @@ import { Step7Component } from '../enviro/step7/step7.component';
     FormsModule,
     IonicModule,
     EnviroPageRoutingModule,
+    NavBarModule,
     ExploreContainerComponentModule
   ],
   declarations: [
@@ -50,7 +52,6 @@ import { Step7Component } from '../enviro/step7/step7.component';
 ]
 })
 export class EnviroPageModule {}
-
 
 
 

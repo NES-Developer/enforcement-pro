@@ -1,25 +1,13 @@
+
+
 <ion-header [translucent]="true">
-  <ion-toolbar>
-      <ion-row>
-          <ion-col>
-                <ion-button (click)="route('/queue')">
-                    <ion-icon name="time"></ion-icon>
-                </ion-button>
-                <ion-button (click)="refresh()">
-                    <ion-icon name="refresh"></ion-icon>
-                </ion-button>
-                <ion-button (click)="route('/dashboard')">
-                    <ion-icon name="home"></ion-icon>
-                </ion-button>
-                <ion-button (click)="route('/photo')">
-                    <ion-icon name="camera"></ion-icon>
-                    <ion-badge color="white">
-                        {{ enviro_post.offence_images.length !== null ? enviro_post.offence_images.length : 0 }}
-                    </ion-badge>
-                </ion-button>
-          </ion-col>
-      </ion-row>
-  </ion-toolbar>
+    <!-- Main content -->
+    <ion-router-outlet></ion-router-outlet>
+  
+    <app-nav-bar
+        [photoCount]="enviro_post?.offence_images?.length ?? 0"
+        [currentStep]="currentStep">
+    </app-nav-bar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
@@ -68,3 +56,6 @@
       </ion-row>
   </ion-toolbar>
 </ion-footer>
+
+
+

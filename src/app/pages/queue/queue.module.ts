@@ -7,12 +7,14 @@ import { IonicModule } from '@ionic/angular';
 import { QueuePageRoutingModule } from './queue-routing.module';
 
 import { QueuePage } from './queue.page';
+import { NavBarModule } from '../../components/nav-bar/nav-bar.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
+    NavBarModule,
     QueuePageRoutingModule
   ],
   declarations: [QueuePage]

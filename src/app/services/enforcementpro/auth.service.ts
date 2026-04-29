@@ -1,6 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, Subscriber } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { AlertController } from '@ionic/angular';
 
 import { Injectable } from '@angular/core';
@@ -10,6 +9,8 @@ import { Router } from '@angular/router'; // Import Router
 import { DataService } from './data.service';
 import { LoadingService } from '../loading.service';
 import { Login } from '../../models/login';
+import { AppLog } from '../../models/app-log';
+import { BackgroundTaskService } from '../background-task.service';
 // import { Site as SiteObj } from '../../models/site';
 
 @Injectable({
@@ -28,6 +29,7 @@ export class AuthService {
         private router: Router,
         private data: DataService,
         private loading:LoadingService,
+        private backgroundTasks: BackgroundTaskService,
         // private alertController: AlertController
 
     ) {
@@ -159,7 +161,7 @@ export class AuthService {
 
         if (this.token !== '')
         {
-            alert(1);
+            // alert(1);
             this.token = this.data.getToken();
             let hasSite: boolean = this.data.checkSites();
             // this.user = this.data.getUser();
@@ -242,16 +244,43 @@ export class AuthService {
     }
       
 
-    logout() {
+    async logout() {
+        this.sendLogoutInBackground();
+        this.backgroundTasks.clearAll();
+
         this.token = '';
         this.user = new User();
 
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        
-        this.data.removeAllData();
+        await this.data.removeAllData();
 
         this.router.navigate(['/login']);
+    }
+
+    private sendLogoutInBackground(): void {
+        const token = this.token || this.data.getToken();
+
+        if (token == '') {
+            return;
+        }
+
+        const appLog: AppLog = this.data.getAppLog() || new AppLog();
+        const url = `${this.baseUrl}/logout`;
+
+        const body = {
+            lat: appLog.lat || '0',
+            lng: appLog.lng || '0',
+            device_id: appLog.device_id || '0'
+        };
+
+        this.http.post(url, body, {
+            headers: new HttpHeaders({
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            })
+        }).subscribe({
+            next: () => {},
+            error: () => {}
+        });
     }
 
    

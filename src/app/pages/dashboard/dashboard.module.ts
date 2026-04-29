@@ -7,12 +7,14 @@ import { IonicModule } from '@ionic/angular';
 import { DashboardPageRoutingModule } from './dashboard-routing.module';
 
 import { DashboardPage } from './dashboard.page';
+import { NavBarModule } from '../../components/nav-bar/nav-bar.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
+    NavBarModule,
     DashboardPageRoutingModule
   ],
   declarations: [DashboardPage]

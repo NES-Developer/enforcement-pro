@@ -14,6 +14,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
 import { User } from 'src/app/models/user';
+import { CapacitorConfig } from '@capacitor/cli';
+// import { SunmiPrinter } from '@kduma-autoid/capacitor-sunmi-printer';
+import { SunmiPrinter, AlignmentModeEnum } from '@kduma-autoid/capacitor-sunmi-printer';
+import { CapacitorHttp, HttpResponse } from '@capacitor/core';
+import { BackgroundTaskService } from '../../services/background-task.service';
 
 @Component({
   selector: 'app-queue',
@@ -44,7 +49,8 @@ export class QueuePage implements OnInit {
         private loading:LoadingService,
         private auth: AuthService,
         private ticket: TicketService,
-        private sanitizer: DomSanitizer
+        private sanitizer: DomSanitizer,
+        private backgroundTasks: BackgroundTaskService
     ) {
 
         // this.auth.checkLoggedIn();
@@ -91,7 +97,7 @@ export class QueuePage implements OnInit {
         }
 
         this.ping();
-        setInterval(() => {
+        this.backgroundTasks.setInterval(() => {
             this.ping();
         }, 30000); // 30 seconds in milliseconds
     }
@@ -154,49 +160,7 @@ export class QueuePage implements OnInit {
     }
 
 
-    async clearFPNFolder() {
-        const folderName = 'FPNs';
-      
-        try {
-          // List files in FPNs folder
-          const listResult = await Filesystem.readdir({
-            path: folderName,
-            directory: Directory.Documents,
-          });
-      
-          // Accepts both forms: { files: ['file.json', ...] } or { files: [{ name: 'file.json' }, ...] }
-          const files =
-            Array.isArray(listResult.files) && listResult.files.length > 0
-              ? typeof listResult.files[0] === 'string'
-                ? listResult.files
-                : listResult.files.map((f: any) => f.name)
-              : [];
-      
-          if (files.length === 0) {
-            this.presentAlert('Info', 'FPNs folder exists but is already empty.');
-            return;
-          }
-      
-          // Delete each file found
-          for (const fileName of files) {
-            await Filesystem.deleteFile({
-              path: `${folderName}/${fileName}`,
-              directory: Directory.Documents,
-            });
-          }
-      
-          this.presentAlert('Success', 'Troubleshoot Phase 1, a Success.');
-        } catch (error: any) {
-            if (
-                error.message?.toLowerCase().includes('does not exist') ||
-                error.message?.toLowerCase().includes('not found')
-            ) {
-                this.presentAlert('Info', 'FPNs folder does not exist.');
-            } else {
-                this.presentAlert('Error', 'Failed to clear FPNs folder: ' + error);
-            }
-        }
-    }
+
 
     // postFPNTroubleShoot(enviro_post: EnviroPost)
     // {
@@ -205,6 +169,9 @@ export class QueuePage implements OnInit {
       
 
     refresh() {
+        
+        this.loadData();
+
         this.enviro_que = this.data.getEnviroQue();
         this.enviro_que_addition = this.enviro_que;
         for (let x=0; x<this.enviro_que.length; x++) {
@@ -266,7 +233,27 @@ export class QueuePage implements OnInit {
         await alert.present();
     }
 
-    submitFPN(enviro_post: any) {
+    async printBase64Image(base64Data: string) {
+        try {
+          // Strip the data:image/png;base64, prefix if it exists
+          const cleanBase64 = base64Data.includes(',') 
+            ? base64Data.split(',')[1] 
+            : base64Data;
+      
+          await SunmiPrinter.printerInit();
+          
+          // Using 'bitmap' as required by the interface
+          await SunmiPrinter.printBitmap({
+            bitmap: cleanBase64
+          });
+      
+          await SunmiPrinter.lineWrap({ lines: 3 });
+        } catch (error) {
+          console.error("Base64 Print failed", error);
+        }
+    }
+
+    submitFPN(enviro_post: any, print: boolean) {
 
       if (this.isSubmitting) {
         return;
@@ -306,6 +293,12 @@ export class QueuePage implements OnInit {
                     this.isSubmitting = false;
                     this.loading.hideLoading();
 
+                    if (print == true)
+                    {
+                        let ticket_image = this.baseUrl + fpn.ticket;
+                        this.printImageFromUrl(ticket_image);
+                    }
+                    
                     this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
                     this.data.spliceEnviroQue(enviro_post);
                     this.enviro_que = this.data.getEnviroQue();
@@ -332,7 +325,7 @@ export class QueuePage implements OnInit {
                         
                         enviro_post = this.data.spliceOffenceImageEnviroQue(enviro_post)
                         
-                        this.submitFPN(enviro_post);
+                        this.submitFPN(enviro_post, print);
 
 
                     } else if (enviro_post.offence_images.length == 1) {
@@ -346,18 +339,6 @@ export class QueuePage implements OnInit {
                 } 
             }
         });
-    }
-
-    authFail(enviro_post: any)
-    {
-
-        if (this.auth.isLoggedIn() == false)
-        {
-            this.auth.autoLogin();
-        }
-                    
-        this.submitFPN(enviro_post);
-
     }
     
 
@@ -385,8 +366,144 @@ export class QueuePage implements OnInit {
         });
     }
 
-    
+    // Helper function to convert Blob to Base64 string
+    private blobToBase64(blob: Blob): Promise<string> {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64String = reader.result as string;
+            // Remove the data:image/png;base64, prefix if the plugin requires raw base64
+            resolve(base64String.split(',')[1]); 
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+    }
 
+    async printImageFromUrl(imageUrl: string) {
+        try {
+            // 1. Initialize the printer
+            await SunmiPrinter.printerInit();
+            console.log("Printer initialized...");
+    
+            // 2. Fetch the image via Native HTTP (Bypasses CORS)
+            // We use 'arraybuffer' to get the raw binary data of the image
+            const options = {
+                url: imageUrl,
+                responseType: 'arraybuffer' as const
+            };
+    
+            const response: HttpResponse = await CapacitorHttp.get(options);
+    
+            if (response.status !== 200) {
+                throw new Error(`Failed to download image. Status: ${response.status}`);
+            }
+    
+            // 3. Convert ArrayBuffer to Base64 for the Image object
+            // This allows us to load the image into a canvas for resizing
+            const base64String = response.data; // CapacitorHttp returns base64 for arraybuffer
+            const dataUrl = `data:image/png;base64,${base64String}`;
+    
+            // 4. Load the image into a hidden HTML Image element
+            const img = new Image();
+            img.src = dataUrl;
+    
+            await new Promise((resolve, reject) => {
+                img.onload = () => resolve(true);
+                img.onerror = (err) => reject(new Error("Canvas failed to load native image data"));
+            });
+    
+            // 5. Setup Canvas for Resizing (Strict 384px for Sunmi 58mm)
+            const canvas = document.createElement('canvas');
+            const TARGET_WIDTH = 384; 
+            const scaleFactor = TARGET_WIDTH / img.width;
+            
+            canvas.width = TARGET_WIDTH;
+            canvas.height = img.height * scaleFactor;
+    
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error("Could not create 2D Canvas context");
+    
+            // Use high-quality image smoothing
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+    
+            // 6. Draw/Resize the image
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+            // 7. Extract the final clean Base64 (No prefix)
+            const finalBase64 = canvas.toDataURL('image/png').split(',')[1];
+    
+            // 8. Execute Printing
+            await SunmiPrinter.setAlignment({ 
+                alignment: AlignmentModeEnum.CENTER 
+            });
+    
+            await SunmiPrinter.printBitmap({
+                bitmap: finalBase64
+            });
+    
+            // Feed paper so the user can tear it off
+            await SunmiPrinter.lineWrap({ lines: 4 });
+            
+            console.log("Printing completed successfully");
+    
+        } catch (error: any) {
+            console.error("Complete Print Error:", error);
+            // alert("Print Error: " + (error.message || "Unknown error"));
+        }
+    }
+
+    async printTicketHtml(ticketHTML: string) {
+        try {
+          // 1. Create a hidden container to render the HTML
+          const container = document.createElement('div');
+          container.style.width = '384px'; // Standard Sunmi 58mm width
+          container.style.position = 'absolute';
+          container.style.left = '-9999px';
+          container.style.top = '0';
+          container.innerHTML = ticketHTML;
+          document.body.appendChild(container);
+      
+          // 2. Wait a moment for images (QR/Barcode) to render
+          await new Promise(resolve => setTimeout(resolve, 500));
+      
+          // 3. Convert HTML to Canvas
+          const canvas = await html2canvas(container, {
+            width: 384,
+            scale: 2, // Higher scale for sharper text
+            useCORS: true,
+            logging: false
+          });
+      
+          // 4. Convert Canvas to Base64 (Clean)
+          const base64Data = canvas.toDataURL('image/png').split(',')[1];
+      
+          // 5. Cleanup the DOM
+          document.body.removeChild(container);
+      
+          // 6. Print to Sunmi
+          await SunmiPrinter.printerInit();
+          await SunmiPrinter.setAlignment({ 
+            alignment: AlignmentModeEnum.CENTER 
+          });
+        //   await SunmiPrinter.setAlignment({ alignment: 1 }); // Center
+          
+          await SunmiPrinter.printBitmap({
+            bitmap: base64Data
+          });
+      
+          // Feed enough paper to tear off
+          await SunmiPrinter.lineWrap({ lines: 4 });
+          
+          console.log("Receipt printed successfully");
+      
+        } catch (error) {
+          console.error("Printing Error:", error);
+        }
+    }
+
+    
     copyTicketToClipboard(enviro_post: any) {
 
         this.isSubmitting = true;
@@ -468,7 +585,7 @@ export class QueuePage implements OnInit {
           return savedFile.uri; // Return the file URI if needed
         } catch (error) {
           console.error('Error saving file:', error);
-          alert('Failed to save image');
+        //   alert('Failed to save image');
           this.presentAlert('Error', 'Failed to save: ' + error);
 
           throw error; // Re-throw error if further handling is required

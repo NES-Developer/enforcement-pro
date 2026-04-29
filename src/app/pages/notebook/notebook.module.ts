@@ -7,12 +7,14 @@ import { IonicModule } from '@ionic/angular';
 import { NotebookPageRoutingModule } from './notebook-routing.module';
 
 import { NotebookPage } from './notebook.page';
+import { NavBarModule } from '../../components/nav-bar/nav-bar.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
+    NavBarModule,
     NotebookPageRoutingModule
   ],
   declarations: [NotebookPage]

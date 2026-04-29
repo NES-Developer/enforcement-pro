@@ -7,18 +7,21 @@
 
 <!-- FPN issued on the spot -->
 <ion-item>
-  <ion-label>FPN Issued on The Spot *</ion-label>  
+  <ion-label>Send FPN by Postal *</ion-label>  
 </ion-item>
 <ion-item>
-  <ion-select interface="action-sheet" interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.enviro_issued_onspot">
-      <ion-select-option>yes</ion-select-option>
-      <ion-select-option>no</ion-select-option>
+  <ion-select interface="action-sheet" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.fpn_issued">
+      
+      <ion-select-option [value]="0">
+        Yes
+      </ion-select-option>
+      <ion-select-option [value]="1">
+        No
+      </ion-select-option>
+    
   </ion-select>
 </ion-item>
-<!-- 
-<ion-item>
-    <ion-label><strong><u>Location Information</u></strong></ion-label>
-</ion-item> -->
+
 
 
 <!-- Offence Location Text -->
@@ -47,7 +50,7 @@
     </ion-label>
 </ion-item>
 <ion-item>
-    <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.land_type_id">
+    <ion-select  interface="action-sheet" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.land_type_id">
         <ion-select-option [value]="1">
             Public
         </ion-select-option>

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { EnviroPost } from '../../models/enviro';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,7 +9,7 @@ import { AlertController } from '@ionic/angular';
   templateUrl: './photo.page.html',
   styleUrls: ['./photo.page.scss'],
 })
-export class PhotoPage implements OnInit {
+export class PhotoPage implements OnInit, AfterViewInit, OnDestroy {
 
 
     WIDTH = 640;
@@ -27,6 +27,7 @@ export class PhotoPage implements OnInit {
     captures: string[] = [];
     error: any;
     isCaptured!: boolean;
+    private mediaStream: MediaStream | null = null;
 
     constructor(
         private data: DataService,
@@ -56,6 +57,7 @@ export class PhotoPage implements OnInit {
                 }
                 });
                 if (stream) {
+                    this.mediaStream = stream;
                     this.video.nativeElement.srcObject = stream;
                     this.video.nativeElement.play();
                     this.error = null;
@@ -65,6 +67,21 @@ export class PhotoPage implements OnInit {
             } catch (e) {
                 // this.error = e;
             }
+        }
+    }
+
+    ngOnDestroy() {
+        this.stopCameraStream();
+    }
+
+    private stopCameraStream(): void {
+        if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => track.stop());
+            this.mediaStream = null;
+        }
+
+        if (this.video?.nativeElement) {
+            this.video.nativeElement.srcObject = null;
         }
     }
 

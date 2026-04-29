@@ -7,12 +7,14 @@ import { IonicModule } from '@ionic/angular';
 import { PhotoPageRoutingModule } from './photo-routing.module';
 
 import { PhotoPage } from './photo.page';
+import { NavBarModule } from '../../components/nav-bar/nav-bar.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
+    NavBarModule,
     PhotoPageRoutingModule
   ],
   declarations: [PhotoPage]

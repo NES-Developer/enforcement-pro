@@ -22,6 +22,8 @@ import { ConstantsService } from '../../services/constants.service';
 import { User } from '../../models/user';
 import { App } from '@capacitor/app';
 import { EnviroPost } from 'src/app/models/enviro';
+import { LoadingService } from 'src/app/services/loading.service';
+import { BackgroundTaskService } from '../../services/background-task.service';
 
 @Component({
     selector: 'app-setting',
@@ -59,7 +61,9 @@ export class SettingPage implements OnInit {
         private api: ApiService,
         private alertController: AlertController,
         private constantsService: ConstantsService,
-        private platform: Platform
+        private platform: Platform,
+        private loading:LoadingService,
+        private backgroundTasks: BackgroundTaskService
 
 
     ) {
@@ -78,13 +82,15 @@ export class SettingPage implements OnInit {
         this.init();
 
         this.ping();
-        setInterval(() => {
+        this.backgroundTasks.setInterval(() => {
             this.ping();
         }, 30000); // 30 seconds in milliseconds
     }
 
     blockBackButton() {
-        this.platform.backButton.subscribeWithPriority(9999, () => {});
+        this.backgroundTasks.registerSubscription(
+            this.platform.backButton.subscribeWithPriority(9999, () => {})
+        );
     }
 
     init() {
@@ -174,6 +180,7 @@ export class SettingPage implements OnInit {
 
         this.data.setAppLog(this.app_log);
     }
+
 
     getFPNData(): void {
         let site: any = this.data.getSelectedSite();
@@ -429,7 +436,5 @@ export class SettingPage implements OnInit {
     }
 
 }
-
-
 
 

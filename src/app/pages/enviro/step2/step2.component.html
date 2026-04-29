@@ -122,6 +122,20 @@
     <ion-button (click)="ValidatePerson();" class="validate-search" expand="block">Validate personal details</ion-button>
 </ion-item>
 
+<!-- contact detais -->
+<ion-item>
+    <ion-label>
+        Email Address
+    </ion-label>
+    <ion-label>
+        Mobile No.
+    </ion-label>
+</ion-item>
+<ion-item>
+    <ion-input type="email" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.email"></ion-input>
+    <ion-input type="text" maxlength="100" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.phone"></ion-input>
+</ion-item>
+
 <!-- BWC Text -->
 <ion-item>
     <ion-label>

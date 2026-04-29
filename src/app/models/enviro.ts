@@ -14,8 +14,11 @@ export class EnviroPost {
    town: string = '';
    county: string = 'United Kingdom';
    post_code: string = '';
-   phone: string = '';
    date_of_birth: string = '';
+
+   phone: string = '';
+   email: string = '';
+
    // ethnicity_id: number = 0;
    // gender: string = '';
    is_bwc_active: string = '';
@@ -49,7 +52,7 @@ export class EnviroPost {
    manual_time: boolean = false;
    offence_datetime: string = moment().format('YYYY-MM-DDTHH:mm:ss');
    issue_datetime: string = moment().format('YYYY-MM-DDTHH:mm:ss');
-   enviro_issued_onspot: string = 'yes';
+   fpn_issued: number = 0;
    is_id_verified: string = '';
    is_address_verified: string = '';
    lat: string = '0';

@@ -15,6 +15,7 @@ import { EnviroPost } from 'src/app/models/enviro';
 import { interval } from 'rxjs';
 import {Site  } from '../../models/site';
 import { User } from 'src/app/models/user';
+import { BackgroundTaskService } from '../../services/background-task.service';
 
 @Component({
   selector: 'app-site',
@@ -45,7 +46,8 @@ export class SitePage implements OnInit, OnDestroy
         private router: Router,
         private alertController: AlertController,
         private loading:LoadingService,
-        private platform: Platform
+        private platform: Platform,
+        private backgroundTasks: BackgroundTaskService
 
     ) {
 
@@ -71,7 +73,9 @@ export class SitePage implements OnInit, OnDestroy
     }
 
     blockBackButton() {
-        this.platform.backButton.subscribeWithPriority(9999, () => {});
+        this.backgroundTasks.registerSubscription(
+            this.platform.backButton.subscribeWithPriority(9999, () => {})
+        );
     }
 
     logout(): void {
@@ -97,11 +101,11 @@ export class SitePage implements OnInit, OnDestroy
         // }, 5000);
 
 
-        this.checkLoginTimeoutId = setTimeout(() => {
+        this.checkLoginTimeoutId = this.backgroundTasks.setTimeout(() => {
             this.checkLoggedIn();
         }, 4000);
         
-        this.refreshIntervalId = setInterval(() => {
+        this.refreshIntervalId = this.backgroundTasks.setInterval(() => {
             this.refresh();
         }, 5000);
 
@@ -118,12 +122,12 @@ export class SitePage implements OnInit, OnDestroy
 
     private clearTimers() {
         if (this.checkLoginTimeoutId) {
-            clearTimeout(this.checkLoginTimeoutId);
+            this.backgroundTasks.clearTimer(this.checkLoginTimeoutId);
             this.checkLoginTimeoutId = null;
         }
 
         if (this.refreshIntervalId) {
-            clearInterval(this.refreshIntervalId);
+            this.backgroundTasks.clearTimer(this.refreshIntervalId);
             this.refreshIntervalId = null;
         }
     }
