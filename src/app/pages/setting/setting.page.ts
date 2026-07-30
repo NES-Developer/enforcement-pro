@@ -16,7 +16,6 @@ import { SiteOffence } from '../../models/site-offence';
 import { Observable, Subscriber, interval } from 'rxjs';
 import { AlertController, Platform } from '@ionic/angular';
 import { Login } from '../../models/login';
-import { ZoneDetection } from '../../models/zone-detection';
 //import * as L from 'leaflet';
 import { ConstantsService } from '../../services/constants.service';
 import { User } from '../../models/user';
@@ -360,61 +359,6 @@ export class SettingPage implements OnInit {
         const json = JSON.stringify(enviro_data);
         return new Blob([json]).size; // gives exact byte size
     }    
-
-    ZoneDetection() {
-
-        let zone_detection = new ZoneDetection();
-
-        zone_detection.lat = this.app_log.lat;
-        zone_detection.lng = this.app_log.lng;
-
-        let site = this.data.getSelectedSite();
-        zone_detection.site_id = site.id.toString();
-
-        
-
-        this.api.zoneDetection(zone_detection).subscribe({
-            next: (response) => {
-                if (response.success === false){
-
-                    this.data.setZoneDetectionStatus({
-                        code: 'not_in_zone',
-                        message: response.message || 'You are not in a zone. Please select a zone.',
-                        updated_at: new Date().toISOString()
-                    });
-                    this.presentAlert('Error', response.message);
-                } else {
-
-
-                    this.selected_zone = {
-                        ...response,
-                        id: Number(response.id)
-                    };
-                    this.data.setSelectedZone(this.selected_zone);
-                    this.data.clearZoneDetectionStatus();
-                    this.data.setAppLog(this.app_log);
-
-                    let enviro_data = this.data.getEnviroPost();
-                    enviro_data.zone_id = Number(response.id);
-                    this.data.setEnviroPost(enviro_data);
-
-
-                    this.presentAlert('Success', 'We found your zone, your at: ' + response.name);
-                    this.storeAppLog();
-
-                    this.ping();
-
-                }
-            },
-            error: () => {
-                this.data.setZoneDetectionStatus({
-                    code: 'network',
-                    message: 'Unable to confirm your zone. Please select a zone.',
-                    updated_at: new Date().toISOString()
-                });
-            }
-        });
-    }
 
     async presentAlert(header: string, message: string) {
         let primary_button_title: string = 'Ok';

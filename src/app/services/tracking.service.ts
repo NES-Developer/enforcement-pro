@@ -368,10 +368,12 @@ export class TrackingService {
     private extractZoneStatus(payload: any): string {
         const data = payload?.data;
         const statuses = [
+            payload?.status,
             payload?.zone_status,
             payload?.zoneStatus,
             payload?.zone_error,
             payload?.zoneError,
+            data?.status,
             data?.zone_status,
             data?.zoneStatus,
             data?.zone_error,
@@ -389,6 +391,7 @@ export class TrackingService {
     private isNoZoneStatus(status: string, message: string): boolean {
         const text = `${status} ${message}`.toLowerCase();
         return text.includes('not_in_zone')
+            || text.includes('zone_not_found')
             || text.includes('not in a zone')
             || text.includes('not in zone')
             || text.includes('outside zone')
