@@ -15,10 +15,11 @@ import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
 import { User } from 'src/app/models/user';
 import { CapacitorConfig } from '@capacitor/cli';
-// import { SunmiPrinter } from '@kduma-autoid/capacitor-sunmi-printer';
-import { SunmiPrinter, AlignmentModeEnum } from '@kduma-autoid/capacitor-sunmi-printer';
-import { CapacitorHttp, HttpResponse } from '@capacitor/core';
 import { BackgroundTaskService } from '../../services/background-task.service';
+import { FpnSubmissionService } from '../../services/fpn-submission.service';
+import { PatrolService } from '../../services/patrol.service';
+import { TrackingService } from '../../services/tracking.service';
+import { ThermalPrinterService } from '../../services/thermal-printer.service';
 
 @Component({
   selector: 'app-queue',
@@ -50,7 +51,11 @@ export class QueuePage implements OnInit {
         private auth: AuthService,
         private ticket: TicketService,
         private sanitizer: DomSanitizer,
-        private backgroundTasks: BackgroundTaskService
+        private backgroundTasks: BackgroundTaskService,
+        private fpnSubmission: FpnSubmissionService,
+        private patrol: PatrolService,
+        private tracking: TrackingService,
+        private printer: ThermalPrinterService
     ) {
 
         // this.auth.checkLoggedIn();
@@ -72,6 +77,13 @@ export class QueuePage implements OnInit {
 
         await this.data.init();
 
+        if (!this.patrol.canUseFpnTools()) {
+            this.loading.hideLoading();
+            this.presentAlert('Patrol Required', 'Start patrol from the dashboard before using the queue.');
+            this.router.navigate(['/dashboard']);
+            return;
+        }
+
         this.init();
 
         this.loading.hideLoading();
@@ -82,7 +94,7 @@ export class QueuePage implements OnInit {
     {
         this.enviro_que =  this.data.getEnviroQue();
         this.user = this.data.getUser();
-        this.app_log = this.data.getAppLog();
+        this.app_log = this.data.getAppLog() || new AppLog();
     }
 
     init() {
@@ -197,15 +209,7 @@ export class QueuePage implements OnInit {
     }
 
     ping() {
-        this.api.postTrack(this.app_log).subscribe({
-            next: (response) => {
-                // console.log('Response:', response);
-                
-            },
-            error: (error) => {
-                // console.error('Error:', error);
-            }
-        });
+        this.tracking.pingNow().catch(() => undefined);
     }
 
     route (route: string) {
@@ -235,19 +239,7 @@ export class QueuePage implements OnInit {
 
     async printBase64Image(base64Data: string) {
         try {
-          // Strip the data:image/png;base64, prefix if it exists
-          const cleanBase64 = base64Data.includes(',') 
-            ? base64Data.split(',')[1] 
-            : base64Data;
-      
-          await SunmiPrinter.printerInit();
-          
-          // Using 'bitmap' as required by the interface
-          await SunmiPrinter.printBitmap({
-            bitmap: cleanBase64
-          });
-      
-          await SunmiPrinter.lineWrap({ lines: 3 });
+          await this.printer.printBase64Image(base64Data);
         } catch (error) {
           console.error("Base64 Print failed", error);
         }
@@ -268,87 +260,56 @@ export class QueuePage implements OnInit {
         enviro_post.officer_id = this.user.id;
       }
 
-      this.api.postFPN(enviro_post).subscribe({
-            next: (response) => {
+      this.fpnSubmission.submit(enviro_post)
+        .then((result) => {
+            this.isSubmitting = false;
+            this.loading.hideLoading();
 
-                // Handle the response here
-                if(response.success === false) 
+            if (result.status === 'posted') {
+                let fpn = result.response.data;
+
+                Clipboard.write({
+                    string: fpn.fpn_number
+                });
+
+                if (print == true && fpn.ticket)
                 {
-                    let message = response.message + " (Please Edit)";
-                    
-                    this.isSubmitting = false;
-                    this.loading.hideLoading();
-
-                    this.presentAlert('Error', message);
-
-                } else {
-                    let fpn_number = response.data.fpn_number;
-                    this.presentAlert('Success', fpn_number);
-
-                    let fpn = response.data;
-
-                    Clipboard.write({
-                        string: fpn.fpn_number
-                    });
-                    this.isSubmitting = false;
-                    this.loading.hideLoading();
-
-                    if (print == true)
-                    {
-                        let ticket_image = this.baseUrl + fpn.ticket;
-                        this.printImageFromUrl(ticket_image);
-                    }
-                    
-                    this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
-                    this.data.spliceEnviroQue(enviro_post);
-                    this.enviro_que = this.data.getEnviroQue();
+                    let ticket_image = this.baseUrl + fpn.ticket;
+                    this.printImageFromUrl(ticket_image);
                 }
-            },
-            error: (error) => {
-                this.isSubmitting = false;
-                this.loading.hideLoading();
 
-                if (error.status == 500)
-                {
-                    this.presentAlert('Server Error', 'Please place in que and report error.');
-                } 
-                else if (error.status == 401) {
-                    this.presentAlert('Auth Failed', 'Server has logged you off. Please Auto Login.');
-                    // this.authFail(enviro_post); 
-                    // this.submitFPN(enviro_post);
-                } 
-                else if (error.status == 0)
-                {
-                    if (enviro_post.offence_images.length > 1)
-                    {
-                        this.presentAlert('Processing', 'please Wait! Network error, we are compressing your image');
-                        
-                        enviro_post = this.data.spliceOffenceImageEnviroQue(enviro_post)
-                        
-                        this.submitFPN(enviro_post, print);
-
-
-                    } else if (enviro_post.offence_images.length == 1) {
-                        this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
-
-                    }
-                } 
-                else 
-                {
-                    this.presentAlert('Error', error.message);
-                } 
+                this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + ' has been copied to your clipboard.');
+                this.data.spliceEnviroQue(enviro_post);
+                this.refresh();
+                return;
             }
+
+            if (result.status === 'queued') {
+                this.presentAlert('Queued', result.message);
+                this.refresh();
+                return;
+            }
+
+            this.presentAlert(result.status === 'blocked' ? 'Patrol Required' : 'Error', result.message);
+        })
+        .catch((error: any) => {
+            this.isSubmitting = false;
+            this.loading.hideLoading();
+            this.presentAlert('Error', error?.message || 'Unable to submit queued FPN.');
         });
     }
     
 
     generateTicket(enviro_post: EnviroPost) {
+        this.prepareOfflineTicket(enviro_post, true);
+    }
 
+    private prepareOfflineTicket(enviro_post: EnviroPost, copyToClipboard: boolean): string | null {
         let ticket = this.ticket.generateWelcomeTicket(enviro_post);
          
         if (ticket == "refresh") {
             this.presentAlert('Error', 'Please find Network and get latest data. To regenerate new FPN Numbers');
-
+            return null;
         }
 
         for (let x = 0; x<this.enviro_que_addition.length; x++) {
@@ -361,9 +322,41 @@ export class QueuePage implements OnInit {
             }
         }
 
-        Clipboard.write({
-            string: ticket
-        });
+        if (copyToClipboard) {
+            Clipboard.write({
+                string: ticket
+            });
+        }
+
+        return ticket;
+    }
+
+    async printOfflineTicket(enviro_post: any) {
+        if (this.isSubmitting) {
+            return;
+        }
+
+        const existingTicket = typeof enviro_post.html_string === 'string' && enviro_post.html_bool
+            ? enviro_post.html_string
+            : null;
+        const ticket = existingTicket || this.prepareOfflineTicket(enviro_post, false);
+
+        if (!ticket) {
+            return;
+        }
+
+        this.isSubmitting = true;
+        this.loading.showLoading();
+
+        try {
+            await this.printTicketHtml(ticket);
+            this.presentAlert('Success', 'Ticket printed successfully.');
+        } catch (error: any) {
+            this.presentAlert('Print Error', error?.message || 'Unable to print ticket.');
+        } finally {
+            this.isSubmitting = false;
+            this.loading.hideLoading();
+        }
     }
 
     // Helper function to convert Blob to Base64 string
@@ -382,86 +375,26 @@ export class QueuePage implements OnInit {
 
     async printImageFromUrl(imageUrl: string) {
         try {
-            // 1. Initialize the printer
-            await SunmiPrinter.printerInit();
-            console.log("Printer initialized...");
-    
-            // 2. Fetch the image via Native HTTP (Bypasses CORS)
-            // We use 'arraybuffer' to get the raw binary data of the image
-            const options = {
-                url: imageUrl,
-                responseType: 'arraybuffer' as const
-            };
-    
-            const response: HttpResponse = await CapacitorHttp.get(options);
-    
-            if (response.status !== 200) {
-                throw new Error(`Failed to download image. Status: ${response.status}`);
-            }
-    
-            // 3. Convert ArrayBuffer to Base64 for the Image object
-            // This allows us to load the image into a canvas for resizing
-            const base64String = response.data; // CapacitorHttp returns base64 for arraybuffer
-            const dataUrl = `data:image/png;base64,${base64String}`;
-    
-            // 4. Load the image into a hidden HTML Image element
-            const img = new Image();
-            img.src = dataUrl;
-    
-            await new Promise((resolve, reject) => {
-                img.onload = () => resolve(true);
-                img.onerror = (err) => reject(new Error("Canvas failed to load native image data"));
-            });
-    
-            // 5. Setup Canvas for Resizing (Strict 384px for Sunmi 58mm)
-            const canvas = document.createElement('canvas');
-            const TARGET_WIDTH = 384; 
-            const scaleFactor = TARGET_WIDTH / img.width;
-            
-            canvas.width = TARGET_WIDTH;
-            canvas.height = img.height * scaleFactor;
-    
-            const ctx = canvas.getContext('2d');
-            if (!ctx) throw new Error("Could not create 2D Canvas context");
-    
-            // Use high-quality image smoothing
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-    
-            // 6. Draw/Resize the image
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
-            // 7. Extract the final clean Base64 (No prefix)
-            const finalBase64 = canvas.toDataURL('image/png').split(',')[1];
-    
-            // 8. Execute Printing
-            await SunmiPrinter.setAlignment({ 
-                alignment: AlignmentModeEnum.CENTER 
-            });
-    
-            await SunmiPrinter.printBitmap({
-                bitmap: finalBase64
-            });
-    
-            // Feed paper so the user can tear it off
-            await SunmiPrinter.lineWrap({ lines: 4 });
-            
+            await this.printer.printImage(imageUrl);
             console.log("Printing completed successfully");
-    
         } catch (error: any) {
             console.error("Complete Print Error:", error);
-            // alert("Print Error: " + (error.message || "Unknown error"));
+            this.presentAlert('Print Error', error?.message || 'Unable to print ticket.');
         }
     }
 
     async printTicketHtml(ticketHTML: string) {
+        let container: HTMLDivElement | null = null;
+
         try {
           // 1. Create a hidden container to render the HTML
-          const container = document.createElement('div');
+          container = document.createElement('div');
           container.style.width = '384px'; // Standard Sunmi 58mm width
           container.style.position = 'absolute';
           container.style.left = '-9999px';
           container.style.top = '0';
+          container.style.background = '#ffffff';
+          container.style.color = '#000000';
           container.innerHTML = ticketHTML;
           document.body.appendChild(container);
       
@@ -479,27 +412,17 @@ export class QueuePage implements OnInit {
           // 4. Convert Canvas to Base64 (Clean)
           const base64Data = canvas.toDataURL('image/png').split(',')[1];
       
-          // 5. Cleanup the DOM
-          document.body.removeChild(container);
-      
-          // 6. Print to Sunmi
-          await SunmiPrinter.printerInit();
-          await SunmiPrinter.setAlignment({ 
-            alignment: AlignmentModeEnum.CENTER 
-          });
-        //   await SunmiPrinter.setAlignment({ alignment: 1 }); // Center
-          
-          await SunmiPrinter.printBitmap({
-            bitmap: base64Data
-          });
-      
-          // Feed enough paper to tear off
-          await SunmiPrinter.lineWrap({ lines: 4 });
+          await this.printer.printBase64Image(base64Data);
           
           console.log("Receipt printed successfully");
       
         } catch (error) {
           console.error("Printing Error:", error);
+          throw error;
+        } finally {
+          if (container?.parentNode) {
+            document.body.removeChild(container);
+          }
         }
     }
 
@@ -531,7 +454,7 @@ export class QueuePage implements OnInit {
                 this.isSubmitting = false;
                 this.loading.hideLoading();
                 this.saveBase64Image(dataUrl, 'ticket_offline.png');
-                this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
+                this.presentAlert('Success', 'Ticket image saved successfully.');
 
             })
             .catch((error) => {
@@ -549,8 +472,7 @@ export class QueuePage implements OnInit {
                     this.loading.hideLoading();
                     this.saveBase64Image(dataUrl, 'ticket_offline.png');
 
-                    // this.presentAlert('Success', 'Successfully copied Ticket, navigate to Printer');
-                    // Add your clipboard or saving logic here
+                    this.presentAlert('Success', 'Ticket image saved successfully.');
                 }).catch((error2) => {
                     this.isSubmitting = false;
                     this.loading.hideLoading();

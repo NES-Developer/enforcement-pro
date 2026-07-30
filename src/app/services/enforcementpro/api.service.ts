@@ -47,6 +47,10 @@ export class ApiService {
     }
     
     postTrack(data: AppLog): Observable<any> {
+        if (data && Object.prototype.hasOwnProperty.call(data, 'zone_id')) {
+            delete (data as any).zone_id;
+        }
+
         const url = `${this.baseUrl}/user/track`;
         return this.http.post(url, data, { headers: this.getHeaders() });
     }

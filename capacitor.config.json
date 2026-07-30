@@ -4,6 +4,9 @@
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "www",
+  "android": {
+    "useLegacyBridge": true
+  },
   "plugins": {
     "SplashScreen": {
       "splashShowDuration": 3000,

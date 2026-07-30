@@ -13,11 +13,9 @@ import { EnviroPost } from '../../models/enviro';
 import { AlertController, Platform } from '@ionic/angular';
 import { Clipboard } from '@capacitor/clipboard';
 import { AppLog } from '../../models/app-log';
-import { AppLauncher } from '@capacitor/app-launcher';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingService } from '../../services/loading.service';
 // import { App } from '@capacitor/app';
-import { Capacitor, CapacitorHttp, HttpResponse } from '@capacitor/core';
 import { User } from '../../models/user';
 import { Observable, Subscriber, timeout } from 'rxjs';
 
@@ -25,8 +23,11 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { OnDestroy } from '@angular/core';
 
 import { CapacitorConfig } from '@capacitor/cli';
-import { AlignmentModeEnum, SunmiPrinter } from '@kduma-autoid/capacitor-sunmi-printer';
 import { BackgroundTaskService } from '../../services/background-task.service';
+import { FpnSubmissionService } from '../../services/fpn-submission.service';
+import { PatrolService } from '../../services/patrol.service';
+import { TrackingService } from '../../services/tracking.service';
+import { ThermalPrinterService } from '../../services/thermal-printer.service';
 
 
 @Component({
@@ -61,7 +62,11 @@ import { BackgroundTaskService } from '../../services/background-task.service';
         private router: Router,
         private loading:LoadingService,
         private platform: Platform,
-        private backgroundTasks: BackgroundTaskService
+        private backgroundTasks: BackgroundTaskService,
+        private fpnSubmission: FpnSubmissionService,
+        private patrol: PatrolService,
+        private tracking: TrackingService,
+        private printer: ThermalPrinterService
 
 
     ) {
@@ -95,6 +100,13 @@ import { BackgroundTaskService } from '../../services/background-task.service';
         this.loading.showLoading();
 
         await this.data.init();
+
+        if (!this.patrol.canUseFpnTools()) {
+            this.loading.hideLoading();
+            this.presentAlert('Patrol Required', 'Start patrol from the dashboard before using FPN tools.');
+            this.router.navigate(['/dashboard']);
+            return;
+        }
     
         this.init();
 
@@ -103,6 +115,8 @@ import { BackgroundTaskService } from '../../services/background-task.service';
     }
 
     init() {
+        this.tracking.syncTrackingState().catch(() => undefined);
+
         this.backgroundTasks.setTimeout(() => {
             this.refresh();
         }, 5000);
@@ -131,7 +145,7 @@ import { BackgroundTaskService } from '../../services/background-task.service';
         this.enviro_post = this.data.getEnviroPost();
         this.user = this.data.getUser();
         this.assignOfficerId();
-        this.app_log = this.data.getAppLog();
+        this.app_log = this.data.getAppLog() || new AppLog();
        
         if (!this.data.checkFPNData()){
             this.getFPNData();
@@ -390,75 +404,11 @@ import { BackgroundTaskService } from '../../services/background-task.service';
 
     async printImageFromUrl(imageUrl: string) {
         try {
-            // 1. Initialize the printer
-            await SunmiPrinter.printerInit();
-            console.log("Printer initialized...");
-    
-            // 2. Fetch the image via Native HTTP (Bypasses CORS)
-            // We use 'arraybuffer' to get the raw binary data of the image
-            const options = {
-                url: imageUrl,
-                responseType: 'arraybuffer' as const
-            };
-    
-            const response: HttpResponse = await CapacitorHttp.get(options);
-    
-            if (response.status !== 200) {
-                throw new Error(`Failed to download image. Status: ${response.status}`);
-            }
-    
-            // 3. Convert ArrayBuffer to Base64 for the Image object
-            // This allows us to load the image into a canvas for resizing
-            const base64String = response.data; // CapacitorHttp returns base64 for arraybuffer
-            const dataUrl = `data:image/png;base64,${base64String}`;
-    
-            // 4. Load the image into a hidden HTML Image element
-            const img = new Image();
-            img.src = dataUrl;
-    
-            await new Promise((resolve, reject) => {
-                img.onload = () => resolve(true);
-                img.onerror = (err) => reject(new Error("Canvas failed to load native image data"));
-            });
-    
-            // 5. Setup Canvas for Resizing (Strict 384px for Sunmi 58mm)
-            const canvas = document.createElement('canvas');
-            const TARGET_WIDTH = 384; 
-            const scaleFactor = TARGET_WIDTH / img.width;
-            
-            canvas.width = TARGET_WIDTH;
-            canvas.height = img.height * scaleFactor;
-    
-            const ctx = canvas.getContext('2d');
-            if (!ctx) throw new Error("Could not create 2D Canvas context");
-    
-            // Use high-quality image smoothing
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-    
-            // 6. Draw/Resize the image
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
-            // 7. Extract the final clean Base64 (No prefix)
-            const finalBase64 = canvas.toDataURL('image/png').split(',')[1];
-    
-            // 8. Execute Printing
-            await SunmiPrinter.setAlignment({ 
-                alignment: AlignmentModeEnum.CENTER 
-            });
-    
-            await SunmiPrinter.printBitmap({
-                bitmap: finalBase64
-            });
-    
-            // Feed paper so the user can tear it off
-            await SunmiPrinter.lineWrap({ lines: 4 });
-            
+            await this.printer.printImage(imageUrl);
             console.log("Printing completed successfully");
-    
         } catch (error: any) {
             console.error("Complete Print Error:", error);
-            // alert("Print Error: " + (error.message || "Unknown error"));
+            this.presentAlert('Print Error', error?.message || 'Unable to print ticket.');
         }
     }
 
@@ -640,104 +590,51 @@ import { BackgroundTaskService } from '../../services/background-task.service';
             return;
         }
 
-        this.getCurrentPosition()
-        .subscribe((position: any) => {
-            this.enviro_post.lat = position.latitude;
-            this.enviro_post.lng = position.longitude;
-        });
-
         let checker = this.submitValidator();
         if (checker) {
             this.isSubmitting = true;
             this.loading.showLoading();
-            this.offenceSwitcherForserver();
             this.assignOfficerId();
-            this.api.postFPN(this.enviro_post).subscribe({
-                next: (response) => {
+
+            this.fpnSubmission.submit(this.enviro_post)
+                .then((result) => {
                     this.loading.hideLoading();
-                    console.log('Response:', response);
-                    // Handle the response here
-                    if(response.success === false) 
-                    {
-                        
-                        let message = response.message + " (Please Edit)";
+                    this.isSubmitting = false;
 
-                        this.loading.hideLoading();
+                    if (result.status === 'posted') {
+                        this.fpn = result.response.data;
 
-                        this.offenceSwitcherForserver();
-                        this.isSubmitting = false;
+                        if (this.fpn?.fpn_number) {
+                            Clipboard.write({
+                                string: this.fpn.fpn_number
+                            });
+                        }
 
-                        this.presentAlert('Error', message);
+                        if (this.fpn?.ticket) {
+                            let ticket_image = this.baseUrl + this.fpn.ticket;
+                            this.printImageFromUrl(ticket_image);
+                        }
 
-                    } else {
-                        this.fpn = response.data;
-
-                        // app.enforcementpro.co.uk
-                        // ticket : "uploads/tickets/EP1_100123369_PRINT_1_fpn.png"
-
-                        let ticket_image = this.baseUrl + this.fpn.ticket;
-                        
-                        Clipboard.write({
-                            string: this.fpn.fpn_number
-                        });
-
-                        this.loading.hideLoading();
-                        
-                        this.isSubmitting = false;
-
-                        this.printImageFromUrl(ticket_image);
-
-                        this.presentAlert('Success', 'FPN submitted successfully.');
-
+                        this.presentAlert('Success', result.message);
                         this.cancel();
+                        return;
                     }
 
-                },
-                error: (error) => {
-                    this.offenceSwitcherForserver();
+                    if (result.status === 'queued') {
+                        this.presentAlert('Queued', result.message);
+                        this.cancel();
+                        return;
+                    }
 
+                    this.presentAlert(result.status === 'blocked' ? 'Patrol Required' : 'Error', result.message);
+                })
+                .catch((error: any) => {
                     this.loading.hideLoading();
-
-                    if (error.status == 500)
-                    {
-                        this.presentAlert('Server Error', 'Please place in que and report error.');
-                    } 
-                    else if (error.status == 401) {
-                        this.presentAlert('Auth Failed', 'Please try auto-logging you in.');
-                        // this.auth.autoLogin(); 
-                        // this.submitForm();
-                    } 
-                    else if (error.status == 0)
-                    {
-                        
-                        if (this.enviro_post.offence_images.length > 1)
-                        {
-                            let offence_images_length = this.enviro_post.offence_images.length;
-                            this.presentAlert('Processing', 'please Wait! Network error, we are compressing your image');
-                            this.data.spliceOffenceImageEnviroPost(this.enviro_post.offence_images[offence_images_length - 1])
-                            this.submitForm();
-                        } else if (this.enviro_post.offence_images.length == 1) {
-                            //Compress the image as its base64
-                            this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
-
-                        }
-                    } 
-                    else 
-                    {
-                        this.presentAlert('Error', error.message);
-                    }   
-                }
-            });
+                    this.isSubmitting = false;
+                    this.presentAlert('Error', error?.message || 'Unable to submit FPN.');
+                });
 
         }
-    }
-
-    offenceSwitcherForserver() {
-        let offence = this.enviro_post.offence_id;
-        let offence_group = this.enviro_post.offence_type_id;
-
-        this.enviro_post.offence_id = offence_group;
-        this.enviro_post.offence_type_id = offence;
     }
 
     refresh() {
@@ -796,59 +693,7 @@ import { BackgroundTaskService } from '../../services/background-task.service';
     }
 
     ping() {
-        if (this.app_log == null) {
-            this.app_log = this.data.getAppLog();
-            if (this.app_log == null) {
-                this.app_log = new AppLog();
-            }
-        }
-
-        if (this.app_log.user_id)
-        {
-            this.app_log.user_id = this.user.id.toString();
-        }
-        
-        if (this.app_log.site_id)
-        {
-            this.app_log.site_id = this.selected_site.id.toString();
-        }
-
-        this.app_log.zone_id = this.enviro_post.zone_id.toString();
-
-        this.getCurrentPosition()
-            .subscribe((position: any) => {
-                this.app_log.lat = position.latitude;
-                this.app_log.lng = position.longitude;
-            });
-
-        this.data.setAppLog(this.app_log);
-        
-        this.api.postTrack(this.app_log).subscribe({
-            next: (response) => {
-                // console.log('Response:', response);
-                
-            },
-            error: (error) => {
-                // console.error('Error:', error);
-            }
-        });
-    }
-
-    async openOtherApp() {
-        try {
-            try {
-                await AppLauncher.openUrl({
-                    url: 'com.example.enforcementproprinter'
-                });
-            } catch (error) {
-                await AppLauncher.openUrl({
-                    url: 'com.ahmedelsayed.sunmiprinterapp.test'
-                });
-            }
-        } catch (error) {
-          console.error('Error launching app:', error);
-          this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-        }
+        this.tracking.pingNow().catch(() => undefined);
     }
 
     saveFPN() {
@@ -856,34 +701,38 @@ import { BackgroundTaskService } from '../../services/background-task.service';
             return;
         }
 
-        this.getCurrentPosition()
-            .subscribe((position: any) => {
-                this.enviro_post.lat = position.latitude;
-                this.enviro_post.lng = position.longitude;
-            });
-
         let checker = this.submitValidator();
 
         if (checker) {
+            this.isSubmitting = true;
             this.loading.showLoading();
-            //this.assignOfficerId();
             let queue = this.data.getEnviroQue();
 
             if (queue.length < 25) {            
-                this.offenceSwitcherForserver();
                 this.assignOfficerId();
 
-                this.data.setEnviroPost(this.enviro_post);
+                this.fpnSubmission.queueForLater(this.enviro_post)
+                    .then((result) => {
+                        this.loading.hideLoading();
+                        this.isSubmitting = false;
 
-                this.data.pushEnviroQue();
-                this.loading.hideLoading();
+                        if (result.status === 'queued') {
+                            this.presentAlert('Saved', result.message);
+                            this.cancel();
+                            return;
+                        }
 
-                this.presentAlert('Saved', 'FPN has been captured in Queue');
-
-                this.cancel();
+                        this.presentAlert(result.status === 'blocked' ? 'Patrol Required' : 'Error', result.message);
+                    })
+                    .catch((error: any) => {
+                        this.loading.hideLoading();
+                        this.isSubmitting = false;
+                        this.presentAlert('Error', error?.message || 'Unable to save FPN.');
+                    });
 
             } else {
                 this.loading.hideLoading();
+                this.isSubmitting = false;
                 this.presentAlert('Error', 'Queue has exceeded 25, please submit. Submit some FPNs on queue to increase space.')
             }
         }

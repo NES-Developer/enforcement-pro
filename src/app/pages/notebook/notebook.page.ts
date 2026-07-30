@@ -20,9 +20,10 @@ import { Ethnicity } from '../../models/ethnicity';
 import { LoadingService } from '../../services/loading.service';
 import { User } from 'src/app/models/user';
 import { CapacitorConfig } from '@capacitor/cli';
-import { AlignmentModeEnum, SunmiPrinter } from '@kduma-autoid/capacitor-sunmi-printer';
-import { CapacitorHttp, HttpResponse } from '@capacitor/core';
 import { BackgroundTaskService } from '../../services/background-task.service';
+import { TrackingService } from '../../services/tracking.service';
+import { FpnSubmissionService } from '../../services/fpn-submission.service';
+import { ThermalPrinterService } from '../../services/thermal-printer.service';
 
 @Component({
   selector: 'app-notebook',
@@ -60,6 +61,9 @@ export class NotebookPage implements OnInit {
         private router: Router,
         private loading: LoadingService,
         private backgroundTasks: BackgroundTaskService,
+        private tracking: TrackingService,
+        private fpnSubmission: FpnSubmissionService,
+        private printer: ThermalPrinterService,
     ) 
     {
 
@@ -100,15 +104,7 @@ export class NotebookPage implements OnInit {
     }
 
     ping() {
-        if (this.data.checkAppLog()) {
-            this.api.postTrack(this.app_log).subscribe({
-                next: (response) => {
-                    
-                },
-                error: (error) => {
-                }
-            });
-        }
+        this.tracking.pingNow().catch(() => undefined);
     }
 
     init()
@@ -123,7 +119,7 @@ export class NotebookPage implements OnInit {
     }
 
     loadData() {
-        this.app_log = this.data.getAppLog();
+        this.app_log = this.data.getAppLog() || new AppLog();
         this.builds = this.data.getBuilds();
         this.hair_colours = this.data.getHairColours();
         this.enviro_post =  this.data.getEnviroPost();
@@ -201,75 +197,11 @@ export class NotebookPage implements OnInit {
 
     async printImageFromUrl(imageUrl: string) {
         try {
-            // 1. Initialize the printer
-            await SunmiPrinter.printerInit();
-            console.log("Printer initialized...");
-    
-            // 2. Fetch the image via Native HTTP (Bypasses CORS)
-            // We use 'arraybuffer' to get the raw binary data of the image
-            const options = {
-                url: imageUrl,
-                responseType: 'arraybuffer' as const
-            };
-    
-            const response: HttpResponse = await CapacitorHttp.get(options);
-    
-            if (response.status !== 200) {
-                throw new Error(`Failed to download image. Status: ${response.status}`);
-            }
-    
-            // 3. Convert ArrayBuffer to Base64 for the Image object
-            // This allows us to load the image into a canvas for resizing
-            const base64String = response.data; // CapacitorHttp returns base64 for arraybuffer
-            const dataUrl = `data:image/png;base64,${base64String}`;
-    
-            // 4. Load the image into a hidden HTML Image element
-            const img = new Image();
-            img.src = dataUrl;
-    
-            await new Promise((resolve, reject) => {
-                img.onload = () => resolve(true);
-                img.onerror = (err) => reject(new Error("Canvas failed to load native image data"));
-            });
-    
-            // 5. Setup Canvas for Resizing (Strict 384px for Sunmi 58mm)
-            const canvas = document.createElement('canvas');
-            const TARGET_WIDTH = 384; 
-            const scaleFactor = TARGET_WIDTH / img.width;
-            
-            canvas.width = TARGET_WIDTH;
-            canvas.height = img.height * scaleFactor;
-    
-            const ctx = canvas.getContext('2d');
-            if (!ctx) throw new Error("Could not create 2D Canvas context");
-    
-            // Use high-quality image smoothing
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-    
-            // 6. Draw/Resize the image
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
-            // 7. Extract the final clean Base64 (No prefix)
-            const finalBase64 = canvas.toDataURL('image/png').split(',')[1];
-    
-            // 8. Execute Printing
-            await SunmiPrinter.setAlignment({ 
-                alignment: AlignmentModeEnum.CENTER 
-            });
-    
-            await SunmiPrinter.printBitmap({
-                bitmap: finalBase64
-            });
-    
-            // Feed paper so the user can tear it off
-            await SunmiPrinter.lineWrap({ lines: 4 });
-            
+            await this.printer.printImage(imageUrl);
             console.log("Printing completed successfully");
-    
         } catch (error: any) {
             console.error("Complete Print Error:", error);
-            // alert("Print Error: " + (error.message || "Unknown error"));
+            this.presentAlert('Print Error', error?.message || 'Unable to print ticket.');
         }
     }
 
@@ -282,79 +214,49 @@ export class NotebookPage implements OnInit {
 
         if (checker) {
 
-            this.offenceSwitcherForserver(this.enviro_post);
-
             this.isSubmitting = true;
+            this.loading.showLoading();
 
-            this.api.postFPN(this.enviro_post).subscribe({
-                next: (response) => {
-                    console.log('Response:', response);
-                    // Handle the response here
-                    if(response.success === false) 
-                    {
-                        this.offenceSwitcherForserver(this.enviro_post);
-                        let message = response.message + " (Please Edit)";
-                        this.isSubmitting = false;
-                        this.presentAlert('Error', message);
-                    } else {                        
-                        let fpn = response.data;    
+            this.fpnSubmission.submit(this.enviro_post)
+                .then((result) => {
+                    this.loading.hideLoading();
+                    this.isSubmitting = false;
+
+                    if (result.status === 'posted') {
+                        let fpn = result.response.data;
 
                         Clipboard.write({
-                            string: fpn.ticket
+                            string: fpn.fpn_number
                         });
 
-                        if (print == true)
+                        if (print == true && fpn.ticket)
                         {
                             let ticket_image = this.baseUrl + fpn.ticket;
-
                             this.printImageFromUrl(ticket_image);
                         }
-                        
+
                         this.data.spliceEnviroQue(this.enviro_post);
                         this.enviro_post = new EnviroPost();
                         this.data.setEnviroPost(this.enviro_post);
-                        this.isSubmitting = false;
-                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. URL has been copied to your clipboard.');
+                        this.presentAlert('Success', 'Successfully posted FPN. FPN Number: ' + fpn.fpn_number + '. FPN number has been copied to your clipboard.');
 
-                        this.route('/tabs/fpn');
+                        this.route('/dashboard');
+                        return;
                     }
-                }, error: (error) => {
 
-                    // this.loading.hideLoading();
+                    if (result.status === 'queued') {
+                        this.presentAlert('Queued', result.message);
+                        this.route('/queue');
+                        return;
+                    }
+
+                    this.presentAlert(result.status === 'blocked' ? 'Patrol Required' : 'Error', result.message);
+                })
+                .catch((error: any) => {
+                    this.loading.hideLoading();
                     this.isSubmitting = false;
-
-
-                    if (error.status == 500)
-                    {
-                        this.presentAlert('Server Error', 'Please place in que and report error.');
-                    } 
-                    else if (error.status == 401) 
-                    {
-                        this.presentAlert('Auth Failed', 'Please try auto-login.');
-                    } 
-                    else if (error.status == 0)
-                    {
-                        if (this.enviro_post.offence_images.length > 1)
-                        {
-                            let offence_images_length = this.enviro_post.offence_images.length;
-                            this.presentAlert('Processing', 'please Wait! Network error, we are compressing your image');
-                            this.data.spliceOffenceImageEnviroPost(this.enviro_post.offence_images[offence_images_length - 1]);
-                            this.enviro_post = this.data.getEnviroPost();
-
-                            this.submitFpn(print);
-                        } else if (this.enviro_post.offence_images.length == 1) 
-                        {
-                            //Compress the image as its base64
-                            this.presentAlert('Network Error', 'No internet connection. Please place in que, find better reception and try again.');
-
-                        }
-                    } 
-                    else 
-                    {
-                        this.presentAlert('Error', error.message);
-                    }   
-                }
-            });
+                    this.presentAlert('Error', error?.message || 'Unable to submit FPN.');
+                });
         }
     }
 
@@ -428,15 +330,6 @@ export class NotebookPage implements OnInit {
             });
         }
     }
-
-    offenceSwitcherForserver(enviro_post: EnviroPost) {
-        let offence = enviro_post.offence_id;
-        let offence_group = enviro_post.offence_type_id;
-
-        enviro_post.offence_id = offence_group;
-        enviro_post.offence_type_id = offence;
-    }
-
 
     async presentAlert(header: string, message: string) {
         let button_title: string = 'Ok';

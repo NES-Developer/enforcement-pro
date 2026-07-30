@@ -21,6 +21,23 @@
   border-radius: 14px;
 }
 
+.patrol-card {
+  margin: 12px;
+  border-radius: 10px;
+  border-left: 5px solid var(--ion-color-danger);
+}
+
+.patrol-card.patrol-active {
+  border-left-color: var(--ion-color-success);
+}
+
+.patrol-hours {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
 .logout-row {
   justify-content: center;
 }

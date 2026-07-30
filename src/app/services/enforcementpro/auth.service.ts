@@ -1,5 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, Subscriber } from 'rxjs';
+import { from, Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { AlertController } from '@ionic/angular';
 
 import { Injectable } from '@angular/core';
@@ -11,6 +12,7 @@ import { LoadingService } from '../loading.service';
 import { Login } from '../../models/login';
 import { AppLog } from '../../models/app-log';
 import { BackgroundTaskService } from '../background-task.service';
+import { LocationService } from '../location.service';
 // import { Site as SiteObj } from '../../models/site';
 
 @Injectable({
@@ -30,6 +32,7 @@ export class AuthService {
         private data: DataService,
         private loading:LoadingService,
         private backgroundTasks: BackgroundTaskService,
+        private location: LocationService,
         // private alertController: AlertController
 
     ) {
@@ -38,41 +41,25 @@ export class AuthService {
         // this.selected_site = new SiteObj();
     }
 
-    private getCurrentPosition(): any {
-        return new Observable((observer: Subscriber<any>) => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position: any) => {
-            observer.next({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-            });
-            observer.complete();
-            });
-        } else {
-            observer.error();
-        }
-        });
-    }
-
     login(id: string, pin: string): Observable<any> {
         const url = `${this.baseUrl}/login`;
 
-        let lat = 0;
-        let lng = 0;
+        return from(this.location.requireCurrentPosition()).pipe(
+            switchMap(position => {
+                const body = {
+                    id,
+                    pin,
+                    lat: position.latitude,
+                    lng: position.longitude
+                };
 
-        this.getCurrentPosition()
-        .subscribe((position: any) => {
-            lat = position.latitude;
-            lng = position.longitude;
-        });
-
-        const body = { id, pin, lat, lng };
-    
-        return this.http.post(url, body, {
-            headers: new HttpHeaders({
-                'Content-Type': 'application/json'
+                return this.http.post(url, body, {
+                    headers: new HttpHeaders({
+                        'Content-Type': 'application/json'
+                    })
+                });
             })
-        });
+        );
     }
 
     

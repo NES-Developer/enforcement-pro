@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
-import { Observable } from 'rxjs';
-import { LoadingService } from './services/loading.service';
+import { App } from '@capacitor/app';
+import { Platform } from '@ionic/angular';
+import { DataService } from './services/enforcementpro/data.service';
+import { TrackingService } from './services/tracking.service';
 
 
 @Component({
@@ -9,5 +11,24 @@ import { LoadingService } from './services/loading.service';
   styleUrls: ['app.component.scss'],
 })
 export class AppComponent {
-  constructor() {}
+  constructor(
+    private data: DataService,
+    private platform: Platform,
+    private tracking: TrackingService
+  ) {
+    this.platform.ready().then(() => {
+      this.initialiseTracking();
+    });
+  }
+
+  private async initialiseTracking(): Promise<void> {
+    await this.data.init();
+    await this.tracking.syncTrackingState().catch(() => undefined);
+
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        this.tracking.syncTrackingState().catch(() => undefined);
+      }
+    });
+  }
 }

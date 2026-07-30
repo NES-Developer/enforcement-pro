@@ -50,13 +50,13 @@ export class TicketService {
 
         console.log(11,fpn_numbers_and_barcode);
 
-        if(fpn_numbers_and_barcode.length < 0)
+        this.enviro_que = this.data.getEnviroQue();
+        const index = this.enviro_que.indexOf(enviro_post);
+
+        if (index < 0 || fpn_numbers_and_barcode.length <= index)
         {
             return 'refresh';
         }
-
-        this.enviro_que = this.data.getEnviroQue();
-        const index = this.enviro_que.indexOf(enviro_post);
 
         // Generate FPN Number and Barcode
         
@@ -232,5 +232,4 @@ export class TicketService {
         return fpnNumber;
     }
 }
-
 

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { EnviroPost } from '../../../models/enviro';
 import { Offence } from '../../../models/offence';
 import { Zone } from '../../../models/zone';
@@ -8,7 +8,7 @@ import { OffenceGroup } from '../../../models/offence-group';
 import { Site } from '../../../models/site';
 import { ZoneDetection } from '../../../models/zone-detection';
 import { AppLog } from 'src/app/models/app-log';
-import { Observable, Subscriber } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { EnviroPage } from '../enviro.page';
 
 @Component({
@@ -16,7 +16,7 @@ import { EnviroPage } from '../enviro.page';
   templateUrl: './step1.component.html',
   styleUrls: ['./step1.component.scss'],
 })
-export class Step1Component  implements OnInit {
+export class Step1Component  implements OnInit, OnDestroy {
 
     offences: Offence[] = [];
     filteredOffences: Offence[] = [];
@@ -26,12 +26,16 @@ export class Step1Component  implements OnInit {
     selected_zone: any = null;
 
     zones: Zone[] = [];
+    filteredZones: Zone[] = [];
+    zoneSearch: string = '';
     sites: Site[] = [];
+    zoneStatusMessage: string = '';
 
     app_log: AppLog;
     offence!: Offence;
 
     enviro_post: EnviroPost = new EnviroPost();
+    private subscriptions: Subscription[] = [];
 
     constructor(
         private api: ApiService,
@@ -45,13 +49,19 @@ export class Step1Component  implements OnInit {
 
     async ngOnInit() {
         this.init();
+        this.watchZoneSelection();
+    }
+
+    ngOnDestroy() {
+        this.subscriptions.forEach(subscription => subscription.unsubscribe());
     }
 
     init() {
-        this.enviro_post.site_id = this.selected_site.id;
-        this.enviro_post.zone_id = this.selected_zone.id;
-        this.app_log.zone_id = this.selected_zone.id;
-        this.data.setAppLog(this.app_log);
+        if (this.selected_site?.id) {
+            this.enviro_post.site_id = this.selected_site.id;
+        }
+
+        this.applySelectedZoneToForm();
 
         if (this.offences && this.enviro_post && this.enviro_post.offence_type_id) {
             this.filterOffences();
@@ -73,21 +83,34 @@ export class Step1Component  implements OnInit {
             next: (response) => {
                 if (response.success === false){
 
+                    this.data.setZoneDetectionStatus({
+                        code: 'not_in_zone',
+                        message: response.message || 'You are not in a zone. Please select a zone.',
+                        updated_at: new Date().toISOString()
+                    });
                     this.fpnPage.presentAlert('Error', response.message);
                 } else {
 
-                    this.app_log.zone_id = response.id;
-                    this.data.setAppLog(this.app_log);
-
-                    this.enviro_post.zone_id = parseInt(this.app_log.zone_id);
+                    this.enviro_post.zone_id = Number(response.id);
                     this.saveEnviroData();
 
-                    this.selected_zone = response;
+                    this.selected_zone = {
+                        ...response,
+                        id: Number(response.id)
+                    };
                     this.data.setSelectedZone(this.selected_zone);
+                    this.data.clearZoneDetectionStatus();
 
                     this.fpnPage.presentAlert('Yay', 'We found your zone, device settings have been altered.');
                 }
             },
+            error: () => {
+                this.data.setZoneDetectionStatus({
+                    code: 'network',
+                    message: 'Unable to confirm your zone. Please select a zone.',
+                    updated_at: new Date().toISOString()
+                });
+            }
         });
     }
 
@@ -109,6 +132,7 @@ export class Step1Component  implements OnInit {
         this.offenceGroups = this.data.getOffenceGroup();
         this.offences = this.data.getOffence();
         this.zones = this.data.getZones();
+        this.filterZones();
         this.sites = this.data.getSites();
 
          
@@ -134,6 +158,25 @@ export class Step1Component  implements OnInit {
         // this.saveEnviroData();
     }
 
+    filterZones() {
+        const query = this.zoneSearch.trim().toLowerCase();
+
+        if (!query) {
+            this.filteredZones = this.zones;
+            return;
+        }
+
+        this.filteredZones = this.zones.filter(zone => {
+            return [
+                zone.name,
+                zone.town,
+                zone.post_code,
+                zone.address_line1,
+                zone.address_line2
+            ].some(value => (value || '').toLowerCase().includes(query));
+        });
+    }
+
     resetOffenceAndFilter() {
         this.filterOffences();
         this.enviro_post.offence_id = 0;
@@ -142,9 +185,16 @@ export class Step1Component  implements OnInit {
     saveEnviroData() {
         this.data.setEnviroPost(this.enviro_post);
 
-        
-        this.app_log.zone_id = this.enviro_post.zone_id.toString();
-        this.data.setAppLog(this.app_log);
+        if (this.enviro_post.zone_id > 0) {
+            const zone = this.data.findZoneById(Number(this.enviro_post.zone_id));
+
+            if (zone) {
+                this.selected_zone = zone;
+                this.data.setSelectedZone(zone);
+                this.data.clearZoneDetectionStatus();
+                this.zoneStatusMessage = '';
+            }
+        }
     }
 
     getOffenceById(id: number) {        
@@ -153,6 +203,56 @@ export class Step1Component  implements OnInit {
             this.offence = offence;
         }
         this.saveEnviroData();
+    }
+
+    private watchZoneSelection(): void {
+        this.subscriptions.push(
+            this.data.selectedZoneChanges().subscribe(() => this.applySelectedZoneToForm()),
+            this.data.zoneDetectionStatusChanges().subscribe(() => this.applySelectedZoneToForm())
+        );
+    }
+
+    private applySelectedZoneToForm(): void {
+        this.selected_zone = this.data.getSelectedZone();
+        this.zoneStatusMessage = this.getZoneStatusMessage();
+
+        if (!this.enviro_post) {
+            return;
+        }
+
+        if (this.enviro_post.zone_id <= 0 && this.selected_zone?.id && !this.isOutsideZone() && this.selectedZoneMatchesSite()) {
+            this.enviro_post.zone_id = Number(this.selected_zone.id);
+            this.data.setEnviroPost(this.enviro_post);
+        }
+
+        this.zones = this.data.getZones();
+        this.filterZones();
+    }
+
+    private getZoneStatusMessage(): string {
+        const status = this.data.getZoneDetectionStatus();
+
+        if (status.code === 'idle') {
+            return '';
+        }
+
+        if (status.code === 'network' && this.data.checkSelectedZone()) {
+            return '';
+        }
+
+        return status.message;
+    }
+
+    private isOutsideZone(): boolean {
+        return this.data.getZoneDetectionStatus().code === 'not_in_zone';
+    }
+
+    private selectedZoneMatchesSite(): boolean {
+        if (!this.selected_zone?.site_id || !this.selected_site?.id) {
+            return true;
+        }
+
+        return this.selected_zone.site_id.toString() === this.selected_site.id.toString();
     }
 
 }

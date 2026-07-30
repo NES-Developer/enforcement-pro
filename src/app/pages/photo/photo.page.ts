@@ -3,6 +3,7 @@ import { EnviroPost } from '../../models/enviro';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
+import { PatrolService } from '../../services/patrol.service';
 
 @Component({
   selector: 'app-photo',
@@ -33,7 +34,8 @@ export class PhotoPage implements OnInit, AfterViewInit, OnDestroy {
         private data: DataService,
         private router: Router,
         private alertController: AlertController,
-        private route2: ActivatedRoute
+        private route2: ActivatedRoute,
+        private patrol: PatrolService
         ) {
             this.route2.queryParams.subscribe(params => {
                 this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
@@ -41,10 +43,20 @@ export class PhotoPage implements OnInit, AfterViewInit, OnDestroy {
         }
 
     ngOnInit() {
+        if (!this.patrol.canUseFpnTools()) {
+            this.presentAlert('Patrol Required', 'Start patrol from the dashboard before using the camera.');
+            this.router.navigate(['/dashboard']);
+            return;
+        }
+
         this.loadData();
     }
 
     async ngAfterViewInit() {
+        if (!this.patrol.canUseFpnTools()) {
+            return;
+        }
+
         await this.setupDevices();
     }
 

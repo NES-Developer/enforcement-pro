@@ -39,14 +39,14 @@
 
             <div> 
                 <ion-item>
-                    <ion-button *ngIf="!enviro_post.html_bool" color="sucess" (click)="generateTicket(enviro_post)">
+                    <ion-button *ngIf="!enviro_post.html_bool" color="success" (click)="generateTicket(enviro_post)">
                         Generate Ticket
+                    </ion-button>
+                    <ion-button color="dark" (click)="printOfflineTicket(enviro_post)">
+                        Print
                     </ion-button>
                     <ion-button *ngIf="enviro_post.html_bool" color="danger" (click)="enviro_post.html_bool = false">
                         x
-                    </ion-button>
-                    <ion-button *ngIf="enviro_post.html_bool" color="black" (click)="printTicketHtml(enviro_post.html_string)">
-                        Print 
                     </ion-button>
 
                 </ion-item>

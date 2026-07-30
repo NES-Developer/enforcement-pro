@@ -21,11 +21,21 @@
     <ion-label>Zones *</ion-label>
 </ion-item>
 <ion-item>
+    <ion-searchbar
+        [(ngModel)]="zoneSearch"
+        (ionInput)="filterZones()"
+        placeholder="Search zones">
+    </ion-searchbar>
+</ion-item>
+<ion-item>
     <ion-select interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.zone_id">
-        <ion-select-option *ngFor="let zone of zones" [value]="zone.id"> 
+        <ion-select-option *ngFor="let zone of filteredZones" [value]="zone.id"> 
             {{ zone.name }}     
         </ion-select-option>
     </ion-select>
+</ion-item>
+<ion-item lines="none" *ngIf="zoneStatusMessage">
+    <ion-text color="danger" class="zone-status-message">{{ zoneStatusMessage }}</ion-text>
 </ion-item>
 <ion-item>
     <ion-label>

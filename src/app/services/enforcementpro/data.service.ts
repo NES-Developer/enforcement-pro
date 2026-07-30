@@ -21,12 +21,22 @@ import { HairColour } from '../../models/hair_colour';
 import { NotebookEntry } from '../../models/notebook-entry';
 import { AppLog } from '../../models/app-log';
 import { Login } from '../../models/login';
+import { PatrolSession } from '../../models/patrol-session';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 //Storage
 // import { Storage } from '@ionic/storage';
 import { Storage } from '@ionic/storage-angular';
 
 import { User } from 'src/app/models/user';
+
+export type ZoneDetectionStatusCode = 'idle' | 'not_in_zone' | 'network' | 'error';
+
+export interface ZoneDetectionStatus {
+    code: ZoneDetectionStatusCode;
+    message: string;
+    updated_at: string;
+}
 
 
 @Injectable({
@@ -57,9 +67,11 @@ export class DataService {
     private enviro_post: EnviroPost;
     private service_request: ServiceRequest;
     private app_log: AppLog;
+    private patrol_session: PatrolSession | null = null;
     private login: Login;
     private selected_site: any;
     private selected_zone: any;
+    private zone_detection_status: ZoneDetectionStatus = this.emptyZoneDetectionStatus();
 
     private enviro_que: EnviroPost[] = [];
     private site_offences: SiteOffence[] = [];
@@ -88,6 +100,9 @@ export class DataService {
     private offence_types: any[] = [];
 
     private fpn_number_offline_printer: any[] = [];
+    private tracking_queue: AppLog[] = [];
+    private selectedZoneSubject = new BehaviorSubject<any>(null);
+    private zoneDetectionStatusSubject = new BehaviorSubject<ZoneDetectionStatus>(this.zone_detection_status);
     
     constructor(
         private storage: Storage
@@ -98,6 +113,7 @@ export class DataService {
         this.service_request = new ServiceRequest();
         this.enviro_post = new EnviroPost();
         this.app_log = new AppLog();
+        this.patrol_session = null;
         this.login = new Login();
 
         this.loadFromLocalStorage();
@@ -137,14 +153,20 @@ export class DataService {
         this.sites = await this.loadArrayFromLocalStorage('sites');
         this.offence_types = await this.loadArrayFromLocalStorage('offence_types');
         this.fpn_number_offline_printer = await this.loadArrayFromLocalStorage('fpn_number_offline_printer');
+        this.tracking_queue = await this.loadArrayFromLocalStorage('tracking_queue');
 
         this.selected_site = await this.loadObjectFromLocalStorage('selected_site');
         this.selected_zone = await this.loadObjectFromLocalStorage('selected_zone');
+        this.selectedZoneSubject.next(this.selected_zone);
         this.login = await this.loadObjectFromLocalStorage('login');
         this.service_request = await this.loadObjectFromLocalStorage('service_request');
         this.dynamic_feilds_data = await this.loadObjectFromLocalStorage('dynamic_feilds_data');
         this.enviro_post = await this.loadObjectFromLocalStorage('enviro_post');
         this.app_log = await this.loadObjectFromLocalStorage('app_log');
+        this.removeAppLogZoneId(this.app_log);
+        this.patrol_session = await this.loadObjectFromLocalStorage('patrol_session');
+        this.zone_detection_status = await this.loadObjectFromLocalStorage('zone_detection_status') || this.emptyZoneDetectionStatus();
+        this.zoneDetectionStatusSubject.next(this.zone_detection_status);
 
         this.user = await this.loadObjectFromLocalStorage('user');
         this.token = await this.loadStringFromLocalStorage('token');
@@ -351,8 +373,30 @@ export class DataService {
     }
 
     setAppLog(app_log: AppLog): void {
+        this.removeAppLogZoneId(app_log);
         this.app_log = app_log;
         this.saveObjectToLocalStorage('app_log', this.app_log);
+    }
+
+    setPatrolSession(patrol_session: PatrolSession | null): void {
+        this.patrol_session = patrol_session;
+        this.saveObjectToLocalStorage('patrol_session', this.patrol_session);
+    }
+
+    setTrackingQueue(tracking_queue: AppLog[]): void {
+        this.tracking_queue = tracking_queue || [];
+        this.saveArrayToLocalStorage('tracking_queue', this.tracking_queue);
+    }
+
+    pushTrackingQueue(app_log: AppLog): void {
+        this.removeAppLogZoneId(app_log);
+        this.tracking_queue.push(app_log);
+
+        if (this.tracking_queue.length > 250) {
+            this.tracking_queue = this.tracking_queue.slice(this.tracking_queue.length - 250);
+        }
+
+        this.saveArrayToLocalStorage('tracking_queue', this.tracking_queue);
     }
 
     setSelectedSite(selected_site: any): void {
@@ -363,6 +407,28 @@ export class DataService {
     setSelectedZone(selected_zone: any): void {
         this.selected_zone = selected_zone;
         this.saveObjectToLocalStorage('selected_zone', this.selected_zone);
+        this.selectedZoneSubject.next(this.selected_zone);
+
+        const selectedZoneId = Number(this.selected_zone?.id);
+
+        if (selectedZoneId > 0 && !this.zones.some(zone => Number(zone.id) === selectedZoneId)) {
+            this.zones = [this.selected_zone, ...this.zones];
+            this.saveArrayToLocalStorage('zones', this.zones);
+        }
+    }
+
+    setZoneDetectionStatus(status: ZoneDetectionStatus): void {
+        this.zone_detection_status = {
+            code: status.code,
+            message: status.message || '',
+            updated_at: status.updated_at || new Date().toISOString()
+        };
+        this.saveObjectToLocalStorage('zone_detection_status', this.zone_detection_status);
+        this.zoneDetectionStatusSubject.next(this.zone_detection_status);
+    }
+
+    clearZoneDetectionStatus(): void {
+        this.setZoneDetectionStatus(this.emptyZoneDetectionStatus());
     }
 
     setLogin(login: any): void {
@@ -529,6 +595,11 @@ export class DataService {
 
     }
 
+    pushEnviroQueItem(enviro_post: EnviroPost): void {
+        this.enviro_que.push(enviro_post);
+        this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
+    }
+
     spliceEnviroQue(enviro_post: EnviroPost): void {
         const index = this.enviro_que.indexOf(enviro_post);
         if (index > -1) {
@@ -591,11 +662,11 @@ export class DataService {
     }
       
     checkSelectedSite(): boolean {
-        return this.selected_site?.id !== null;
+        return !!this.selected_site?.id;
     }
 
     checkSelectedZone(): boolean {
-        return this.selected_zone !== null;
+        return !!this.selected_zone?.id;
     }
 
     checkLogin(): boolean {
@@ -663,7 +734,32 @@ export class DataService {
     }
 
     getAppLog(): AppLog {
+        if (!this.app_log) {
+            this.app_log = new AppLog();
+        }
+
+        this.removeAppLogZoneId(this.app_log);
         return this.app_log;
+    }
+
+    getZoneDetectionStatus(): ZoneDetectionStatus {
+        return this.zone_detection_status || this.emptyZoneDetectionStatus();
+    }
+
+    selectedZoneChanges(): Observable<any> {
+        return this.selectedZoneSubject.asObservable();
+    }
+
+    zoneDetectionStatusChanges(): Observable<ZoneDetectionStatus> {
+        return this.zoneDetectionStatusSubject.asObservable();
+    }
+
+    getPatrolSession(): PatrolSession | null {
+        return this.patrol_session;
+    }
+
+    getTrackingQueue(): AppLog[] {
+        return this.tracking_queue;
     }
 
     getSelectedSite(): Site {
@@ -852,8 +948,10 @@ export class DataService {
         this.service_request = new ServiceRequest();
         this.enviro_post = new EnviroPost();
         this.app_log = new AppLog();
+        this.patrol_session = null;
         this.login = new Login();
         this.user = new User();
+        this.zone_detection_status = this.emptyZoneDetectionStatus();
         
 
         this.enviro_que = [];
@@ -867,6 +965,9 @@ export class DataService {
         this.salutations = [];
         this.builds = [];
         this.hair_colours = [];
+        this.tracking_queue = [];
+        this.selectedZoneSubject.next(this.selected_zone);
+        this.zoneDetectionStatusSubject.next(this.zone_detection_status);
 
         this.zones = [];
 
@@ -877,5 +978,19 @@ export class DataService {
         localStorage.clear();
         sessionStorage.clear();
         await this._storage?.clear();
+    }
+
+    private emptyZoneDetectionStatus(): ZoneDetectionStatus {
+        return {
+            code: 'idle',
+            message: '',
+            updated_at: ''
+        };
+    }
+
+    private removeAppLogZoneId(app_log: any): void {
+        if (app_log && Object.prototype.hasOwnProperty.call(app_log, 'zone_id')) {
+            delete app_log.zone_id;
+        }
     }
 }

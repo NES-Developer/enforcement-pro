@@ -12,22 +12,22 @@ import { Clipboard } from '@capacitor/clipboard';
 import { AlertController, Platform } from '@ionic/angular';
 import { Observable, Subscriber, isEmpty } from 'rxjs';
 
-import { AppLauncher } from '@capacitor/app-launcher';
 import { LoadingService } from '../../services/loading.service';
 import { User } from '../../models/user';
 
-import { Capacitor, CapacitorHttp, HttpResponse } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Login } from '../../models/login';
 import { EnviroPost } from '../../models/enviro';
 import { BackgroundTaskService } from '../../services/background-task.service';
+import { PatrolService } from '../../services/patrol.service';
+import { TrackingService } from '../../services/tracking.service';
+import { ThermalPrinterService } from '../../services/thermal-printer.service';
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { OnDestroy } from '@angular/core';
 import { Site } from '../../models/site';
 
 import { CapacitorConfig } from '@capacitor/cli';
-import { AlignmentModeEnum, SunmiPrinter } from '@kduma-autoid/capacitor-sunmi-printer';
 
 @Component({
   selector: 'app-dashboard',
@@ -87,6 +87,18 @@ export class DashboardPage implements OnInit, OnDestroy {
         return `${this.app_log.lat}, ${this.app_log.lng}`;
     }
 
+    get isOnPatrol(): boolean {
+        return this.patrol.isOnPatrol();
+    }
+
+    get patrolStatus(): string {
+        return this.patrol.getStatusText();
+    }
+
+    get patrolHours(): string {
+        return this.patrol.getHoursText();
+    }
+
 
     constructor(
         private auth: AuthService,
@@ -97,7 +109,10 @@ export class DashboardPage implements OnInit, OnDestroy {
         private alertController: AlertController,
         private loading:LoadingService,
         private platform: Platform,
-        private backgroundTasks: BackgroundTaskService
+        private backgroundTasks: BackgroundTaskService,
+        private patrol: PatrolService,
+        private tracking: TrackingService,
+        private printer: ThermalPrinterService
 
     ) {
         this.app_log = new AppLog();
@@ -116,7 +131,7 @@ export class DashboardPage implements OnInit, OnDestroy {
         this.token = this.data.getToken();
         this.url = this.data.getUrl();
         this.selected_site = this.data.getSelectedSite();
-        this.app_log = this.data.getAppLog();
+        this.app_log = this.data.getAppLog() || new AppLog();
 
         this.getRecentFPN();
 
@@ -142,13 +157,10 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     async printFoward() {
         try {
-          await SunmiPrinter.printerInit();
-    
-          await SunmiPrinter.printText({ 
-            text: "\n\n" 
-          });
-          
-        } catch (error) {
+          await this.printer.feedPaper();
+        } catch (error: any) {
+          console.error("Paper feed failed:", error);
+          this.presentAlert('Print Error', error?.message || 'Unable to feed printer paper.');
         }
     }
 
@@ -201,6 +213,8 @@ export class DashboardPage implements OnInit, OnDestroy {
         this.backgroundTasks.setTimeout(() => {
             this.checkSelectedSite();
         }, 30000);
+
+        this.tracking.syncTrackingState().catch(() => undefined);
 
     }
 
@@ -287,25 +301,28 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     ping() {
         if (this.token !== '') {
+            this.tracking.pingNow().catch(() => undefined);
+        }
+    }
 
-            this.getCurrentPosition()
-            .subscribe((position: any) => {
-                this.app_log.lat = position.latitude;
-                this.app_log.lng = position.longitude;
-            });
+    async startPatrol(): Promise<void> {
+        this.patrol.startPatrol(8);
 
-            this.app_log.user_id = this.user.id.toString();
-            this.app_log.type = 'ping';
+        try {
+            await this.tracking.syncTrackingState();
+            this.refresh();
+            this.presentAlert('Patrol Started', 'Location tracking is now active for your patrol hours.');
+        } catch (error: any) {
+            this.patrol.endPatrol();
+            this.presentAlert('Location Required', error?.message || 'Location permission is required to start patrol.');
+        }
+    }
 
-            this.api.postTrack(this.app_log).subscribe({
-                next: (response) => {
-                    // console.log('Response:', response);
-                },
-                error: (error) => {
-                    // console.error('Error:', error);
-                }
-            });
-        } 
+    async endPatrol(): Promise<void> {
+        this.patrol.endPatrol();
+        await this.tracking.stop();
+        this.refresh();
+        this.presentAlert('Patrol Ended', 'FPN tools are locked until you start patrol again.');
     }
 
     getRecentFPN() {
@@ -337,75 +354,11 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     async printImageFromUrl(imageUrl: string) {
         try {
-            // 1. Initialize the printer
-            await SunmiPrinter.printerInit();
-            console.log("Printer initialized...");
-    
-            // 2. Fetch the image via Native HTTP (Bypasses CORS)
-            // We use 'arraybuffer' to get the raw binary data of the image
-            const options = {
-                url: imageUrl,
-                responseType: 'arraybuffer' as const
-            };
-    
-            const response: HttpResponse = await CapacitorHttp.get(options);
-    
-            if (response.status !== 200) {
-                throw new Error(`Failed to download image. Status: ${response.status}`);
-            }
-    
-            // 3. Convert ArrayBuffer to Base64 for the Image object
-            // This allows us to load the image into a canvas for resizing
-            const base64String = response.data; // CapacitorHttp returns base64 for arraybuffer
-            const dataUrl = `data:image/png;base64,${base64String}`;
-    
-            // 4. Load the image into a hidden HTML Image element
-            const img = new Image();
-            img.src = dataUrl;
-    
-            await new Promise((resolve, reject) => {
-                img.onload = () => resolve(true);
-                img.onerror = (err) => reject(new Error("Canvas failed to load native image data"));
-            });
-    
-            // 5. Setup Canvas for Resizing (Strict 384px for Sunmi 58mm)
-            const canvas = document.createElement('canvas');
-            const TARGET_WIDTH = 384; 
-            const scaleFactor = TARGET_WIDTH / img.width;
-            
-            canvas.width = TARGET_WIDTH;
-            canvas.height = img.height * scaleFactor;
-    
-            const ctx = canvas.getContext('2d');
-            if (!ctx) throw new Error("Could not create 2D Canvas context");
-    
-            // Use high-quality image smoothing
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-    
-            // 6. Draw/Resize the image
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
-            // 7. Extract the final clean Base64 (No prefix)
-            const finalBase64 = canvas.toDataURL('image/png').split(',')[1];
-    
-            // 8. Execute Printing
-            await SunmiPrinter.setAlignment({ 
-                alignment: AlignmentModeEnum.CENTER 
-            });
-    
-            await SunmiPrinter.printBitmap({
-                bitmap: finalBase64
-            });
-    
-            // Feed paper so the user can tear it off
-            await SunmiPrinter.lineWrap({ lines: 4 });
-            
+            await this.printer.printImage(imageUrl);
             console.log("Printing completed successfully");
-    
         } catch (error: any) {
             console.error("Complete Print Error:", error);
-            // alert("Print Error: " + (error.message || "Unknown error"));
+            this.presentAlert('Print Error', error?.message || 'Unable to print ticket.');
         }
     }
       
@@ -484,16 +437,6 @@ export class DashboardPage implements OnInit, OnDestroy {
             string: fpn_number
         });
         this.presentAlert('Successful', 'Copied FPN Number to Clipboard')
-    }
-
-    async openOtherApp() {
-        try {
-            await AppLauncher.openUrl({
-                url: 'com.example.enforcementproprinter'
-            });
-        } catch (error) {
-            this.presentAlert('Error', 'Cannot find printer app. Navigate manually')
-        }
     }
 
     async presentAlert(header: string, message: string) {

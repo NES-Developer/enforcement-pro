@@ -24,6 +24,8 @@ import { App } from '@capacitor/app';
 import { EnviroPost } from 'src/app/models/enviro';
 import { LoadingService } from 'src/app/services/loading.service';
 import { BackgroundTaskService } from '../../services/background-task.service';
+import { TrackingService } from '../../services/tracking.service';
+import { AppUpdateService } from '../../services/app-update.service';
 
 @Component({
     selector: 'app-setting',
@@ -37,7 +39,7 @@ export class SettingPage implements OnInit {
 
     map: any;
     selected_site!: Site;
-    selected_zone!: Zone;
+    selected_zone: Zone | null = null;
 
     zones: Zone[] = [];
     sites: Site[] = [];
@@ -47,7 +49,6 @@ export class SettingPage implements OnInit {
 
     device_id: string = "0";
     site_id: number = 0;
-    // zone_id: string = '0';
 
     app_log: AppLog;
     app_version: string = this.constantsService.APP_VERSION;
@@ -63,7 +64,9 @@ export class SettingPage implements OnInit {
         private constantsService: ConstantsService,
         private platform: Platform,
         private loading:LoadingService,
-        private backgroundTasks: BackgroundTaskService
+        private backgroundTasks: BackgroundTaskService,
+        private tracking: TrackingService,
+        private appUpdate: AppUpdateService
 
 
     ) {
@@ -109,27 +112,17 @@ export class SettingPage implements OnInit {
         this.loadData();
     }
 
-    getVersion()
+    async getVersion(): Promise<void>
     {
-        this.api.getApiVersion().subscribe(
-            (response) => {
-                this.api_app_version = response.data.version;
-                this.api_app_url = response.data.url;
-                this.data.setApiAppVersion(this.api_app_version);
-                this.data.setApiAppUrl(this.api_app_url);
+        const result = await this.appUpdate.checkAndInstallIfNeeded('settings');
+        const manifest = result.manifest;
 
-                if (this.api_app_version !== this.app_version)
-                {
-                    this.presentAlert("Update Available: " + this.api_app_version, "We will navigate you to assist Update.")
-                    this.downloadFile();
-                }
-
-            },
-            (error) => {
-                console.log(error);
-                this.presentAlert("Failed", "Failed to get app version")
-            }
-        );
+        if (manifest) {
+            this.api_app_version = manifest.latestVersionName || '';
+            this.api_app_url = manifest.apkUrl || '';
+            this.data.setApiAppVersion(this.api_app_version);
+            this.data.setApiAppUrl(this.api_app_url);
+        }
     }
 
     autoLogin() {
@@ -151,7 +144,7 @@ export class SettingPage implements OnInit {
     }
 
     downloadFile() {
-        window.open(this.api_app_url, '_blank');
+        this.appUpdate.checkAndInstallIfNeeded('settings').catch(() => undefined);
     }
 
     
@@ -161,8 +154,16 @@ export class SettingPage implements OnInit {
         this.app_log.device_id = this.device_id;
         this.app_log.site_id = this.site_id.toString();
 
-        this.data.setSelectedZone(this.selected_zone);
-        this.app_log.zone_id = this.selected_zone.id.toString();
+        if (this.selected_zone?.id) {
+            this.data.setSelectedZone(this.selected_zone);
+            this.data.clearZoneDetectionStatus();
+
+            let enviro_data = this.data.getEnviroPost();
+            if (enviro_data && enviro_data.zone_id <= 0) {
+                enviro_data.zone_id = Number(this.selected_zone.id);
+                this.data.setEnviroPost(enviro_data);
+            }
+        }
 
 
         let user: any = this.auth.getUser();
@@ -272,14 +273,6 @@ export class SettingPage implements OnInit {
         if (this.data.checkAppLog()) {
             this.app_log = this.data.getAppLog();
             this.device_id = this.app_log.device_id;
-            // this.selected_zone.id = parseInt(this.app_log.zone_id);
-            if (!this.selected_zone) {
-                this.selected_zone = {} as any;
-              }
-              
-              this.selected_zone.id = parseInt(this.app_log.zone_id);
-              
-            
         } 
 
         this.storeAppLog();
@@ -326,14 +319,7 @@ export class SettingPage implements OnInit {
     }
 
     ping() {
-        this.api.postTrack(this.app_log).subscribe({
-            next: (response) => {
-                
-            },
-            error: (error) => {
-                
-            }
-        });
+        this.tracking.pingNow().catch(() => undefined);
     }
 
     deviceValidation() {
@@ -391,19 +377,25 @@ export class SettingPage implements OnInit {
             next: (response) => {
                 if (response.success === false){
 
+                    this.data.setZoneDetectionStatus({
+                        code: 'not_in_zone',
+                        message: response.message || 'You are not in a zone. Please select a zone.',
+                        updated_at: new Date().toISOString()
+                    });
                     this.presentAlert('Error', response.message);
                 } else {
 
 
-                    this.selected_zone = response;
+                    this.selected_zone = {
+                        ...response,
+                        id: Number(response.id)
+                    };
                     this.data.setSelectedZone(this.selected_zone);
-
-                    this.app_log.zone_id = response.id;
-
+                    this.data.clearZoneDetectionStatus();
                     this.data.setAppLog(this.app_log);
 
                     let enviro_data = this.data.getEnviroPost();
-                    enviro_data.zone_id = parseInt(this.app_log.zone_id);
+                    enviro_data.zone_id = Number(response.id);
                     this.data.setEnviroPost(enviro_data);
 
 
@@ -414,6 +406,13 @@ export class SettingPage implements OnInit {
 
                 }
             },
+            error: () => {
+                this.data.setZoneDetectionStatus({
+                    code: 'network',
+                    message: 'Unable to confirm your zone. Please select a zone.',
+                    updated_at: new Date().toISOString()
+                });
+            }
         });
     }
 
@@ -436,5 +435,3 @@ export class SettingPage implements OnInit {
     }
 
 }
-
-
