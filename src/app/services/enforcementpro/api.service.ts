@@ -1,10 +1,9 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { from, Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
+import { CapacitorHttp } from '@capacitor/core';
 
-import { Router } from '@angular/router'; // Import Router
 import { AuthService } from './auth.service';
 import { DataService } from './data.service';
 import { EnviroPost } from '../../models/enviro';
@@ -38,7 +37,7 @@ export class ApiService {
 
     postFPN(data: EnviroPost): Observable<any> {
         const url = `${this.baseUrl}/enviro1`;
-        return this.http.post(url, data, { headers: this.getHeaders() });
+        return from(this.nativePost(url, data, 90000));
     }
 
     postNoteBook(data: NotebookEntry): Observable<any> {
@@ -118,5 +117,62 @@ export class ApiService {
     delete(endpoint: string): Observable<any> {
         const url = `${this.baseUrl}/${endpoint}`;
         return this.http.delete(url, { headers: this.getHeaders() });
+    }
+
+    private async nativePost(url: string, data: any, timeoutMs: number): Promise<any> {
+        try {
+            const response = await CapacitorHttp.post({
+                url,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${this.data.getToken()}`
+                },
+                data,
+                connectTimeout: Math.min(timeoutMs, 30000),
+                readTimeout: timeoutMs
+            });
+
+            const payload = this.parseNativeData(response.data);
+
+            if (response.status >= 200 && response.status < 300) {
+                return payload;
+            }
+
+            throw this.toHttpLikeError(url, response.status, payload);
+        } catch (error: any) {
+            if (typeof error?.status === 'number') {
+                throw error;
+            }
+
+            throw this.toHttpLikeError(url, 0, {
+                message: error?.message || 'Could not reach the server.'
+            });
+        }
+    }
+
+    private parseNativeData(data: any): any {
+        if (typeof data !== 'string') {
+            return data;
+        }
+
+        try {
+            return JSON.parse(data);
+        } catch {
+            return { message: data };
+        }
+    }
+
+    private toHttpLikeError(url: string, status: number, payload: any): Error {
+        const statusText = status === 0 ? 'Unknown Error' : 'Error';
+        const serverMessage = payload?.message || payload?.error;
+        const message = typeof serverMessage === 'string' && serverMessage.trim()
+            ? serverMessage
+            : `Http failure response for ${url}: ${status} ${statusText}`;
+        const error: any = new Error(message);
+        error.status = status;
+        error.statusText = statusText;
+        error.url = url;
+        error.error = payload;
+        return error;
     }
 }

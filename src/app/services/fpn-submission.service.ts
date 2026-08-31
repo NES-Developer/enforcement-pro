@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { firstValueFrom, timeout } from 'rxjs';
+import { compressDataUrl } from '../helpers/image-compress';
 import { EnviroPost } from '../models/enviro';
 import { NotebookEntry } from '../models/notebook-entry';
 import { ApiService } from './enforcementpro/api.service';
@@ -38,6 +39,7 @@ export class FpnSubmissionService {
         }
 
         const queueRecord = await this.prepareQueueRecord(enviroPost);
+        await this.shrinkPayloadMedia(queueRecord);
         const payload = this.prepareServerPayload(queueRecord);
         let lastError: any = null;
 
@@ -100,6 +102,7 @@ export class FpnSubmissionService {
         }
 
         const queueRecord = await this.prepareQueueRecord(enviroPost);
+        await this.shrinkPayloadMedia(queueRecord);
         this.addToQueue(queueRecord);
 
         return {
@@ -194,6 +197,18 @@ export class FpnSubmissionService {
             const combined = existing ? `${existing} | ${overflow}` : overflow;
             payload.notebook_entries.officer_statement = this.truncate(combined, 1800);
             (payload as any).officer_statement = payload.notebook_entries.officer_statement;
+        }
+    }
+
+    private async shrinkPayloadMedia(record: EnviroPost): Promise<void> {
+        if (Array.isArray(record.offence_images) && record.offence_images.length > 0) {
+            record.offence_images = await Promise.all(
+                record.offence_images.map(image => compressDataUrl(image, 220000))
+            );
+        }
+
+        if (typeof record.signature === 'string' && record.signature.length > 0) {
+            record.signature = await compressDataUrl(record.signature, 120000);
         }
     }
 
@@ -298,15 +313,36 @@ export class FpnSubmissionService {
         const status = error?.status;
         const message = this.getErrorMessage(error).toLowerCase();
 
-        if (message.includes('data too long')) {
+        if (message.includes('data too long') || status === 413) {
             return false;
+        }
+
+        if (error?.name === 'TimeoutError') {
+            return true;
         }
 
         return [0, 408, 409, 423, 425, 429, 500, 502, 503, 504].includes(status);
     }
 
     private getErrorMessage(error: any): string {
-        return error?.error?.message || error?.message || 'Network/server error.';
+        if (error?.name === 'TimeoutError') {
+            return 'The server took too long to respond.';
+        }
+
+        const status = error?.status;
+        const serverMessage = error?.error?.message || error?.message;
+
+        if (status === 413) {
+            return 'FPN is too large to send. Reduce the number of photos and try again.';
+        }
+
+        if (status === 0) {
+            return serverMessage && !String(serverMessage).includes('Unknown Error')
+                ? serverMessage
+                : 'Could not reach the server. Check the device connection and try again.';
+        }
+
+        return serverMessage || 'Network/server error.';
     }
 
     private getBackoffMs(attempt: number): number {
