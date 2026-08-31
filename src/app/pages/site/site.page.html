@@ -12,7 +12,7 @@
                 </ion-tab-button>
             </ion-col>
             <ion-col>
-                <ion-tab-button (click)="refresh()">
+                <ion-tab-button (click)="forceRefresh()">
                     <ion-icon name="refresh"></ion-icon>
                 </ion-tab-button>
             </ion-col>
@@ -35,8 +35,8 @@
     <ion-list *ngIf=" searchQuery == '' ">
         <div>
             <div class="site-load" *ngIf="sites.length<1">
-                <img src="../assets/loader.gif">
-               
+                <img *ngIf="!sitesLoadFailed" src="../assets/loader.gif">
+                <ion-label *ngIf="sitesLoadFailed">Unable to load sites. Tap refresh to try again.</ion-label>
               </div>
             <ion-item *ngFor="let site of sites">
                 <ion-grid>

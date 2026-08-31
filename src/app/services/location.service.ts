@@ -9,6 +9,10 @@ export interface LocationFix {
     latitude: string;
     longitude: string;
     accuracy: number;
+    altitude: number | null;
+    altitudeAccuracy: number | null;
+    speed: number | null;
+    heading: number | null;
     timestamp: number;
 }
 
@@ -31,6 +35,10 @@ export class LocationService {
             latitude: position.coords.latitude.toString(),
             longitude: position.coords.longitude.toString(),
             accuracy: position.coords.accuracy,
+            altitude: position.coords.altitude ?? null,
+            altitudeAccuracy: position.coords.altitudeAccuracy ?? null,
+            speed: position.coords.speed ?? null,
+            heading: position.coords.heading ?? null,
             timestamp: position.timestamp
         };
     }

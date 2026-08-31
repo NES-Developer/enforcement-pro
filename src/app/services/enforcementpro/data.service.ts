@@ -48,6 +48,7 @@ export class DataService {
     private _storage!: Storage;
 
     private _ready = false;
+    private dataHydrated: Promise<void>;
 
 
     private last_fpn_id: number = 0;
@@ -116,7 +117,7 @@ export class DataService {
         this.patrol_session = null;
         this.login = new Login();
 
-        this.loadFromLocalStorage();
+        this.dataHydrated = this.loadFromLocalStorage();
     }
 
     async init() {
@@ -126,6 +127,11 @@ export class DataService {
         const storage = await this.storage.create();
         this._storage = storage;
         this._ready = true;
+    }
+
+    async waitUntilHydrated(): Promise<void> {
+        await this.init();
+        await this.dataHydrated;
     }
 
     private async loadFromLocalStorage() {

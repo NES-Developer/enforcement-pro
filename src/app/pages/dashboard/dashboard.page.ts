@@ -40,6 +40,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     private checkLoginTimeoutId: any;
     private refreshIntervalId: any;
     private pingIntervalId: any;
+    private checkSelectedSiteTimeoutId: any;
 
     appStateListener: any;
 
@@ -142,11 +143,20 @@ export class DashboardPage implements OnInit, OnDestroy {
     async ngOnInit() {
         this.loading.showLoading();
 
-        await this.data.init();
- 
-        this.init();
+        try {
+            await this.data.waitUntilHydrated();
+            this.loadData();
+            this.init();
+        } finally {
+            this.loading.hideLoading();
+        }
+    }
 
-        this.loading.hideLoading();
+    async ionViewWillEnter() {
+        await this.data.waitUntilHydrated();
+        this.loadData();
+        this.init();
+        this.checkSelectedSite();
     }
 
     blockBackButton() {
@@ -197,22 +207,30 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     init() {
 
-        this.checkLoginTimeoutId = this.backgroundTasks.setTimeout(() => {
-            this.checkLoggedIn();
-        }, 4000);
+        if (!this.checkLoginTimeoutId) {
+            this.checkLoginTimeoutId = this.backgroundTasks.setTimeout(() => {
+                this.checkLoggedIn();
+            }, 4000);
+        }
         
-        this.refreshIntervalId = this.backgroundTasks.setTimeout(() => {
-            this.refresh();
-        }, 5000);
+        if (!this.refreshIntervalId) {
+            this.refreshIntervalId = this.backgroundTasks.setTimeout(() => {
+                this.refresh();
+            }, 5000);
+        }
 
-        this.pingIntervalId = this.backgroundTasks.setInterval(() => {
-            this.refresh();
-            this.ping();
-        }, 30000);
+        if (!this.pingIntervalId) {
+            this.pingIntervalId = this.backgroundTasks.setInterval(() => {
+                this.refresh();
+                this.ping();
+            }, 30000);
+        }
 
-        this.backgroundTasks.setTimeout(() => {
-            this.checkSelectedSite();
-        }, 30000);
+        if (!this.checkSelectedSiteTimeoutId) {
+            this.checkSelectedSiteTimeoutId = this.backgroundTasks.setTimeout(() => {
+                this.checkSelectedSite();
+            }, 30000);
+        }
 
         this.tracking.syncTrackingState().catch(() => undefined);
 
@@ -241,6 +259,11 @@ export class DashboardPage implements OnInit, OnDestroy {
         if (this.pingIntervalId) {
             this.backgroundTasks.clearTimer(this.pingIntervalId);
             this.pingIntervalId = null;
+        }
+
+        if (this.checkSelectedSiteTimeoutId) {
+            this.backgroundTasks.clearTimer(this.checkSelectedSiteTimeoutId);
+            this.checkSelectedSiteTimeoutId = null;
         }
     }
 

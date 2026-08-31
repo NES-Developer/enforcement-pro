@@ -217,6 +217,10 @@ export class AppUpdateService {
             return true;
         }
 
+        if (manifest.forceUpdate === true) {
+            return true;
+        }
+
         if (latestVersionCode !== undefined && current.versionCode > 0) {
             return latestVersionCode > current.versionCode;
         }

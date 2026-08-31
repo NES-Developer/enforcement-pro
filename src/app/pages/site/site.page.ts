@@ -12,7 +12,7 @@ import { SiteOffence } from '../../models/site-offence';
 import { Visibility } from '../../models/visibility';
 import { Weather } from '../../models/weather';
 import { EnviroPost } from 'src/app/models/enviro';
-import { interval } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import {Site  } from '../../models/site';
 import { User } from 'src/app/models/user';
 import { BackgroundTaskService } from '../../services/background-task.service';
@@ -27,6 +27,9 @@ export class SitePage implements OnInit, OnDestroy
 
     private checkLoginTimeoutId: any;
     private refreshIntervalId: any;
+    private isFetchingSites = false;
+    private nextSitesFetchAt = 0;
+    private activeAlert: HTMLIonAlertElement | null = null;
 
     sites: any[] = [];
     user: User;
@@ -37,6 +40,7 @@ export class SitePage implements OnInit, OnDestroy
     searchQuery: string = '';
     is_logged_in: boolean = true;
     token: string = '';
+    sitesLoadFailed = false;
 
 
     constructor(
@@ -53,7 +57,6 @@ export class SitePage implements OnInit, OnDestroy
 
         this.user = new User();
         // this.selected_site = new Site();
-        this.loadData();
 
         this.platform.ready().then(() => {
             this.blockBackButton();
@@ -65,11 +68,20 @@ export class SitePage implements OnInit, OnDestroy
     async ngOnInit() {
         this.loading.showLoading();
 
-        await this.data.init();
+        try {
+            await this.data.waitUntilHydrated();
+            this.loadData();
+            this.init();
+        } finally {
+            this.loading.hideLoading();
+        }
+
+    }
+
+    async ionViewWillEnter() {
+        await this.data.waitUntilHydrated();
+        this.loadData();
         this.init();
-
-        this.loading.hideLoading();
-
     }
 
     blockBackButton() {
@@ -100,14 +112,17 @@ export class SitePage implements OnInit, OnDestroy
         //     this.refresh();
         // }, 5000);
 
+        if (!this.checkLoginTimeoutId) {
+            this.checkLoginTimeoutId = this.backgroundTasks.setTimeout(() => {
+                this.checkLoggedIn();
+            }, 4000);
+        }
 
-        this.checkLoginTimeoutId = this.backgroundTasks.setTimeout(() => {
-            this.checkLoggedIn();
-        }, 4000);
-        
-        this.refreshIntervalId = this.backgroundTasks.setInterval(() => {
-            this.refresh();
-        }, 5000);
+        if (!this.refreshIntervalId && this.sites.length === 0) {
+            this.refreshIntervalId = this.backgroundTasks.setInterval(() => {
+                this.refresh();
+            }, 5000);
+        }
 
     }
 
@@ -150,17 +165,45 @@ export class SitePage implements OnInit, OnDestroy
         this.loadData();
     }
 
+    forceRefresh() {
+        this.nextSitesFetchAt = 0;
+        this.loadData();
+    }
+
     getSites(): void {
+        if (this.isFetchingSites) {
+            return;
+        }
+
+        if (Date.now() < this.nextSitesFetchAt) {
+            return;
+        }
+
+        this.isFetchingSites = true;
+        this.sitesLoadFailed = false;
         
         this.api.getSites().subscribe({
             next: (data) => {
-                this.sites = data.data;
+                this.isFetchingSites = false;
+                this.nextSitesFetchAt = 0;
+                this.sites = Array.isArray(data?.data) ? data.data : [];
                 this.data.setSites(this.sites);
+                this.sitesLoadFailed = this.sites.length === 0;
+
+                if (this.sites.length > 0) {
+                    this.stopSitesRefreshInterval();
+                } else {
+                    this.nextSitesFetchAt = Date.now() + 30000;
+                }
                 // this.selected_site = this.data.getSelectedSite();
                 // this.url = this.data.getUrl();
                 // this.loadData();
             },
             error: (error) => {
+                this.isFetchingSites = false;
+                this.sitesLoadFailed = true;
+                this.nextSitesFetchAt = Date.now() + (error.status == 429 ? 60000 : 15000);
+
                 if (error.status == 500)
                 {
                     this.presentAlert('Server Error', 'Please report error.');
@@ -179,6 +222,10 @@ export class SitePage implements OnInit, OnDestroy
                 else if (error.status == 0)
                 {
                     this.presentAlert('Network Error', 'No internet connection. Please find better reception and try again.');
+                }
+                else if (error.status == 429)
+                {
+                    this.presentAlert('Please wait', 'Too many requests. Sites will reload automatically in a minute.');
                 } 
                 else 
                 {
@@ -200,25 +247,27 @@ export class SitePage implements OnInit, OnDestroy
 
     assignSites() {
 
-        let has_sites: boolean = false;
+        if (this.sites.length === 0) {
+            const cachedSites = this.data.getSites();
 
-        if (this.sites.length == 0) 
-        {
-            this.sites = this.data.getSites();
-
-            if (this.sites.length == 0)
-            {
-                has_sites = false;
-            } else {
-                has_sites = true;
-            }       
-        } else {
-            has_sites = true;
-        }
-        
-        if (!has_sites) {
+            if (Array.isArray(cachedSites) && cachedSites.length > 0) {
+                this.sites = cachedSites;
+                this.sitesLoadFailed = false;
+                this.stopSitesRefreshInterval();
+                return;
+            }
 
             this.getSites();
+            return;
+        }
+
+        this.stopSitesRefreshInterval();
+    }
+
+    private stopSitesRefreshInterval() {
+        if (this.refreshIntervalId) {
+            this.backgroundTasks.clearTimer(this.refreshIntervalId);
+            this.refreshIntervalId = null;
         }
     }
 
@@ -232,21 +281,22 @@ export class SitePage implements OnInit, OnDestroy
 
     setSite(site_id: any) {
 
+        this.selected_site = this.sites.find((site) => site.id === site_id);
+
+        if (!this.selected_site) {
+            this.presentAlert('Error', 'Unable to select that site. Please try again.');
+            return;
+        }
+
         this.loading.showLoading();
 
         let enviro_post = new EnviroPost();
-
-        this.selected_site = this.sites.find((site) => site.id === site_id);
-
         enviro_post.site_id = this.selected_site.id;
 
         this.data.setSelectedSite(this.selected_site);
-
         this.data.setEnviroPost(enviro_post);
 
         this.getFPNData();
-
-        this.loading.hideLoading();
     }
 
     getFPNData(): void {
@@ -260,74 +310,24 @@ export class SitePage implements OnInit, OnDestroy
             site_id = site.id; 
         }
 
-        this.api.getFPNData(site_id).subscribe({
+        this.api.getFPNData(site_id).pipe(timeout(20000)).subscribe({
             next: (data) => {
+                try {
+                    this.applyFPNData(data, site_id);
+                } catch (error) {
+                    console.error('Error applying FPN data:', error);
+                }
 
-                this.data.removeEnviroLookUps();
-                
-                let salutations = data.data.salutations;
-                this.data.setSalutations(salutations);
-
-                let fpn_number_and_barcode = data.data.fpn_number_offline_printer;
-                this.data.setFPNNumberOfflinePrinter(fpn_number_and_barcode);
-
-                let builds = data.data.builds;
-                console.log(data);
-                this.data.setBuilds(builds);
-
-                let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
-                this.data.setHairColors(hair_colours);
-
-                let zones = data.data.zones;
-                this.data.setZones(zones);
-
-                let offence_how = data.data.offence_how;
-                this.data.setOffenceHow(offence_how);
-
-                let offence_location_suffix = data.data.offence_location_suffix;
-                this.data.setOffenceLocationSuffix(offence_location_suffix);
-
-                let address_verified_by = data.data.address_verified_via;
-                this.data.setAddressVerifiedBy(address_verified_by);
-
-                let ethnicities = data.data.ethnicities;
-                this.data.setEthnicities(ethnicities);
-
-                let id_shown = data.data.id_shown;
-                this.data.setIdShown(id_shown);
-
-                let weather: Weather[] = data.data.weathers;
-                this.data.setWeather(weather);
-
-                let visibility: Visibility[] = data.data.visibility;
-                this.data.setVisibility(visibility);
-
-                let poi_prefix: POIPrefix[] = data.data.poi_prefix;
-                this.data.setPOIPrefix(poi_prefix);
-
-                let site_offence = data.data.site_offences;
-                this.data.setSiteOffences(site_offence);
-
-                let offences = this.extractOffence(site_offence);
-                this.data.setOffences(offences);
-
-                let offenceGroups = this.extractOffenceGroups(offences);
-                this.data.setOffenceGroups(offenceGroups);
-
-                let enviro_post = new EnviroPost();
-                enviro_post.site_id = site_id;
-                this.data.setEnviroPost(enviro_post);
-
-
-                // this.router.navigate(['/dashboard']);
-
+                this.loading.hideLoading();
                 this.navigate('/dashboard');
-                
             },
             error: (error) => {
+                this.loading.hideLoading();
 
-                // this.presentAlert('Error', error.message);
-                // console.error('Error 1:', error);
+                if (this.selected_site || this.data.getSelectedSite()) {
+                    this.navigate('/dashboard');
+                    return;
+                }
 
                 if (error.status == 500)
                 {
@@ -336,11 +336,14 @@ export class SitePage implements OnInit, OnDestroy
                 else if (error.status == 401) 
                 {
                     this.presentAlert('Auth Failed', 'Please try Auto Login.');
-                    // this.getFPNData();
                 } 
                 else if (error.status == 0)
                 {
                     this.presentAlert('Network Error', 'No internet connection. Please find better reception and try again.');
+                }
+                else if (error.status == 429)
+                {
+                    this.presentAlert('Please wait', 'Too many requests. Please wait a moment and select the site again.');
                 } 
                 else 
                 {
@@ -350,14 +353,49 @@ export class SitePage implements OnInit, OnDestroy
         });
     }
 
+    private applyFPNData(data: any, site_id: number): void {
+        const payload = data?.data || {};
+
+        this.data.removeEnviroLookUps();
+
+        this.data.setSalutations(payload.salutations || []);
+        this.data.setFPNNumberOfflinePrinter(payload.fpn_number_offline_printer || []);
+        this.data.setBuilds(payload.builds || []);
+        this.data.setHairColors(payload.hair_colors || []);
+        this.data.setZones(payload.zones || []);
+        this.data.setOffenceHow(payload.offence_how || []);
+        this.data.setOffenceLocationSuffix(payload.offence_location_suffix || []);
+        this.data.setAddressVerifiedBy(payload.address_verified_via || []);
+        this.data.setEthnicities(payload.ethnicities || []);
+        this.data.setIdShown(payload.id_shown || []);
+        this.data.setWeather(payload.weathers || []);
+        this.data.setVisibility(payload.visibility || []);
+        this.data.setPOIPrefix(payload.poi_prefix || []);
+
+        const site_offence = payload.site_offences || [];
+        this.data.setSiteOffences(site_offence);
+
+        const offences = this.extractOffence(site_offence);
+        this.data.setOffences(offences);
+        this.data.setOffenceGroups(this.extractOffenceGroups(offences));
+
+        const enviro_post = new EnviroPost();
+        enviro_post.site_id = site_id;
+        this.data.setEnviroPost(enviro_post);
+    }
+
     extractOffence(site_offences: SiteOffence[]): Offence[] {
-        const groups = site_offences.map(site_offence => site_offence.offences);
+        const groups = (site_offences || [])
+            .map(site_offence => site_offence?.offences)
+            .filter((group): group is Offence => !!group?.id);
         return Array.from(new Set(groups.map(group => group.id)))
           .map(id => groups.find(group => group.id === id) as Offence);
     }
 
     extractOffenceGroups(offences: Offence[]): OffenceGroup[] {
-        const groups = offences.map(offence => offence.offenceGroup);
+        const groups = (offences || [])
+            .map(offence => offence?.offenceGroup)
+            .filter((group): group is OffenceGroup => !!group?.id);
         return Array.from(new Set(groups.map(group => group.id)))
           .map(id => groups.find(group => group.id === id) as OffenceGroup);
     }
@@ -374,29 +412,29 @@ export class SitePage implements OnInit, OnDestroy
     }
 
     async presentAlert(header: string, message: string) {
-        // let button_title: string = 'Ok';
-        // let button_retry: string = 'Retry';
-        // let message_display: string = 'Please Click Okay.';
-        // if (header == "Error") {
-        //     message_display = message + ". Please attempt to logout and log back in.";
-        //     button_retry = 'Retry';
+        if (this.activeAlert) {
+            return;
+        }
 
-        // }
         const alert = await this.alertController.create({
             header: header,
             message: message,
+            buttons: ['Okay'],
         });
+        this.activeAlert = alert;
         await alert.present();
-
-        let timeout: number = 3000;
 
         if (header == 'Processing')
         {
            setTimeout(() => {
                 alert.dismiss();
-            }, timeout); 
+            }, 3000); 
         }
-        
+
+        await alert.onDidDismiss();
+        if (this.activeAlert === alert) {
+            this.activeAlert = null;
+        }
     }
 
 }

@@ -7,11 +7,22 @@ import type {
 } from '@capacitor-community/background-geolocation';
 import { AppLog } from '../models/app-log';
 import { DataService } from './enforcementpro/data.service';
-import { LocationService } from './location.service';
+import { LocationFix, LocationService } from './location.service';
 import { PatrolService } from './patrol.service';
 import { AppUpdateService } from './app-update.service';
 
 const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
+
+interface TrackingTelemetry {
+    accuracy?: number | null;
+    altitude?: number | null;
+    altitudeAccuracy?: number | null;
+    speed?: number | null;
+    heading?: number | null;
+    recordedAt?: string;
+    source?: string;
+    isMocked?: boolean;
+}
 
 @Injectable({
     providedIn: 'root'
@@ -92,7 +103,11 @@ export class TrackingService {
         const position = await this.location.requireCurrentPosition();
 
         await this.postTrack(
-            this.buildAppLog(position.latitude, position.longitude)
+            this.buildAppLog(
+                position.latitude,
+                position.longitude,
+                this.telemetryFromCurrentPosition(position)
+            )
         );
     }
 
@@ -128,11 +143,15 @@ export class TrackingService {
             return;
         }
 
-        const log = this.buildAppLog(location.latitude.toString(), location.longitude.toString());
+        const log = this.buildAppLog(
+            location.latitude.toString(),
+            location.longitude.toString(),
+            this.telemetryFromBackgroundLocation(location)
+        );
         this.postTrack(log);
     }
 
-    private buildAppLog(lat: string, lng: string): AppLog {
+    private buildAppLog(lat: string, lng: string, telemetry: TrackingTelemetry = {}): AppLog {
         const appLog = this.data.getAppLog() || new AppLog();
         const user = this.data.getUser();
         const site = this.data.getSelectedSite();
@@ -142,6 +161,7 @@ export class TrackingService {
         appLog.site_id = (site?.id || appLog.site_id || 0).toString();
         appLog.lat = lat;
         appLog.lng = lng;
+        this.applyTelemetry(appLog, telemetry);
         this.removeZoneId(appLog);
 
         this.data.setAppLog(appLog);
@@ -150,6 +170,73 @@ export class TrackingService {
         const cleanLog = { ...appLog };
         this.removeZoneId(cleanLog);
         return cleanLog;
+    }
+
+    private telemetryFromCurrentPosition(position: LocationFix): TrackingTelemetry {
+        return {
+            accuracy: position.accuracy,
+            altitude: position.altitude,
+            altitudeAccuracy: position.altitudeAccuracy,
+            speed: position.speed,
+            heading: position.heading,
+            recordedAt: this.timestampToIso(position.timestamp),
+            source: 'foreground',
+            isMocked: false
+        };
+    }
+
+    private telemetryFromBackgroundLocation(location: BackgroundLocation): TrackingTelemetry {
+        return {
+            accuracy: location.accuracy,
+            altitude: location.altitude,
+            altitudeAccuracy: location.altitudeAccuracy,
+            speed: location.speed,
+            heading: location.bearing,
+            recordedAt: this.timestampToIso(location.time),
+            source: 'background',
+            isMocked: !!location.simulated
+        };
+    }
+
+    private applyTelemetry(appLog: AppLog, telemetry: TrackingTelemetry): void {
+        appLog.recorded_at = telemetry.recordedAt || new Date().toISOString();
+        appLog.accuracy_meters = this.normaliseOptionalNumber(telemetry.accuracy, 0);
+        appLog.altitude_meters = this.normaliseOptionalNumber(telemetry.altitude);
+        appLog.altitude_accuracy_meters = this.normaliseOptionalNumber(telemetry.altitudeAccuracy, 0);
+        appLog.speed_mps = this.normaliseOptionalNumber(telemetry.speed, 0);
+        appLog.heading_degrees = this.normaliseHeading(telemetry.heading);
+        appLog.source = telemetry.source || 'mobile';
+        appLog.is_mocked = !!telemetry.isMocked;
+    }
+
+    private timestampToIso(timestamp?: number | null): string {
+        if (typeof timestamp !== 'number' || !Number.isFinite(timestamp) || timestamp <= 0) {
+            return new Date().toISOString();
+        }
+
+        return new Date(timestamp).toISOString();
+    }
+
+    private normaliseOptionalNumber(value?: number | null, min?: number): number | null {
+        if (typeof value !== 'number' || !Number.isFinite(value)) {
+            return null;
+        }
+
+        if (min !== undefined && value < min) {
+            return null;
+        }
+
+        return Number(value.toFixed(2));
+    }
+
+    private normaliseHeading(value?: number | null): number | null {
+        const heading = this.normaliseOptionalNumber(value);
+
+        if (heading === null) {
+            return null;
+        }
+
+        return Number((((heading % 360) + 360) % 360).toFixed(2));
     }
 
     private async postTrack(appLog: AppLog, queueOnFailure: boolean = true): Promise<boolean> {
