@@ -37,6 +37,10 @@ const routes: Routes = [
     loadChildren: () => import('./pages/queue/queue.module').then(m => m.QueuePageModule)
   },
   {
+    path: 'lemo',
+    loadChildren: () => import('./pages/lemo/lemo.module').then(m => m.LemoPageModule)
+  },
+  {
     path: 'login',
     loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule)
   },

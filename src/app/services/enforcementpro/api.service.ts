@@ -40,6 +40,14 @@ export class ApiService {
         return from(this.nativePost(url, data, 90000));
     }
 
+    postFPNImage(enviroId: number, image: string): Observable<any> {
+        const url = `${this.baseUrl}/enviro/images`;
+        return from(this.nativePost(url, {
+            enviro_id: enviroId,
+            image
+        }, 45000));
+    }
+
     postNoteBook(data: NotebookEntry): Observable<any> {
         const url = `${this.baseUrl}/enviro/notebook`;
         return this.http.post(url, data, { headers: this.getHeaders() });
@@ -86,6 +94,11 @@ export class ApiService {
     getFPNData(site_id: number): Observable<any> {
         const url = `${this.baseUrl}/sites/${site_id}/fpn`;
         return this.http.get(url, { headers: this.getHeaders() });
+    }
+
+    postLemoChat(body: { message: string; chat_id?: number | null; site_id?: number | null; zone_id?: number | null }): Observable<any> {
+        const url = `${this.baseUrl}/lemo/chat`;
+        return this.http.post(url, body, { headers: this.getHeaders() });
     }
 
 

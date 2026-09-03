@@ -1,14 +1,11 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
 import { IonicModule } from '@ionic/angular';
-
-import { PhotoPageRoutingModule } from './photo-routing.module';
-
-import { PhotoPage } from './photo.page';
-import { NavBarModule } from '../../components/nav-bar/nav-bar.module';
 import { EvidenceCaptureModule } from '../../components/evidence-capture/evidence-capture.module';
+import { NavBarModule } from '../../components/nav-bar/nav-bar.module';
+import { LemoPageRoutingModule } from './lemo-routing.module';
+import { LemoPage } from './lemo.page';
 
 @NgModule({
   imports: [
@@ -17,8 +14,8 @@ import { EvidenceCaptureModule } from '../../components/evidence-capture/evidenc
     IonicModule,
     NavBarModule,
     EvidenceCaptureModule,
-    PhotoPageRoutingModule
+    LemoPageRoutingModule
   ],
-  declarations: [PhotoPage]
+  declarations: [LemoPage]
 })
-export class PhotoPageModule {}
+export class LemoPageModule {}

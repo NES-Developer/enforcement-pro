@@ -1,0 +1,90 @@
+<ion-header [translucent]="true">
+  <app-nav-bar [photoCount]="photoCount"></app-nav-bar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="ep-page lemo-page">
+    <section class="ep-hero lemo-hero">
+      <p class="ep-kicker">Officer assistant</p>
+      <h1>Lemo AI</h1>
+      <p>{{ siteName }}<span *ngIf="zoneName"> · {{ zoneName }}</span></p>
+    </section>
+
+    <div class="lemo-thread">
+      <article
+        class="lemo-bubble"
+        *ngFor="let message of lemo.messages; trackBy: trackMessage"
+        [class.is-user]="message.role === 'user'"
+        [class.is-assistant]="message.role === 'assistant'">
+        <p class="lemo-bubble__role">{{ message.role === 'user' ? 'You' : 'Lemo AI' }}</p>
+        <div class="lemo-bubble__text">{{ formattedContent(message.content) }}</div>
+
+        <div class="lemo-cards" *ngIf="message.offenceCards?.length">
+          <button
+            type="button"
+            class="lemo-card"
+            *ngFor="let card of message.offenceCards"
+            (click)="useOffence(card)">
+            <p class="ep-kicker">{{ card.groupName }}</p>
+            <h3>{{ card.name }}</h3>
+            <p *ngIf="card.legislationTitle">{{ card.legislationTitle }}</p>
+            <p *ngIf="card.legislation">{{ card.legislation }}</p>
+            <span>Use this offence</span>
+          </button>
+        </div>
+
+        <div class="lemo-choices" *ngIf="message.choices?.length">
+          <ion-button
+            size="small"
+            fill="outline"
+            *ngFor="let choice of message.choices"
+            (click)="choose(choice)">
+            {{ choice.label }}
+          </ion-button>
+        </div>
+
+        <div class="lemo-fields" *ngIf="message.fields?.length">
+          <ion-input
+            *ngFor="let field of message.fields"
+            [label]="field.label + (field.required ? ' *' : '')"
+            label-placement="stacked"
+            fill="outline"
+            [type]="field.type === 'textarea' ? 'text' : field.type"
+            [(ngModel)]="draft[field.key]">
+          </ion-input>
+          <ion-button expand="block" (click)="submitFields(message.fields || [])">Continue</ion-button>
+        </div>
+
+        <div class="lemo-camera" *ngIf="message.showCamera">
+          <app-evidence-capture [compact]="true"></app-evidence-capture>
+        </div>
+
+        <div class="lemo-sign" *ngIf="message.showSignature">
+          <canvas #signatureCanvas width="320" height="160"></canvas>
+          <div class="ep-actions ep-actions--split">
+            <ion-button expand="block" color="medium" (click)="clearSignature()">Clear</ion-button>
+            <ion-button expand="block" (click)="saveSignature()">Save</ion-button>
+          </div>
+        </div>
+      </article>
+
+      <p class="lemo-busy" *ngIf="lemo.busy">Lemo is thinking…</p>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="lemo-footer">
+  <div class="lemo-composer">
+    <ion-textarea
+      [(ngModel)]="composer"
+      auto-grow="true"
+      rows="1"
+      maxlength="4000"
+      placeholder="Ask about an offence, or create an FPN"
+      (keydown.enter)="send(); $event.preventDefault()">
+    </ion-textarea>
+    <ion-button [disabled]="lemo.busy || !composer.trim()" (click)="send()">
+      Send
+    </ion-button>
+  </div>
+</ion-footer>

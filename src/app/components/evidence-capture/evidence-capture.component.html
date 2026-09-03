@@ -1,0 +1,25 @@
+<div [class.ep-evidence--compact]="compact">
+  <div class="ep-photo-stage" *ngIf="!error">
+    <video #video id="lemo-video" [height]="height" autoplay playsinline></video>
+  </div>
+
+  <p class="ep-note" *ngIf="error">{{ error }}.</p>
+
+  <button class="ep-capture" type="button" (click)="capture()">
+    <ion-icon name="camera"></ion-icon>
+    Capture
+  </button>
+
+  <p class="ep-evidence__count">{{ photoCount }} of {{ maxPhotos }} photos attached</p>
+
+  <div class="ep-photo-grid" *ngIf="photoCount">
+    <div class="ep-photo-tile" *ngFor="let src of enviro_post.offence_images; let idx = index">
+      <img [src]="src" alt="" />
+      <button type="button" (click)="removePhoto(idx)" aria-label="Remove photo">
+        <ion-icon name="trash"></ion-icon>
+      </button>
+    </div>
+  </div>
+
+  <canvas #canvas class="ep-evidence__canvas" [width]="width" [height]="height"></canvas>
+</div>

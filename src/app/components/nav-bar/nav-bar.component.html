@@ -1,38 +1,40 @@
-<ion-toolbar class="nav-toolbar">
-  <ion-row class="nav-row">
-    <ion-col class="nav-col">
-      <ion-tab-button class="nav-button" (click)="navigate('/dashboard')">
-        <ion-icon name="home"></ion-icon>
+<ion-toolbar class="ep-nav">
+  <ion-row class="ep-nav__row">
+    <ion-col class="ep-nav__col">
+      <ion-tab-button class="ep-nav__btn" [class.is-active]="isActive('/dashboard')" (click)="navigate('/dashboard')">
+        <ion-icon [name]="isActive('/dashboard') ? 'home' : 'home-outline'"></ion-icon>
+        <span class="ep-nav__label">Home</span>
       </ion-tab-button>
     </ion-col>
-    <ion-col class="nav-col">
-      <ion-tab-button class="nav-button" (click)="navigate('/enviro')">
-        <ion-icon name="leaf"></ion-icon>
+    <ion-col class="ep-nav__col">
+      <ion-tab-button class="ep-nav__btn" [class.is-active]="isActive('/enviro')" (click)="navigate('/enviro')">
+        <ion-icon [name]="isActive('/enviro') ? 'leaf' : 'leaf-outline'"></ion-icon>
+        <span class="ep-nav__label">FPN</span>
       </ion-tab-button>
     </ion-col>
-    <ion-col class="nav-col">
-      <ion-tab-button class="nav-button" (click)="navigate('/photo')">
-        <ion-row *ngIf="photoCount !== null; else cameraOnly">
-          <ion-col size="auto">
-            <ion-icon name="camera"></ion-icon>
-          </ion-col>
-          <ion-col size="auto">
-            <ion-label>{{ photoCount }}</ion-label>
-          </ion-col>
-        </ion-row>
-        <ng-template #cameraOnly>
-          <ion-icon name="camera"></ion-icon>
-        </ng-template>
+    <ion-col class="ep-nav__col">
+      <ion-tab-button class="ep-nav__btn" [class.is-active]="isActive('/lemo')" (click)="navigate('/lemo')">
+        <ion-icon [name]="isActive('/lemo') ? 'sparkles' : 'sparkles-outline'"></ion-icon>
+        <span class="ep-nav__label">Lemo</span>
       </ion-tab-button>
     </ion-col>
-    <ion-col class="nav-col">
-      <ion-tab-button class="nav-button" (click)="navigate('/queue')">
-        <ion-icon name="time"></ion-icon>
+    <ion-col class="ep-nav__col">
+      <ion-tab-button class="ep-nav__btn" [class.is-active]="isActive('/photo')" (click)="navigate('/photo')">
+        <ion-icon [name]="isActive('/photo') ? 'camera' : 'camera-outline'"></ion-icon>
+        <span class="ep-nav__label">Camera</span>
+        <span class="ep-nav__count" *ngIf="photoCount !== null">{{ photoCount }}</span>
       </ion-tab-button>
     </ion-col>
-    <ion-col class="nav-col">
-      <ion-tab-button class="nav-button" (click)="navigate('/setting')">
-        <ion-icon name="person"></ion-icon>
+    <ion-col class="ep-nav__col">
+      <ion-tab-button class="ep-nav__btn" [class.is-active]="isActive('/queue')" (click)="navigate('/queue')">
+        <ion-icon [name]="isActive('/queue') ? 'time' : 'time-outline'"></ion-icon>
+        <span class="ep-nav__label">Queue</span>
+      </ion-tab-button>
+    </ion-col>
+    <ion-col class="ep-nav__col">
+      <ion-tab-button class="ep-nav__btn" [class.is-active]="isActive('/setting')" (click)="navigate('/setting')">
+        <ion-icon [name]="isActive('/setting') ? 'person' : 'person-outline'"></ion-icon>
+        <span class="ep-nav__label">Profile</span>
       </ion-tab-button>
     </ion-col>
   </ion-row>

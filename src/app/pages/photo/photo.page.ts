@@ -1,9 +1,8 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { compressDataUrl, estimateDataUrlBytes } from '../../helpers/image-compress';
-import { EnviroPost } from '../../models/enviro';
-import { DataService } from '../../services/enforcementpro/data.service';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
+import { EnviroPost } from '../../models/enviro';
+import { DataService } from '../../services/enforcementpro/data.service';
 import { PatrolService } from '../../services/patrol.service';
 
 @Component({
@@ -11,198 +10,49 @@ import { PatrolService } from '../../services/patrol.service';
   templateUrl: './photo.page.html',
   styleUrls: ['./photo.page.scss'],
 })
-export class PhotoPage implements OnInit, AfterViewInit, OnDestroy {
+export class PhotoPage implements OnInit {
+  currentStep: number = 1;
+  enviro_post: EnviroPost = new EnviroPost();
 
+  constructor(
+    private data: DataService,
+    private router: Router,
+    private alertController: AlertController,
+    private route2: ActivatedRoute,
+    private patrol: PatrolService
+  ) {
+    this.route2.queryParams.subscribe(params => {
+      this.currentStep = parseInt(params['currentStep']) || 1;
+    });
+  }
 
-    WIDTH = 640;
-    HEIGHT = 480;
-
-    @ViewChild('video')
-    public video!: ElementRef;
-
-    @ViewChild('canvas')
-    public canvas!: ElementRef;
-
-    currentStep: number = 1;
-
-    enviro_post: EnviroPost = new EnviroPost();
-    captures: string[] = [];
-    error: any;
-    isCaptured!: boolean;
-    private mediaStream: MediaStream | null = null;
-
-    constructor(
-        private data: DataService,
-        private router: Router,
-        private alertController: AlertController,
-        private route2: ActivatedRoute,
-        private patrol: PatrolService
-        ) {
-            this.route2.queryParams.subscribe(params => {
-                this.currentStep = parseInt(params['currentStep']) ?? 1; // Fallback to 1 if null or undefined
-            });
-        }
-
-    ngOnInit() {
-        if (!this.patrol.canUseFpnTools()) {
-            this.presentAlert('Patrol Required', 'Start patrol from the dashboard before using the camera.');
-            this.router.navigate(['/dashboard']);
-            return;
-        }
-
-        this.loadData();
+  ngOnInit(): void {
+    if (!this.patrol.canUseFpnTools()) {
+      this.presentAlert('Patrol Required', 'Start patrol from the dashboard before using the camera.');
+      this.router.navigate(['/dashboard']);
+      return;
     }
 
-    async ngAfterViewInit() {
-        if (!this.patrol.canUseFpnTools()) {
-            return;
-        }
+    this.loadData();
+  }
 
-        await this.setupDevices();
+  ionViewWillEnter(): void {
+    this.loadData();
+  }
+
+  private loadData(): void {
+    const enviroPost = this.data.getEnviroPost();
+    if (enviroPost) {
+      this.enviro_post = enviroPost;
     }
+  }
 
-    async setupDevices() {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: { exact: "environment" }
-                }
-                });
-                if (stream) {
-                    this.mediaStream = stream;
-                    this.video.nativeElement.srcObject = stream;
-                    this.video.nativeElement.play();
-                    this.error = null;
-                } else {
-                    this.error = "You have no output video device";
-                }
-            } catch (e) {
-                // this.error = e;
-            }
-        }
-    }
-
-    ngOnDestroy() {
-        this.stopCameraStream();
-    }
-
-    private stopCameraStream(): void {
-        if (this.mediaStream) {
-            this.mediaStream.getTracks().forEach(track => track.stop());
-            this.mediaStream = null;
-        }
-
-        if (this.video?.nativeElement) {
-            this.video.nativeElement.srcObject = null;
-        }
-    }
-
-    capture() {
-        // If already 5 images, block adding more
-        if (this.enviro_post.offence_images.length >= 5) {
-            this.presentAlert('Limit Exceeded', 'FPN images cannot exceed 5.');
-            return;
-        }
-        this.drawImageToCanvas(this.video.nativeElement);
-        const capturedImage = this.canvas.nativeElement.toDataURL('image/jpeg', 0.72);
-        this.captures.push(capturedImage);
-        this.enviro_post.offence_images.push(capturedImage);
-        this.saveEnviroData();
-
-        this.checkAndCompressLastOffenceImage();
-        
-    }
-
-    // Compress the last offence image if it is still larger than ~220KB
-    private async checkAndCompressLastOffenceImage(): Promise<void> {
-        const images = this.enviro_post.offence_images;
-        if (!images || images.length === 0) {
-            return;
-        }
-
-        const lastIndex = images.length - 1;
-        const lastImage = images[lastIndex];
-        const maxBytes = 220000;
-
-        if (estimateDataUrlBytes(lastImage) <= maxBytes) {
-            return;
-        }
-
-        try {
-            const compressed = await compressDataUrl(lastImage, maxBytes);
-            this.enviro_post.offence_images[lastIndex] = compressed;
-
-            if (this.captures && this.captures.length > 0) {
-                this.captures[this.captures.length - 1] = compressed;
-            }
-
-            this.saveEnviroData();
-        } catch (e) {
-            console.error('Error compressing image', e);
-        }
-    }
-
-
-
-    route (route: string) {
-        if (route == "/tabs/fpn")
-        {
-            this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
-        } 
-        else
-        {
-            this.router.navigate([route]);
-        }
-    }
-
-    setPhoto(idx: number) {
-        this.isCaptured = true;
-        const image = new Image();
-        image.src = this.captures[idx];
-        image.onload = () => {
-            this.drawImageToCanvas(image);
-        };
-    }
-
-    drawImageToCanvas(image: any) {
-        const context = this.canvas.nativeElement.getContext('2d');
-        context.clearRect(0, 0, this.WIDTH, this.HEIGHT);
-        context.drawImage(image, 0, 0, this.WIDTH, this.HEIGHT);
-    }
-
-    removeCurrent() {
-        this.isCaptured = false;
-    }
-
-    loadData() {
-        const enviro_post = this.data.getEnviroPost();
-        if (enviro_post !== null) {
-        this.enviro_post = enviro_post;
-        }
-    }
-
-    removePhoto(idx: number) {
-        this.captures.splice(idx, 1);
-        this.enviro_post.offence_images.splice(idx, 1);
-        this.saveEnviroData();
-    }
-
-    saveEnviroData() {
-        this.data.setEnviroPost(this.enviro_post);
-    }
-
-    async presentAlert(header: string, message: string) {
-  
-        const alert = await this.alertController.create({
-            header: header,
-            message: message,
-            buttons: [
-                {
-                    text: 'Okay'
-                }
-            ],
-        });
-        await alert.present();
-    }
+  private async presentAlert(header: string, message: string): Promise<void> {
+    const alert = await this.alertController.create({
+      header,
+      message,
+      buttons: ['Okay'],
+    });
+    await alert.present();
+  }
 }

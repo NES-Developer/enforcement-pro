@@ -29,6 +29,8 @@ import { Step4Component } from '../enviro/step4/step4.component';
 import { Step5Component } from '../enviro/step5/step5.component';
 import { Step6Component } from '../enviro/step6/step6.component';
 import { Step7Component } from '../enviro/step7/step7.component';
+import { StepEvidenceComponent } from '../enviro/step-evidence/step-evidence.component';
+import { EvidenceCaptureModule } from '../../components/evidence-capture/evidence-capture.module';
 
 
 @NgModule({
@@ -38,7 +40,8 @@ import { Step7Component } from '../enviro/step7/step7.component';
     IonicModule,
     EnviroPageRoutingModule,
     NavBarModule,
-    ExploreContainerComponentModule
+    ExploreContainerComponentModule,
+    EvidenceCaptureModule
   ],
   declarations: [
     EnviroPage,
@@ -47,6 +50,7 @@ import { Step7Component } from '../enviro/step7/step7.component';
     Step3Component,
     Step4Component,
     Step5Component,
+    StepEvidenceComponent,
     Step6Component,
     Step7Component,
 ]

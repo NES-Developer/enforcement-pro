@@ -1,276 +1,141 @@
 <div *ngIf="selected_site">
+  <ion-header [translucent]="true">
+    <ion-router-outlet></ion-router-outlet>
+    <app-nav-bar></app-nav-bar>
+  </ion-header>
 
+  <ion-content [fullscreen]="true">
+    <div class="ep-page">
+      <section class="ep-hero">
+        <p class="ep-kicker">Duty desk</p>
+        <h1>{{ user.name }}</h1>
+        <p>{{ selected_site.name }}</p>
+        <div class="ep-hero__site">
+          <img [src]="getImageUrl(selected_site.logo)" alt="" />
+          <ion-button fill="clear" size="small" (click)="route('/site')">
+            <ion-icon slot="start" name="pencil-outline"></ion-icon>
+            Change site
+          </ion-button>
+        </div>
+      </section>
 
+      <section class="ep-patrol" [class.is-active]="isOnPatrol">
+        <div class="ep-ticket__top">
+          <div>
+            <p class="ep-kicker">Patrol</p>
+            <h3 class="ep-ticket__title">{{ patrolStatus }}</h3>
+          </div>
+          <span class="ep-chip" [class.ep-chip--live]="isOnPatrol" [class.ep-chip--warn]="!isOnPatrol">
+            {{ isOnPatrol ? 'On duty' : 'Off duty' }}
+          </span>
+        </div>
+        <div class="ep-patrol__hours">{{ patrolHours }}</div>
+        <div class="ep-actions ep-actions--split">
+          <ion-button expand="block" color="success" [disabled]="isOnPatrol" (click)="startPatrol()">
+            Start patrol
+          </ion-button>
+          <ion-button expand="block" color="medium" [disabled]="!isOnPatrol" (click)="endPatrol()">
+            End patrol
+          </ion-button>
+        </div>
+        <ion-note *ngIf="!isOnPatrol" class="ep-note">
+          FPN, camera, and queue tools stay locked until patrol starts. Lemo AI can research offences anytime.
+        </ion-note>
+      </section>
 
-    <ion-header [translucent]="true">
-        <!-- Main content -->
-        <ion-router-outlet></ion-router-outlet>
-    
-        <app-nav-bar></app-nav-bar>
-    </ion-header>
+      <section class="ep-section">
+        <div class="ep-section__head">
+          <p class="ep-kicker">Lemo AI</p>
+          <h2>Offence support</h2>
+        </div>
+        <p>Research legislation, create an FPN, and attach images using the site and zone already selected.</p>
+        <ion-button expand="block" color="primary" (click)="route('/lemo')">
+          <ion-icon slot="start" name="sparkles-outline"></ion-icon>
+          Open Lemo AI
+        </ion-button>
+      </section>
 
+      <section class="ep-section">
+        <div class="ep-section__head">
+          <p class="ep-kicker">Overview</p>
+          <h2>Today at a glance</h2>
+        </div>
+        <div class="ep-stat-grid">
+          <div class="ep-stat">
+            <div class="ep-stat__label">FPNs submitted</div>
+            <div class="ep-stat__value">{{ submittedCount }}</div>
+          </div>
+          <div class="ep-stat">
+            <div class="ep-stat__label">On queue</div>
+            <div class="ep-stat__value">{{ queueCount }}</div>
+          </div>
+          <div class="ep-stat">
+            <div class="ep-stat__label">Submit rate</div>
+            <div class="ep-stat__value">{{ submitRate }}%</div>
+            <div class="ep-stat__sub">of total records</div>
+          </div>
+          <div class="ep-stat">
+            <div class="ep-stat__label">GPS tracking</div>
+            <div class="ep-stat__value ep-stat__value--sm">{{ gpsSummary }}</div>
+            <div class="ep-stat__sub">{{ hasGpsFix ? 'Last fix' : 'Awaiting fix' }}</div>
+          </div>
+        </div>
+      </section>
 
-    <ion-content [fullscreen]="true">
+      <div class="ep-actions ep-actions--split">
+        <ion-button expand="block" (click)="printFoward()">
+          <ion-icon slot="start" name="print-outline"></ion-icon>
+          Forward paper
+        </ion-button>
+        <ion-button expand="block" color="medium" (click)="fpnDuplicate()">
+          Remove duplicate
+        </ion-button>
+      </div>
 
-        
+      <section class="ep-section" style="margin-top: 14px;">
+        <div class="ep-section__head">
+          <p class="ep-kicker">Recent tickets</p>
+          <h2>Issued FPNs</h2>
+        </div>
 
-        <ion-item lines="none" class="ion-justify-content-center">
-            <ion-label class="ion-text-center">
-                <h2>{{ user.name }}</h2>
-            </ion-label>
-        </ion-item>
+        <div class="ep-empty" *ngIf="!recent_fpns?.length">
+          <h3>No tickets yet</h3>
+          <p>Submitted FPNs will appear here.</p>
+        </div>
 
-        <ion-item>
-            <div class="row">
-                <div class="col-4">
-                    <img [src]="getImageUrl(selected_site.logo)" height="40px" />
-                </div>
-                <div class="col-6">
-                    <ion-label class="text-center">{{ selected_site.name }}</ion-label>
-                </div>
-                <div class="col-2">
-                    <ion-button (click)="route('/site')">
-                        <ion-icon name="pencil"></ion-icon>
-                    </ion-button>
-                </div>
-            </div>
-        </ion-item>
-
-        <ion-card class="patrol-card" [class.patrol-active]="isOnPatrol">
-            <ion-card-header>
-                <ion-card-title>Patrol Hours</ion-card-title>
-                <ion-card-subtitle>{{ patrolStatus }}</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-                <div class="patrol-hours">{{ patrolHours }}</div>
-                <ion-row>
-                    <ion-col size="6">
-                        <ion-button expand="block" color="success" [disabled]="isOnPatrol" (click)="startPatrol()">
-                            Start Patrol
-                        </ion-button>
-                    </ion-col>
-                    <ion-col size="6">
-                        <ion-button expand="block" color="medium" [disabled]="!isOnPatrol" (click)="endPatrol()">
-                            End Patrol
-                        </ion-button>
-                    </ion-col>
-                </ion-row>
-                <ion-note *ngIf="!isOnPatrol" color="danger">
-                    FPN, camera, and queue tools are locked until patrol starts.
-                </ion-note>
-            </ion-card-content>
-        </ion-card>
-
-        <ion-card class="analytics-card">
-            <ion-card-header>
-                <ion-card-title>Analytics Overview</ion-card-title>
-                <ion-card-subtitle>Quick view of your system records</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-                <ion-grid>
-                    <ion-row>
-                        <ion-col size="6">
-                            <div class="stat-tile">
-                                <div class="stat-label">FPNs Submitted</div>
-                                <div class="stat-value">{{ submittedCount }}</div>
-                            </div>
-                        </ion-col>
-                        <ion-col size="6">
-                            <div class="stat-tile">
-                                <div class="stat-label">On Queue</div>
-                                <div class="stat-value">{{ queueCount }}</div>
-                            </div>
-                        </ion-col>
-                    </ion-row>
-                    <ion-row>
-                        <ion-col size="6">
-                            <div class="stat-tile">
-                                <div class="stat-label">Submit Rate</div>
-                                <div class="stat-value">{{ submitRate }}%</div>
-                                <div class="stat-sub">of total records</div>
-                            </div>
-                        </ion-col>
-                        <ion-col size="6">
-                            <div class="stat-tile">
-                                <div class="stat-label">GPS Tracking</div>
-                                <div class="stat-value stat-small">{{ gpsSummary }}</div>
-                                <div class="stat-sub">{{ hasGpsFix ? 'Last fix' : 'Awaiting fix' }}</div>
-                            </div>
-                        </ion-col>
-                    </ion-row>
-                </ion-grid>
-            </ion-card-content>
-        </ion-card>
-
-        <ion-row>
-            <ion-col>
-                <ion-item>
-                    <ion-button expand="block" shape="full" (click)="printFoward()">
-                        <ion-icon name="print"></ion-icon> Foward Paper
-                    </ion-button>
-                </ion-item>
-            </ion-col>
-            
-            <ion-col>
-                <ion-item>
-                    <ion-button expand="block" shape="full" (click)="fpnDuplicate()">
-                        Remove Duplicate
-                    </ion-button>
-                </ion-item>
-            </ion-col>
-        </ion-row>
-
-        <ion-row class="logout-row">
-            <ion-item>
-                <ion-tab-button (click)="logout()">
-                    <ion-icon name="log-out"></ion-icon> Logout
-                </ion-tab-button>
-            </ion-item>
-        </ion-row>
-
-
-
-        <ion-list>
+        <article class="ep-ticket" *ngFor="let fpn of recent_fpns">
+          <div class="ep-ticket__top">
             <div>
-                <ion-item *ngFor="let fpn of recent_fpns">
-                    <ion-grid>
-                        <ion-row>
-                            <ion-col size="6">
-                                <ion-item>
-                                    <ion-label>FPN Number: {{ fpn.fpn_number }}</ion-label>
-                                </ion-item>
-                            </ion-col>
-                        
-                            <ion-col size="6">
-                                <ion-item>
-                                    <ion-label>Offender: {{ fpn.offender?.first_name }} {{ fpn.offender?.last_name }}</ion-label>
-                                </ion-item>
-                            </ion-col>
-                        </ion-row>
-                        
-                        <ion-row>
-                            <ion-col size="12">
-                                <ion-item>
-                                    <ion-badge *ngIf="!notebookEntryIsEmpty(fpn)" color="primary">Notebook Found</ion-badge>
-                                    <ion-button *ngIf="notebookEntryIsEmpty(fpn)" (click)="notebookEntry(fpn)" color="dark">NoteBook Entry</ion-button>
-                                    <ion-button (click)="copyFPNNumber(fpn.fpn_number)" color="dark">Copy</ion-button>
-                                    <ion-button (click)="printFPN(fpn)" color="dark">Print</ion-button>
-                                </ion-item>
-                            </ion-col>
-                        </ion-row>
-
-                        <!-- <ion-row>
-
-                        </ion-row> -->
-                        
-                    </ion-grid>
-                </ion-item>
+              <h3 class="ep-ticket__title">{{ fpn.fpn_number }}</h3>
+              <p class="ep-ticket__meta">{{ fpn.offender?.first_name }} {{ fpn.offender?.last_name }}</p>
             </div>
-            
-        </ion-list>
+            <ion-badge *ngIf="!notebookEntryIsEmpty(fpn)">Notebook found</ion-badge>
+          </div>
+          <div class="ep-ticket__actions">
+            <ion-button *ngIf="notebookEntryIsEmpty(fpn)" size="small" (click)="notebookEntry(fpn)">
+              Notebook
+            </ion-button>
+            <ion-button size="small" color="medium" (click)="copyFPNNumber(fpn.fpn_number)">Copy</ion-button>
+            <ion-button size="small" color="dark" (click)="printFPN(fpn)">Print</ion-button>
+          </div>
+        </article>
+      </section>
 
-    </ion-content>
-
-    <!-- <ion-tabs>
-
-        <ion-router-outlet></ion-router-outlet>
-      
-        <ion-tab-bar slot="bottom">
-      
-
-          <ion-tab-button (click)="route('/enviro')">
-            <ion-icon name="leaf"></ion-icon>
-          </ion-tab-button>
-      
-          <ion-tab-button (click)="refresh()">
-            <ion-icon name="refresh"></ion-icon>
-          </ion-tab-button>
-      
-          
-      
-          <ion-tab-button (click)="route('/setting')">
-            <ion-icon name="person"></ion-icon>
-          </ion-tab-button>
-      
-          <ion-tab-button (click)="logout()">
-            <ion-icon name="log-out"></ion-icon>
-          </ion-tab-button>
-      
-        </ion-tab-bar>
-      </ion-tabs> -->
-      
-
-
-    <!-- <ion-header [translucent]="true">
-        <ion-toolbar>
-            <ion-row>
-                <ion-col>
-
-                    <ion-button (click)="route('/queue')">
-                        <ion-icon name="time"></ion-icon>
-                    </ion-button>
-
-                    <ion-button (click)="refresh()">
-                        <ion-icon name="refresh"></ion-icon>
-                    </ion-button>
-
-                    <ion-button (click)="route('/enviro')">
-                        <ion-icon name="leaf"></ion-icon>
-                    </ion-button>
-
-                    <ion-button (click)="route('/setting')">
-                        <ion-icon name="person"></ion-icon>
-                    </ion-button>
-
-                    <ion-button (click)="logout()">
-                        <ion-icon name="log-out"></ion-icon>
-                    </ion-button>
-
-
-                </ion-col>
-            </ion-row>
-        </ion-toolbar>
-    </ion-header> -->
+      <ion-button expand="block" fill="clear" class="ep-logout" (click)="logout()">
+        <ion-icon slot="start" name="log-out-outline"></ion-icon>
+        Sign out
+      </ion-button>
+    </div>
+  </ion-content>
 </div>
 
-
-
 <div *ngIf="!selected_site">
-    <!-- <ion-header [translucent]="true">
-        <ion-toolbar>
-            <ion-row>
-                    Please Wait
-            </ion-row>
-            <ion-row>
-                We are retrieveing your information ...
-            </ion-row>
-        </ion-toolbar>
-    </ion-header> -->
-
-    <ion-content [fullscreen]="true">
-        <div class="center-wrapper">
-      
-          <div class="mb-4 mt-4">
-                <h2>Please Wait</h2>
-          </div>
-      
-          <div class="mb-4 mt-4">
-            <p>We are retrieving your information ...</p>
-          </div>
-      
-          <div class="mb-4 mt-4">
-            <img
-              src="assets/ic_app_logo.png"
-              class="bg-white rounded logo"
-            />
-          </div>
-      
-          <div class="mb-4 mt-4">
-            <ion-spinner name="crescent"></ion-spinner>
-          </div>
-      
-        </div>
-      </ion-content>
-      
-      
+  <ion-content [fullscreen]="true">
+    <div class="ep-wait">
+      <p class="ep-kicker">Please wait</p>
+      <h2>Retrieving your information</h2>
+      <img src="assets/ic_app_logo.png" alt="Enforcement Pro" />
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  </ion-content>
 </div>

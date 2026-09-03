@@ -1,0 +1,138 @@
+.lemo-hero {
+  margin-bottom: 14px;
+}
+
+.lemo-thread {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.lemo-bubble {
+  background: var(--ep-card);
+  border: 1px solid var(--ep-line);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: var(--ep-shadow);
+}
+
+.lemo-bubble.is-user {
+  background: #10232d;
+  color: #fff8e8;
+}
+
+.lemo-bubble.is-user .lemo-bubble__role,
+.lemo-bubble.is-user .lemo-bubble__text {
+  color: #fff8e8;
+}
+
+.lemo-bubble__role {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ep-brass);
+}
+
+.lemo-bubble__text {
+  font-size: 15px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.lemo-choices,
+.lemo-fields,
+.lemo-cards,
+.lemo-camera,
+.lemo-sign {
+  margin-top: 12px;
+}
+
+.lemo-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lemo-choices ion-button {
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  min-height: 36px;
+  margin: 0;
+}
+
+.lemo-fields {
+  display: grid;
+  gap: 10px;
+}
+
+.lemo-cards {
+  display: grid;
+  gap: 10px;
+}
+
+.lemo-card {
+  text-align: left;
+  background: var(--ep-paper);
+  border: 1px solid var(--ep-line);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.lemo-card h3 {
+  margin: 4px 0;
+  font-size: 18px;
+}
+
+.lemo-card p {
+  margin: 0;
+  color: var(--ep-slate);
+  font-size: 13px;
+}
+
+.lemo-card span {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--ep-forest);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.lemo-sign canvas {
+  width: 100%;
+  height: 160px;
+  background: #fff;
+  border: 1px dashed var(--ep-line);
+  border-radius: 12px;
+}
+
+.lemo-busy {
+  margin: 0;
+  color: var(--ep-slate);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lemo-footer {
+  background: var(--ep-card);
+}
+
+.lemo-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+}
+
+.lemo-composer ion-textarea {
+  flex: 1;
+  --background: var(--ep-paper);
+  --padding-start: 12px;
+  --padding-end: 12px;
+}
+
+.lemo-composer ion-button {
+  min-height: 44px;
+  margin: 0;
+}

@@ -45,6 +45,17 @@ import { ThermalPrinterService } from '../../services/thermal-printer.service';
     app_log: AppLog;
     map: any;
     currentStep: number = 1;
+    readonly stepTitles = [
+        '',
+        'Site offence',
+        'Offender',
+        'Validation',
+        'Offence',
+        'Location',
+        'Evidence',
+        'Confirm',
+        'Notebook',
+    ];
     enviro_post: EnviroPost;
     fpn: any;
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
@@ -242,6 +253,18 @@ import { ThermalPrinterService } from '../../services/thermal-printer.service';
           .map(id => groups.find(group => group.id === id) as Offence);
     }
 
+    get stepTitle(): string {
+        return this.stepTitles[this.currentStep] ?? '';
+    }
+
+    get stepProgress(): number {
+        return ((this.currentStep - 1) / 7) * 100;
+    }
+
+    get nextStepTitle(): string {
+        return this.stepTitles[this.currentStep + 1] ?? '';
+    }
+
     extractOffenceGroups(offences: Offence[]): OffenceGroup[] {
         const groups = offences.map(offence => offence.offenceGroup);
         return Array.from(new Set(groups.map(group => group.id)))
@@ -357,16 +380,18 @@ import { ThermalPrinterService } from '../../services/thermal-printer.service';
                 // }
                 break;
             case 6:
-                if (this.enviro_post.signature == '') {
-                    this.presentAlert('Wait!', 'Please provide Signature.');
-                    return false;
-                }
                 if (this.enviro_post.offence_images.length == 0) {
                     this.presentAlert('Wait!', 'Please provide Offence Images.');
                     return false;
                 }
                 break;
             case 7:
+                if (this.enviro_post.signature == '') {
+                    this.presentAlert('Wait!', 'Please provide Signature.');
+                    return false;
+                }
+                break;
+            case 8:
                 if (!this.enviro_post.notebook_entries.is_fpn_advised) {
                     this.presentAlert('Wait!', 'Please provide if FPN is adviced.');
                     return false;
@@ -528,14 +553,14 @@ import { ThermalPrinterService } from '../../services/thermal-printer.service';
         //     this.currentStep = 5;
         //     return false;
         // }
-        if (this.enviro_post.signature == '') {
-            this.presentAlert('Wait!', 'Please provide Signature.');
-            this.currentStep = 6;
-            return false;
-        }
         if (this.enviro_post.offence_images.length == 0) {
             this.presentAlert('Wait!', 'Please provide Offence Images.');
             this.currentStep = 6;
+            return false;
+        }
+        if (this.enviro_post.signature == '') {
+            this.presentAlert('Wait!', 'Please provide Signature.');
+            this.currentStep = 7;
             return false;
         }
 
@@ -555,7 +580,7 @@ import { ThermalPrinterService } from '../../services/thermal-printer.service';
     nextStep() {
         let checker = this.validator();
         if (checker) {
-            if (this.currentStep < 7) {
+            if (this.currentStep < 8) {
                 this.currentStep++;
             }
         }

@@ -1,0 +1,23 @@
+:host {
+  display: block;
+}
+
+.ep-evidence__count {
+  margin: 10px 0 0;
+  color: var(--ep-slate);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.ep-evidence__canvas {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ep-evidence--compact .ep-photo-stage {
+  min-height: 180px;
+}
