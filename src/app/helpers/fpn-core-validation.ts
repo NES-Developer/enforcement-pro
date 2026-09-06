@@ -1,4 +1,5 @@
 import { EnviroPost } from '../models/enviro';
+import { NotebookEntry } from '../models/notebook-entry';
 
 export type FpnWizardStep =
   | 'zone'
@@ -49,6 +50,9 @@ const WIZARD_LABELS: Record<FpnWizardStep, string> = {
   confirm: 'Confirm',
 };
 
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE = /^(\+44|0)[\d\s-]{9,14}$/;
+
 export function findFirstMissingFpnField(
   enviro: EnviroPost | null | undefined,
   options: FpnValidationOptions = {}
@@ -95,6 +99,15 @@ export function findFirstMissingFpnField(
   if (isBlank(draft.date_of_birth)) {
     return gap('date_of_birth', 'Please provide offender Date of Birth.', 2, 'offender');
   }
+  if (!isValidDateOfBirth(draft.date_of_birth)) {
+    return gap('date_of_birth', 'Please provide a valid Date of Birth.', 2, 'offender');
+  }
+  if (!isBlank(draft.email) && !isValidEmail(draft.email)) {
+    return gap('email', 'Please provide a valid email address, or leave it blank.', 2, 'offender');
+  }
+  if (!isBlank(draft.phone) && !isValidPhone(draft.phone)) {
+    return gap('phone', 'Please provide a valid UK mobile number, or leave it blank.', 2, 'offender');
+  }
   if (isBlank(draft.proof_of_address)) {
     return gap('proof_of_address', 'Please provide Proof of Address.', 3, 'proofs');
   }
@@ -135,6 +148,36 @@ export function findFirstMissingFpnField(
   return null;
 }
 
+export function findFirstMissingNotebookField(
+  enviro: EnviroPost | null | undefined
+): FpnFieldGap | null {
+  const notebook = ensureNotebookEntries(enviro || ({} as EnviroPost));
+
+  if (isBlank(notebook.is_fpn_advised)) {
+    return gap('is_fpn_advised', 'Please provide if FPN is advised.', 8, 'confirm');
+  }
+  if (isBlank(notebook.is_fpn_handed)) {
+    return gap('is_fpn_handed', 'Please provide if FPN is handed.', 8, 'confirm');
+  }
+  if (isMissingId(notebook.hair)) {
+    return gap('hair', 'Please provide hair details.', 8, 'confirm');
+  }
+  if (isBlank(notebook.gender)) {
+    return gap('gender', 'Please provide offender Gender.', 8, 'confirm');
+  }
+  if (isMissingId(notebook.visibility_id)) {
+    return gap('visibility_id', 'Please provide Visibility.', 8, 'confirm');
+  }
+  if (isMissingId(notebook.weather_id)) {
+    return gap('weather_id', 'Please provide Weather.', 8, 'confirm');
+  }
+  if (isMissingId(notebook.ethnicity_id)) {
+    return gap('ethnicity_id', 'Please provide offender Ethnicity.', 8, 'confirm');
+  }
+
+  return null;
+}
+
 export function enviroStepperStep(
   enviro: EnviroPost | null | undefined,
   options: FpnValidationOptions = {}
@@ -158,6 +201,91 @@ export function lemoWizardProgress(step: FpnWizardStep | null | undefined): {
     total,
     label: WIZARD_LABELS[step] || '',
   };
+}
+
+export function previousLemoWizardStep(step: FpnWizardStep | null | undefined): FpnWizardStep | null {
+  const index = LEMO_WIZARD_STEPS.indexOf(step as FpnWizardStep);
+  if (index <= 0) {
+    return null;
+  }
+  return LEMO_WIZARD_STEPS[index - 1];
+}
+
+export function ensureNotebookEntries(enviro: EnviroPost): NotebookEntry {
+  if (!enviro.notebook_entries) {
+    enviro.notebook_entries = new NotebookEntry();
+  }
+  return enviro.notebook_entries;
+}
+
+export function hasInProgressFpnDraft(enviro: EnviroPost | null | undefined): boolean {
+  if (!enviro) {
+    return false;
+  }
+
+  return !!(
+    enviro.offence_id ||
+    enviro.first_name ||
+    enviro.last_name ||
+    enviro.offence_location ||
+    enviro.signature ||
+    enviro.offence_images?.length
+  );
+}
+
+export function isValidDateOfBirth(value: unknown): boolean {
+  const parts = parseDateOfBirth(String(value ?? ''));
+  if (!parts) {
+    return false;
+  }
+
+  const year = Number(parts.year);
+  const month = Number(parts.month);
+  const day = Number(parts.day);
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (date > today) {
+    return false;
+  }
+
+  const age = today.getFullYear() - year
+    - (today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day) ? 1 : 0);
+  return age >= 10 && age <= 120;
+}
+
+export function parseDateOfBirth(value: string): { year: string; month: string; day: string } | null {
+  const match = String(value || '').trim().match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    year: match[1],
+    month: match[2].padStart(2, '0'),
+    day: match[3].padStart(2, '0'),
+  };
+}
+
+export function formatDateOfBirth(year?: string | number, month?: string | number, day?: string | number): string {
+  const formatted = `${String(year || '').padStart(4, '0')}/${String(month || '').padStart(2, '0')}/${String(day || '').padStart(2, '0')}`;
+  return isValidDateOfBirth(formatted) ? formatted : '';
+}
+
+export function isValidEmail(value: unknown): boolean {
+  return EMAIL.test(String(value ?? '').trim());
+}
+
+export function isValidPhone(value: unknown): boolean {
+  return PHONE.test(String(value ?? '').replace(/\s+/g, ' ').trim());
 }
 
 function gap(field: string, message: string, stepperStep: number, wizardStep: FpnWizardStep): FpnFieldGap {

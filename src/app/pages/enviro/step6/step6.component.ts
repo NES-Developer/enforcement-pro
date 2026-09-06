@@ -58,6 +58,7 @@ export class Step6Component implements OnInit, AfterViewChecked {
 
     save() {
         if (!this.signaturePad || this.signaturePad.isEmpty()) {
+            this.fpnPage.presentAlert('Wait!', 'Please sign first, then tap Save.');
             return;
         }
 

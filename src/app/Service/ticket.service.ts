@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 // const JsBarcode = require('jsbarcode'); // Use require for CommonJS module
 // const QRCode = require('qrcode'); // Use require for CommonJS module
 import QRCode from 'qrcode'
+import JsBarcode from 'jsbarcode'
 
 // import { toPng } from 'html-to-image';
 
@@ -66,13 +67,13 @@ export class TicketService {
         const officerNo = user?.operator_number || user?.id || '';
         const siteName = site?.name || '';
         const slug = site?.slug || '';
-        const logo = this.siteLogoHtml(site);
+        const logo = this.siteHeadingHtml(site);
         const dob = this.formatTicketDate(enviro_post.date_of_birth) || 'N/A';
         const offenceDate = this.formatTicketDate(enviro_post.offence_datetime);
         const offenceTime = enviro_post.offence_datetime ? moment(enviro_post.offence_datetime).format('HH:mm') : '';
-        const issueDate = this.formatTicketDate(enviro_post.issue_datetime || enviro_post.offence_datetime);
-        const address = [enviro_post.address, enviro_post.town, enviro_post.post_code].filter(Boolean).join(', ');
-        const location = enviro_post.offence_location || '';
+        const issueDate = this.formatTicketShortDate(enviro_post.issue_datetime || enviro_post.offence_datetime);
+        const address = enviro_post.address || '';
+        const location = [enviro_post.poi, enviro_post.offence_location, enviro_post.town].filter(Boolean).join(', ');
         const signature = enviro_post.signature
             ? `<div style="text-align:center"><img src="${enviro_post.signature}" alt="" width="150" /></div>`
             : '';
@@ -82,6 +83,8 @@ export class TicketService {
             slug,
             legislation,
             fpnNumber: enviro_post.fpn_number || '',
+            barcode: enviro_post.barcode || '',
+            barcodeHtml: this.barcodeHtml(enviro_post.barcode || enviro_post.fpn_number),
             name: `${enviro_post.first_name || ''} ${enviro_post.last_name || ''}`.trim(),
             dob,
             address,
@@ -103,10 +106,10 @@ export class TicketService {
             return this.parseTicketTemplate(this.noticeOfIntentTicketHtml(ctx));
         }
 
-        const paysite = `https://paymyfpn.co.uk/FPN/${slug}`;
+        const paysite = `https://paymyfpn.co.uk/fpn/${slug}`;
         const qrCodeCanvas = document.createElement('canvas');
         QRCode.toCanvas(qrCodeCanvas, paysite, {
-            width: 150,
+            width: 120,
             margin: 1,
         });
         const qrCodeBase64 = qrCodeCanvas.toDataURL('image/png');
@@ -134,13 +137,8 @@ export class TicketService {
         return String(site?.slug || '').toLowerCase() === 'test';
     }
 
-    private siteLogoHtml(site: Site | null | undefined): string {
-        const logo = String(site?.logo || '').trim();
-        if (!logo) {
-            return site?.name ? `<h1 class="mb-0">${this.escapeHtml(site.name)}</h1>` : '';
-        }
-        const src = logo.startsWith('http') ? logo : `https://app.enforcementpro.co.uk/${logo.replace(/^\//, '')}`;
-        return `<p class="mb-5" style="text-align:center"><img src="${src}" alt="" style="max-width:220px;width:70%;" /></p>`;
+    private siteHeadingHtml(site: Site | null | undefined): string {
+        return site?.name ? `<h1 class="mb-0">${this.escapeHtml(site.name)}</h1>` : '';
     }
 
     private formatTicketDate(value: any): string {
@@ -158,6 +156,42 @@ export class TicketService {
         const fallback = moment(value);
         const date = parsed.isValid() ? parsed : fallback;
         return date.isValid() ? date.format('DD MMM, YYYY') : String(value);
+    }
+
+    private formatTicketShortDate(value: any): string {
+        if (!value) {
+            return '';
+        }
+        const parsed = moment(value);
+        return parsed.isValid() ? parsed.format('DD-MM-YYYY') : this.formatTicketDate(value);
+    }
+
+    private barcodeHtml(value: string): string {
+        const code = String(value || '').trim();
+        if (!code || typeof document === 'undefined') {
+            return '';
+        }
+
+        try {
+            const canvas = document.createElement('canvas');
+            JsBarcode(canvas, code, {
+                format: 'CODE128',
+                width: 1.5,
+                height: 48,
+                displayValue: false,
+                margin: 0,
+                background: '#ffffff',
+                lineColor: '#000000',
+            });
+            return `
+                <div style="text-align:center;margin:8px 0">
+                    <img src="${canvas.toDataURL('image/png')}" alt="" style="width:100%;max-width:360px;height:auto;" />
+                    <div style="text-align:center;font-size:20px;">${this.escapeHtml(code)}</div>
+                </div>
+            `;
+        } catch {
+            return `<div style="text-align:center;font-size:20px;">${this.escapeHtml(code)}</div>`;
+        }
     }
 
     private noticeOfIntentTicketHtml(ctx: any): string {
@@ -202,36 +236,46 @@ export class TicketService {
         return `
             <section>
                 ${ctx.logo}
-                <p class="mb-0">Fixed Penalty Notice</p>
-                <p>Penalty Amount £${this.escapeHtml(ctx.fullAmount)}</p>
-                <p>${this.escapeHtml(ctx.legislation)}</p>
+                <table>
+                    <tr><td>Fixed Penalty Notice</td></tr>
+                    <tr><td>Penalty Amount <span class="fw-600">£${this.escapeHtml(ctx.reducedAmount)}</span></td></tr>
+                </table>
+                <p><small>${this.escapeHtml(ctx.legislation)}</small></p>
                 <h4 class="m-0 p-0">Ref No: ${this.escapeHtml(ctx.fpnNumber)}</h4>
-                <p>Name: ${this.escapeHtml(ctx.name)}</p>
-                <p>DOB: ${this.escapeHtml(ctx.dob)}</p>
-                <p>Address: ${this.escapeHtml(ctx.address)}</p>
-                <p>I, officer ${this.escapeHtml(ctx.officerNo)}, as an authorised officer of ${this.escapeHtml(ctx.siteName)}, have reason to believe that on ${this.escapeHtml(ctx.offenceDate)} at about ${this.escapeHtml(ctx.offenceTime)}, you commited an offence as detailed below within the area of ${this.escapeHtml(ctx.siteName)}.</p>
-                <p>Location: ${this.escapeHtml(ctx.location)}</p>
-                <p>Offence: ${this.escapeHtml(ctx.offenceName)}</p>
+                <table>
+                    <tr><td>Name:</td><td class="pl-10 fw-600">${this.escapeHtml(ctx.name)}</td></tr>
+                    <tr><td>DOB:</td><td class="pl-10 fw-600">${this.escapeHtml(ctx.dob)}</td></tr>
+                    <tr><td>Address:</td><td class="pl-10 fw-600">${this.escapeHtml(ctx.address)}</td></tr>
+                </table>
+                <p>I, officer ${this.escapeHtml(ctx.officerNo)}, as an authorized officer of ${this.escapeHtml(ctx.siteName)}, has reason to believe that on ${this.escapeHtml(ctx.offenceDate)} at about ${this.escapeHtml(ctx.offenceTime)}, you commited an offence as detailed below within the area of ${this.escapeHtml(ctx.siteName)}.</p>
+                <p>Location: <b class="fw-600">${this.escapeHtml(ctx.location)}</b></p>
+                <p>Offence: <b class="fw-600">${this.escapeHtml(ctx.offenceName)}</b></p>
                 <p>Particulars of the offence are as follows: ${this.escapeHtml(ctx.particulars)}</p>
-                <p>This notice offers you the opportunity to discharge any liability to conviction for the above offence by payment of this Fixed Penalty Notice of £${this.escapeHtml(ctx.reducedAmount)} within ${this.escapeHtml(ctx.reducedDays)} days of the date on the notice. After this it will raise to £${this.escapeHtml(ctx.fullAmount)} payable within ${this.escapeHtml(ctx.fullDays)} days.</p>
-                <p>If you fail to make the payment within the ${this.escapeHtml(ctx.fullDays)} days, you may be summoned to court for the offence described above.</p>
+                <p>This notice offers you the opportunity to discharge any liability to conviction for the above offence by payment of this Fixed Penalty Notice of <span class="fw-600">£${this.escapeHtml(ctx.reducedAmount)}</span> within <span class="fw-600">${this.escapeHtml(ctx.reducedDays)} days</span> of the date on the notice.</p>
+                <p>If you fail to make the payment within the <span>${this.escapeHtml(ctx.reducedDays)} days</span>, you may be summoned to court for the offence Described above.</p>
                 <p>A Fixed Penalty Notice(FPN)is issued as an alternative to prosecution for the offence. Paying the FPN discharges your liability.</p>
                 <h5 class="mb-0">How To Pay</h5>
                 <h5 class="mb-0">By Internet (Debit Card)</h5>
                 <p>Visit the provided payment URL:</p>
-                <a href="${paysite}" style="word-wrap:break-word">www.paymyfpn.co.uk/FPN/${this.escapeHtml(ctx.slug)}</a>
+                <a href="${paysite}" style="word-wrap:break-word">www.paymyfpn.co.uk/fpn/${this.escapeHtml(ctx.slug)}</a>
                 <p>Alternatively, you can use your smartphone to scan the QR code provided below.</p>
-                <p style="text-align:center"><img src="${qrCodeBase64}" alt="QR Code" /></p>
+                <p style="text-align:center"><img src="${qrCodeBase64}" alt="QR Code" width="120" /></p>
                 <h5 class="mb-0">By Telephone (Credit/Debit Card payments only):</h5>
                 <p class="mb-0">Call 0330 314 9705</p>
-                <p>We accept Visa, Mastercard, Switch and Delta</p>
-                <p>You have the right not to pay a Fixed Penalty Notice and defend (appeal) against your prosecution in a Magistrates Court.</p>
-                <p>All representations relating to the issue of this Fixed Penalty Notice must be submitted in writing either by post to Environmental Enforcement, PO Box 250 DEESIDE CH5 9FL by email to <a href="mailto:representations@nesgroup.uk">representations@nesgroup.uk</a> or online at</p>
-                <a href="https://paymyfpn.co.uk/FPNRep/${this.escapeHtml(ctx.slug)}" target="_blank" style="word-wrap:break-word">https://paymyfpn.co.uk/FPNRep/${this.escapeHtml(ctx.slug)}</a>
+                <p class="mb-0">We accept Visa, Mastercard, Switch and Delta</p>
+                <p class="mb-0">Alternatively you can make payments via a Post office, Payzone or Pay point near you.</p>
+                <h5 class="mb-0">By Cash</h5>
+                <p>You can pay by cash at any Post Office Outlet. You will need to present the below unique barcode.</p>
+                ${ctx.barcodeHtml}
+                <p>You have the right not to pay a Fixed Penalty Notice and defend (appeal) against your prosecution in a Magistrate's Court.</p>
+                <p>All representations relating to the issue of this Fixed Penalty Notice must be submitted in writing either by post to Environmental Enforcement National Enforcement Solutions, PO Box 250 DEESIDE CH5 9FL</p>
+                <a href="https://paymyfpn.co.uk/fpnrep/${this.escapeHtml(ctx.slug)}" target="_blank" style="word-wrap:break-word">https://paymyfpn.co.uk/fpnrep/${this.escapeHtml(ctx.slug)}</a>
                 <p>Please note that we are required to process your personal data in order to verify your identity and enforce this FPN Please see our full privacy notice at <a href="https://nationalenforcementsolutions.co.uk/privacy-policy" target="_blank" style="word-wrap:break-word">www.nationalenforcementsolutions.co.uk/privacy-policy</a> for information on how we use your data</p>
                 ${ctx.signature}
-                <p style="text-align:right"><b class="fw-600">${this.escapeHtml(ctx.issueDate)}</b></p>
-                <p><b class="fw-600">Officer Sign.</b></p>
+                <div style="display:flex">
+                    <div style="width:50%">${ctx.signature ? '<p><b class="fw-600">Officer Sign.</b></p>' : ''}</div>
+                    <div style="width:50%"><p style="text-align:right"><b class="fw-600">${this.escapeHtml(ctx.issueDate)}</b></p></div>
+                </div>
             </section>
         `;
     }

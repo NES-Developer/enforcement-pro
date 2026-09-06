@@ -12,7 +12,6 @@ import { AppLog } from '../../models/app-log';
 import { NotebookEntry } from '../../models/notebook-entry';
 import { Weather } from '../../models/weather';
 import { Visibility } from '../../models/visibility';
-import { POIPrefix } from '../../models/poi-prefix';
 import { Offence } from '../../models/offence';
 import { OffenceGroup } from '../../models/offence-group';
 import { SiteOffence } from '../../models/site-offence';
@@ -47,12 +46,25 @@ export class NotebookPage implements OnInit {
 
     baseUrl: string = 'https://app.enforcementpro.co.uk/';
 
-    ethnicities: Ethnicity[] = [];
-    weather: Weather[] = [];
-    visibility: Visibility[] = [];
+    get ethnicities(): Ethnicity[] {
+        return this.data.getEthnicities() || [];
+    }
 
-    builds: Build[] = [];
-    hair_colours: HairColour[] = [];
+    get weather(): Weather[] {
+        return this.data.getWeather() || [];
+    }
+
+    get visibility(): Visibility[] {
+        return this.data.getVisibility() || [];
+    }
+
+    get builds(): Build[] {
+        return this.data.getBuilds() || [];
+    }
+
+    get hair_colours(): HairColour[] {
+        return this.data.getHairColours() || [];
+    }
 
     constructor(
         private auth: AuthService,
@@ -124,12 +136,7 @@ export class NotebookPage implements OnInit {
 
     loadData() {
         this.app_log = this.data.getAppLog() || new AppLog();
-        this.builds = this.data.getBuilds();
-        this.hair_colours = this.data.getHairColours();
         this.enviro_post =  this.data.getEnviroPost();
-        this.ethnicities = this.data.getEthnicities();
-        this.weather = this.data.getWeather();
-        this.visibility = this.data.getVisibility();
         this.user = this.data.getUser();                
 
         if (!this.data.checkFPNData()){
@@ -362,56 +369,7 @@ export class NotebookPage implements OnInit {
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
-                this.data.removeEnviroLookUps()
-
-                let salutations = data.data.salutations;
-                this.data.setSalutations(salutations);
-
-                let fpn_number_and_barcode = data.data.fpn_number_offline_printer;
-                this.data.setFPNNumberOfflinePrinter(fpn_number_and_barcode);
-
-                this.builds = data.data.builds;
-                this.data.setBuilds(this.builds);
-
-                this.hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
-                this.data.setHairColors(this.hair_colours);
-
-                let zones = data.data.zones;
-                this.data.setZones(zones);
-
-                let offence_how = data.data.offence_how;
-                this.data.setOffenceHow(offence_how);
-
-                let offence_location_suffix = data.data.offence_location_suffix;
-                this.data.setOffenceLocationSuffix(offence_location_suffix);
-
-                let address_verified_by = data.data.address_verified_via;
-                this.data.setAddressVerifiedBy(address_verified_by);
-
-                this.ethnicities = data.data.ethnicities;
-                this.data.setEthnicities(this.ethnicities);
-
-                let id_shown = data.data.id_shown;
-                this.data.setIdShown(id_shown);
-
-                this.weather = data.data.weathers;
-                this.data.setWeather(this.weather);
-
-                this.visibility = data.data.visibility;
-                this.data.setVisibility(this.visibility);
-
-                let poi_prefix: POIPrefix[] = data.data.poi_prefix;
-                this.data.setPOIPrefix(poi_prefix);
-
-                let site_offence = data.data.site_offences;
-                this.data.setSiteOffences(site_offence);
-
-                let offences = this.extractOffence(site_offence);
-                this.data.setOffences(offences);
-
-                let offenceGroups = this.extractOffenceGroups(offences);
-                this.data.setOffenceGroups(offenceGroups);
-
+                this.data.applyFPNData(data);
             },
             error: (error) => {
                 // this.loadData();

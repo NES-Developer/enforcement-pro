@@ -51,8 +51,50 @@
               <dd>{{ enviro_post.post_code }}</dd>
             </div>
             <div class="ep-review-row">
+              <dt>Date of birth</dt>
+              <dd>{{ enviro_post.date_of_birth }}</dd>
+            </div>
+            <div class="ep-review-row">
               <dt>BWC advised</dt>
               <dd>{{ enviro_post.is_bwc_active }}</dd>
+            </div>
+          </dl>
+        </div>
+      </ion-accordion>
+
+      <ion-accordion value="place">
+        <ion-item slot="header">
+          <ion-label>Location and time</ion-label>
+        </ion-item>
+        <div slot="content">
+          <dl>
+            <div class="ep-review-row">
+              <dt>Offence location</dt>
+              <dd>{{ enviro_post.offence_location }}</dd>
+            </div>
+            <div class="ep-review-row">
+              <dt>POI</dt>
+              <dd>{{ enviro_post.poi }}</dd>
+            </div>
+            <div class="ep-review-row">
+              <dt>Proof of address</dt>
+              <dd>{{ enviro_post.proof_of_address }}</dd>
+            </div>
+            <div class="ep-review-row">
+              <dt>Proof of ID</dt>
+              <dd>{{ enviro_post.proof_of_id }}</dd>
+            </div>
+            <div class="ep-review-row">
+              <dt>Offence time</dt>
+              <dd>{{ enviro_post.offence_datetime }}</dd>
+            </div>
+            <div class="ep-review-row">
+              <dt>Issue time</dt>
+              <dd>{{ enviro_post.issue_datetime }}</dd>
+            </div>
+            <div class="ep-review-row">
+              <dt>Postal FPN</dt>
+              <dd>{{ enviro_post.fpn_issued === 0 ? 'Yes' : 'No' }}</dd>
             </div>
           </dl>
         </div>

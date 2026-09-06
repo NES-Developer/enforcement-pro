@@ -22,7 +22,7 @@
         <p class="ep-kicker">Evidence notes</p>
         <h2>Notebook entry</h2>
       </div>
-      <p class="lemo-notebook__intro">If the FPN is already in the system, review it here. The FPN form asks for anything still required and submits it.</p>
+      <p class="lemo-notebook__intro">Notebook can wait. Submit the next FPN now, then add notebook later or before logout.</p>
 
       <article class="lemo-notebook__item" *ngIf="hasDraftPreview">
         <div class="ep-ticket__top">
@@ -96,11 +96,20 @@
 
         <div class="lemo-fields" *ngIf="message.fields?.length && isActiveMessage(message)">
           <ng-container *ngFor="let field of message.fields">
-            <ion-input
+            <ion-textarea
+              *ngIf="field.type === 'textarea'"
               [label]="field.label + (field.required ? ' *' : '')"
               label-placement="stacked"
               fill="outline"
-              [type]="field.type === 'textarea' ? 'text' : field.type"
+              auto-grow="true"
+              [(ngModel)]="draft[field.key]">
+            </ion-textarea>
+            <ion-input
+              *ngIf="field.type !== 'textarea'"
+              [label]="field.label + (field.required ? ' *' : '')"
+              label-placement="stacked"
+              fill="outline"
+              [type]="field.type"
               [(ngModel)]="draft[field.key]"
               (ionInput)="field.key === 'offence_location' && onLocationInput($event)">
             </ion-input>
@@ -148,7 +157,10 @@
     <p class="lemo-footer__step" *ngIf="lemo.wizardStep">
       Step {{ lemo.wizardProgress.current }} of {{ lemo.wizardProgress.total }} · {{ lemo.wizardProgress.label }}
     </p>
-    <ion-button expand="block" color="medium" (click)="cancelCreate()">Cancel</ion-button>
+    <div class="ep-actions ep-actions--split">
+      <ion-button expand="block" color="medium" [disabled]="!lemo.wizardStep || lemo.wizardStep === 'zone'" (click)="goBack()">Back</ion-button>
+      <ion-button expand="block" color="medium" fill="outline" (click)="cancelCreate()">Cancel</ion-button>
+    </div>
   </div>
   <div class="lemo-composer" *ngIf="!lemo.isCreating">
     <ion-textarea

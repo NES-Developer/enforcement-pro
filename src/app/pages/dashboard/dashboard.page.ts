@@ -130,16 +130,13 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
 
     loadData() {
-        this.user = this.data.getUser();
-        this.token = this.data.getToken();
+        this.user = this.data.getUser() || new User();
+        this.token = this.data.getToken() || '';
         this.url = this.data.getUrl();
-        this.selected_site = this.data.getSelectedSite();
+        this.selected_site = this.data.getSelectedSite() || null;
         this.app_log = this.data.getAppLog() || new AppLog();
 
         this.getRecentFPN();
-
-        // this.selected_site = this.data.getSelectedSite() || null;
-        // console.log(this.selected_site);
     }
 
     async ngOnInit() {
@@ -149,13 +146,19 @@ export class DashboardPage implements OnInit, OnDestroy {
             await this.data.waitUntilHydrated();
             this.loadData();
             this.init();
+            this.checkSelectedSite();
         } finally {
             this.loading.hideLoading();
         }
     }
 
     async ionViewWillEnter() {
-        await this.data.waitUntilHydrated();
+        try {
+            await this.data.waitUntilHydrated();
+        } catch {
+            // Hydration is best-effort; still leave the wait screen.
+        }
+
         this.loadData();
         this.init();
         this.checkSelectedSite();
@@ -270,16 +273,21 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
 
     checkSelectedSite() {
-        if (this.selected_site == null)
-        {
-            this.selected_site = this.data.getSelectedSite() || null;
+        this.selected_site = this.data.getSelectedSite() || this.selected_site || null;
 
-            if (this.selected_site == null)
-            {
-                this.checkLoggedIn();
-                this.route('/site');
-            }
+        if (this.selected_site?.id) {
+            return;
         }
+
+        this.selected_site = null;
+        this.token = this.token || this.data.getToken() || '';
+
+        if (!this.token) {
+            this.route('/login');
+            return;
+        }
+
+        this.route('/site');
     }
 
 
@@ -352,7 +360,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
 
     getRecentFPN() {
-        if (this.user.id > 0) {
+        if (this.user?.id > 0) {
             this.api.getRecentFPNs(this.user.id).subscribe({
                 next: (response) => {
                     this.recent_fpns = response.data;

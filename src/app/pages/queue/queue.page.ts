@@ -22,7 +22,7 @@ import { TrackingService } from '../../services/tracking.service';
 import { ThermalPrinterService } from '../../services/thermal-printer.service';
 import { OfflineTicketService } from '../../services/offline-ticket.service';
 import { QueueSyncService } from '../../services/queue-sync.service';
-import { enviroStepperStep } from '../../helpers/fpn-core-validation';
+import { enviroStepperStep, findFirstMissingFpnField } from '../../helpers/fpn-core-validation';
 
 @Component({
   selector: 'app-queue',
@@ -234,10 +234,18 @@ export class QueuePage implements OnInit {
         return;
       }
 
+      const gap = findFirstMissingFpnField(enviro_post, {
+        requireZone: this.data.getZones().length > 0,
+      });
+      if (gap) {
+        this.presentAlert('Wait!', gap.message);
+        this.editFPN(enviro_post);
+        return;
+      }
+
       this.isSubmitting = true;
       this.loading.showLoading();
 
-      //last validation before submission
       if (enviro_post.officer_id == 0 )
       {
         enviro_post.officer_id = this.user.id;

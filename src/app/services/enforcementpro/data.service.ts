@@ -46,7 +46,10 @@ export class DataService {
     private _storage!: Storage;
 
     private _ready = false;
+    private _initPromise: Promise<void> | null = null;
     private dataHydrated: Promise<void>;
+    private readonly storageInitTimeoutMs = 4000;
+    private readonly hydrationTimeoutMs = 8000;
 
 
     private last_fpn_id: number = 0;
@@ -101,32 +104,69 @@ export class DataService {
     constructor(
         private storage: Storage
     ) {
-        
-        this.init();
-
         this.enviro_post = new EnviroPost();
         this.app_log = new AppLog();
         this.patrol_session = null;
         this.login = new Login();
 
-        this.dataHydrated = this.loadFromLocalStorage();
+        this.hydrateSessionFromBrowserStorage();
+        this.dataHydrated = this.bootstrap();
     }
 
     async init() {
-        if (this._ready) return;
+        if (this._ready) {
+            return;
+        }
 
-        // IMPORTANT: initialize storage
-        const storage = await this.storage.create();
-        this._storage = storage;
-        this._ready = true;
+        if (!this._initPromise) {
+            this._initPromise = this.createStorage();
+        }
+
+        await this._initPromise;
     }
 
     async waitUntilHydrated(): Promise<void> {
-        await this.init();
-        await this.dataHydrated;
+        try {
+            await this.withTimeout(this.dataHydrated, this.hydrationTimeoutMs);
+        } catch (error) {
+            console.warn('Storage hydration timed out; using browser storage.', error);
+            this.hydrateSessionFromBrowserStorage();
+        }
+    }
+
+    private async bootstrap(): Promise<void> {
+        try {
+            await this.init();
+            await this.withTimeout(this.loadFromLocalStorage(), this.hydrationTimeoutMs);
+        } catch (error) {
+            console.warn('Storage hydration failed; using browser storage.', error);
+            this.hydrateSessionFromBrowserStorage();
+        }
+    }
+
+    private async createStorage(): Promise<void> {
+        const createPromise = this.storage.create();
+
+        try {
+            this._storage = await this.withTimeout(createPromise, this.storageInitTimeoutMs);
+        } catch (error) {
+            console.warn('Ionic Storage init timed out; continuing with localStorage.', error);
+            createPromise.then((storage) => {
+                this._storage = storage;
+            }).catch(() => undefined);
+        } finally {
+            this._ready = true;
+        }
     }
 
     private async loadFromLocalStorage() {
+        this.selected_site = await this.loadObjectFromLocalStorage('selected_site') ?? this.selected_site;
+        this.selected_zone = await this.loadObjectFromLocalStorage('selected_zone') ?? this.selected_zone;
+        this.selectedZoneSubject.next(this.selected_zone);
+        this.login = await this.loadObjectFromLocalStorage('login') ?? this.login;
+        this.user = await this.loadObjectFromLocalStorage('user') ?? this.user ?? {};
+        this.token = (await this.loadStringFromLocalStorage('token')) || this.token || '';
+
         // Load each data array from localStorage if available
         this.weather = await this.loadArrayFromLocalStorage('weather');
         this.visibility = await this.loadArrayFromLocalStorage('visibility');
@@ -149,19 +189,13 @@ export class DataService {
         this.fpn_number_offline_printer = await this.loadArrayFromLocalStorage('fpn_number_offline_printer');
         this.tracking_queue = await this.loadArrayFromLocalStorage('tracking_queue');
 
-        this.selected_site = await this.loadObjectFromLocalStorage('selected_site');
-        this.selected_zone = await this.loadObjectFromLocalStorage('selected_zone');
-        this.selectedZoneSubject.next(this.selected_zone);
-        this.login = await this.loadObjectFromLocalStorage('login');
-        this.enviro_post = await this.loadObjectFromLocalStorage('enviro_post');
-        this.app_log = await this.loadObjectFromLocalStorage('app_log');
+        this.enviro_post = await this.loadObjectFromLocalStorage('enviro_post') ?? this.enviro_post;
+        this.app_log = await this.loadObjectFromLocalStorage('app_log') ?? this.app_log;
         this.removeAppLogZoneId(this.app_log);
-        this.patrol_session = await this.loadObjectFromLocalStorage('patrol_session');
+        this.patrol_session = await this.loadObjectFromLocalStorage('patrol_session') ?? this.patrol_session;
         this.zone_detection_status = await this.loadObjectFromLocalStorage('zone_detection_status') || this.emptyZoneDetectionStatus();
         this.zoneDetectionStatusSubject.next(this.zone_detection_status);
 
-        this.user = await this.loadObjectFromLocalStorage('user');
-        this.token = await this.loadStringFromLocalStorage('token');
         this.posted_fpn_count = Number(await this.loadStringFromLocalStorage('posted_fpn_count')) || 0;
 
         this.api_app_version = await this.loadStringFromLocalStorage('api_app_version');
@@ -459,18 +493,45 @@ export class DataService {
         this.saveArrayToLocalStorage('sites', this.sites);
     }
 
+    applyFPNData(data: any): void {
+        const payload = this.fpnPayload(data);
+
+        this.removeEnviroLookUps();
+
+        this.setSalutations(payload.salutations);
+        this.setFPNNumberOfflinePrinter(payload.fpn_number_offline_printer);
+        this.setBuilds(this.firstLookupArray(payload.builds, payload.offender_builds));
+        this.setHairColors(this.firstLookupArray(payload.hair_colors, payload.hair_colours));
+        this.setZones(payload.zones);
+        this.setOffenceHow(payload.offence_how);
+        this.setOffenceLocationSuffix(payload.offence_location_suffix);
+        this.setAddressVerifiedBy(payload.address_verified_via);
+        this.setEthnicities(payload.ethnicities);
+        this.setIdShown(payload.id_shown);
+        this.setWeather(this.firstLookupArray(payload.weathers, payload.weather));
+        this.setVisibility(this.firstLookupArray(payload.visibility, payload.visibilities));
+        this.setPOIPrefix(payload.poi_prefix);
+
+        const siteOffences = this.asLookupArray(payload.site_offences);
+        this.setSiteOffences(siteOffences);
+
+        const offences = this.extractOffencesFromSiteOffences(siteOffences);
+        this.setOffences(offences);
+        this.setOffenceGroups(this.extractOffenceGroupsFromOffences(offences));
+    }
+
     setSalutations(salutations: Salutation[]): void {
-        this.salutations = salutations;
+        this.salutations = this.asLookupArray(salutations);
         this.saveArrayToLocalStorage('salutations', this.salutations);
     }
 
     setBuilds(builds: Build[]): void {
-        this.builds = builds;
+        this.builds = this.normalizeMachineLookups(builds);
         this.saveArrayToLocalStorage('builds', this.builds);
     }
 
     setHairColors(hair_colours: HairColour[]): void {
-        this.hair_colours = hair_colours;
+        this.hair_colours = this.normalizeMachineLookups(hair_colours);
         this.saveArrayToLocalStorage('hair_colours', this.hair_colours);
     }
 
@@ -500,7 +561,7 @@ export class DataService {
     }
 
     setOffenceHow(offence_how: OffenceHow[]): void {
-        this.offence_how = offence_how || [];
+        this.offence_how = this.normalizeMachineLookups(offence_how);
         this.saveArrayToLocalStorage('offence_how', this.offence_how);
     }
 
@@ -515,7 +576,7 @@ export class DataService {
     }
 
     setAddressVerifiedBy(address_verifed_by: AddressVerifiedBy[]): void {
-        this.address_verifed_by = address_verifed_by || [];
+        this.address_verifed_by = this.normalizeMachineLookups(address_verifed_by);
         this.saveArrayToLocalStorage('address_verifed_by', this.address_verifed_by);
     }
 
@@ -526,39 +587,39 @@ export class DataService {
 
 
     setWeather(weather: Weather[]): void {
-        this.weather = weather;
+        this.weather = this.normalizeMachineLookups(weather);
         this.saveArrayToLocalStorage('weather', this.weather);
     }
 
 
     setVisibility(visibility: Visibility[]): void {
-        this.visibility = visibility;
+        this.visibility = this.normalizeVisibilityLookups(visibility);
         this.saveArrayToLocalStorage('visibility', this.visibility);
     }
 
 
     setPOIPrefix(poi_prefix: POIPrefix[]): void {
-        this.poi_prefix = poi_prefix;
+        this.poi_prefix = this.normalizeMachineLookups(poi_prefix);
         this.saveArrayToLocalStorage('poi_prefix', this.poi_prefix);
     }
 
     setZones(zone: Zone[]): void {
-        this.zones = zone;
+        this.zones = this.asLookupArray(zone);
         this.saveArrayToLocalStorage('zones', this.zones);
     }
 
     setOffenceLocationSuffix(offence_location_suffix: OffenceLocationSuffix[]): void {
-        this.offence_location_suffix = offence_location_suffix || [];
+        this.offence_location_suffix = this.normalizeMachineLookups(offence_location_suffix);
         this.saveArrayToLocalStorage('offence_location_suffix', this.offence_location_suffix);
     }
 
     setEthnicities(ethnicities: Ethnicity[]): void {
-        this.ethnicities = ethnicities || [];
+        this.ethnicities = this.normalizeMachineLookups(ethnicities);
         this.saveArrayToLocalStorage('ethnicities', this.ethnicities);
     }
 
     setIdShown(id_shown: IDShown[]): void {
-        this.id_shown = id_shown || [];
+        this.id_shown = this.normalizeMachineLookups(id_shown);
         this.saveArrayToLocalStorage('id_shown', this.id_shown);
     }
 
@@ -655,7 +716,11 @@ export class DataService {
     }
 
     checkNoteBookEntriesData(): boolean {
-        return this.builds.length > 0 && this.hair_colours.length > 0;
+        return this.builds.length > 0
+            && this.hair_colours.length > 0
+            && this.ethnicities.length > 0
+            && this.weather.length > 0
+            && this.visibility.length > 0;
     }
       
     checkSelectedSite(): boolean {
@@ -679,7 +744,11 @@ export class DataService {
     }
 
     checkFPNData(): boolean {
-        return this.ethnicities.length > 0 && this.site_offences.length > 0 && this.address_verifed_by.length > 0 && this.id_shown.length > 0;
+        return this.ethnicities.length > 0
+            && this.site_offences.length > 0
+            && this.address_verifed_by.length > 0
+            && this.id_shown.length > 0
+            && this.checkNoteBookEntriesData();
     }
 
     checkAppLog(): boolean {
@@ -728,6 +797,15 @@ export class DataService {
     }
 
     getEnviroPost(): EnviroPost {
+        if (!this.enviro_post) {
+            this.enviro_post = new EnviroPost();
+        }
+        if (!this.enviro_post.notebook_entries) {
+            this.enviro_post.notebook_entries = new NotebookEntry();
+        }
+        if (!Array.isArray(this.enviro_post.offence_images)) {
+            this.enviro_post.offence_images = [];
+        }
         return this.enviro_post;
     }
 
@@ -990,5 +1068,143 @@ export class DataService {
         if (app_log && Object.prototype.hasOwnProperty.call(app_log, 'zone_id')) {
             delete app_log.zone_id;
         }
+    }
+
+    private hydrateSessionFromBrowserStorage(): void {
+        this.selected_site = this.readBrowserObject('selected_site') ?? this.selected_site;
+        this.selected_zone = this.readBrowserObject('selected_zone') ?? this.selected_zone;
+        this.selectedZoneSubject.next(this.selected_zone);
+        this.login = this.readBrowserObject('login') ?? this.login;
+        this.user = this.readBrowserObject('user') ?? this.user ?? {};
+        this.token = this.readBrowserString('token') || this.token || '';
+        this.builds = this.normalizeMachineLookups(this.readBrowserArray('builds') ?? this.builds);
+        this.hair_colours = this.normalizeMachineLookups(this.readBrowserArray('hair_colours') ?? this.hair_colours);
+        this.ethnicities = this.normalizeMachineLookups(this.readBrowserArray('ethnicities') ?? this.ethnicities);
+        this.weather = this.normalizeMachineLookups(this.readBrowserArray('weather') ?? this.weather);
+        this.visibility = this.normalizeVisibilityLookups(this.readBrowserArray('visibility') ?? this.visibility);
+        this.zones = this.readBrowserArray('zones') ?? this.zones;
+        this.sites = this.readBrowserArray('sites') ?? this.sites;
+        this.site_offences = this.readBrowserArray('site_offences') ?? this.site_offences;
+        this.address_verifed_by = this.normalizeMachineLookups(this.readBrowserArray('address_verifed_by') ?? this.address_verifed_by);
+        this.id_shown = this.normalizeMachineLookups(this.readBrowserArray('id_shown') ?? this.id_shown);
+    }
+
+    private fpnPayload(data: any): any {
+        if (data?.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
+            return data.data;
+        }
+
+        return data || {};
+    }
+
+    private firstLookupArray(...candidates: any[]): any[] {
+        for (const candidate of candidates) {
+            if (Array.isArray(candidate) && candidate.length > 0) {
+                return candidate;
+            }
+        }
+
+        for (const candidate of candidates) {
+            if (Array.isArray(candidate)) {
+                return candidate;
+            }
+        }
+
+        return [];
+    }
+
+    private asLookupArray(value: any): any[] {
+        return Array.isArray(value) ? value : [];
+    }
+
+    private normalizeMachineLookups<T extends Record<string, any>>(items: T[] | null | undefined): T[] {
+        return this.asLookupArray(items).map((item) => {
+            if (!item || typeof item !== 'object') {
+                return item;
+            }
+
+            const label = item.textOnMachine || item.name || item.visibility || item.title || '';
+            return {
+                ...item,
+                textOnMachine: item.textOnMachine || label,
+                name: item.name || label,
+            };
+        });
+    }
+
+    private normalizeVisibilityLookups<T extends Record<string, any>>(items: T[] | null | undefined): T[] {
+        return this.asLookupArray(items).map((item) => {
+            if (!item || typeof item !== 'object') {
+                return item;
+            }
+
+            const label = item.visibility || item.name || item.textOnMachine || '';
+            return {
+                ...item,
+                visibility: item.visibility || label,
+                name: item.name || label,
+                textOnMachine: item.textOnMachine || label,
+            };
+        });
+    }
+
+    private extractOffencesFromSiteOffences(siteOffences: SiteOffence[]): Offence[] {
+        const offences = this.asLookupArray(siteOffences)
+            .map((item: any) => item?.offences || item?.offence)
+            .filter((offence: Offence) => !!offence?.id);
+
+        return Array.from(new Set(offences.map((offence: Offence) => offence.id)))
+            .map((id) => offences.find((offence: Offence) => offence.id === id) as Offence);
+    }
+
+    private extractOffenceGroupsFromOffences(offences: Offence[]): OffenceGroup[] {
+        const groups = this.asLookupArray(offences)
+            .map((offence) => offence?.offenceGroup)
+            .filter((group: OffenceGroup) => !!group?.id);
+
+        return Array.from(new Set(groups.map((group: OffenceGroup) => group.id)))
+            .map((id) => groups.find((group: OffenceGroup) => group.id === id) as OffenceGroup);
+    }
+
+    private readBrowserArray(key: string): any[] | null {
+        const value = this.readBrowserObject(key);
+        return Array.isArray(value) ? value : null;
+    }
+
+    private readBrowserObject(key: string): any {
+        try {
+            const raw = localStorage.getItem(key);
+            if (!raw) {
+                return null;
+            }
+
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    }
+
+    private readBrowserString(key: string): string {
+        try {
+            return localStorage.getItem(key) ?? '';
+        } catch {
+            return '';
+        }
+    }
+
+    private withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms);
+            promise.then(
+                (value) => {
+                    clearTimeout(timer);
+                    resolve(value);
+                },
+                (error) => {
+                    clearTimeout(timer);
+                    reject(error);
+                }
+            );
+        });
     }
 }

@@ -33,6 +33,9 @@
 
 <ion-footer class="ep-wizard-footer">
   <div class="ep-wizard-bar" [class.ep-wizard-bar--split]="currentStep > 1" *ngIf="currentStep < 7">
+    <ion-button expand="block" color="medium" *ngIf="currentStep === 1" (click)="confirmLeave()">
+      Cancel
+    </ion-button>
     <ion-button expand="block" color="medium" *ngIf="currentStep > 1" (click)="previousStep()">
       Back
     </ion-button>
@@ -44,9 +47,9 @@
   </div>
 
   <div class="ep-wizard-bar ep-wizard-bar--grid" *ngIf="currentStep > 6">
-    <ion-button expand="block" color="medium" *ngIf="currentStep < 8" (click)="previousStep()">Back</ion-button>
+    <ion-button expand="block" color="medium" (click)="previousStep()">Back</ion-button>
     <ion-button expand="block" color="light" (click)="saveFPN()">Save</ion-button>
-    <ion-button expand="block" color="primary" *ngIf="currentStep === 7" (click)="nextStep()">Notebook</ion-button>
-    <ion-button expand="block" color="success" *ngIf="currentStep === 8" (click)="submitForm()">Submit</ion-button>
+    <ion-button expand="block" color="medium" *ngIf="currentStep === 7" (click)="nextStep()">Add notebook</ion-button>
+    <ion-button expand="block" color="success" (click)="submitForm()">Submit</ion-button>
   </div>
 </ion-footer>

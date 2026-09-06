@@ -7,9 +7,6 @@ import { Site } from '../../models/site';
 import { Zone } from '../../models/zone';
 import { AppLog } from '../../models/app-log';
 import { ApiService } from '../../services/enforcementpro/api.service';
-import { Weather } from '../../models/weather';
-import { POIPrefix } from '../../models/poi-prefix';
-import { Visibility } from '../../models/visibility';
 import { Offence } from '../../models/offence';
 import { OffenceGroup } from '../../models/offence-group';
 import { SiteOffence } from '../../models/site-offence';
@@ -258,57 +255,8 @@ export class SettingPage implements OnInit {
         let site_id: number = site.id;
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
-                this.data.removeEnviroLookUps()
-
-
-                let salutations = data.data.salutations;
-                this.data.setSalutations(salutations);
-
-                let fpn_number_and_barcode = data.data.fpn_number_offline_printer;
-                this.data.setFPNNumberOfflinePrinter(fpn_number_and_barcode);
-
-                let builds = data.data.builds;
-                this.data.setBuilds(builds);
-
-                let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
-                this.data.setHairColors(hair_colours);
-
-                this.zones = data.data.zones;
-                this.data.setZones(this.zones);
-
-                let offence_how = data.data.offence_how;
-                this.data.setOffenceHow(offence_how);
-
-                let offence_location_suffix = data.data.offence_location_suffix;
-                this.data.setOffenceLocationSuffix(offence_location_suffix);
-
-                let address_verified_by = data.data.address_verified_via;
-                this.data.setAddressVerifiedBy(address_verified_by);
-
-                let ethnicities = data.data.ethnicities;
-                this.data.setEthnicities(ethnicities);
-
-                let id_shown = data.data.id_shown;
-                this.data.setIdShown(id_shown);
-
-                let weather: Weather[] = data.data.weathers;
-                this.data.setWeather(weather);
-
-                let visibility: Visibility[] = data.data.visibility;
-                this.data.setVisibility(visibility);
-
-                let poi_prefix: POIPrefix[] = data.data.poi_prefix;
-                this.data.setPOIPrefix(poi_prefix);
-
-                let site_offence = data.data.site_offences;
-                this.data.setSiteOffences(site_offence);
-
-                let offences = this.extractOffence(site_offence);
-                this.data.setOffences(offences);
-
-                let offenceGroups = this.extractOffenceGroups(offences);
-                this.data.setOffenceGroups(offenceGroups);
-
+                this.data.applyFPNData(data);
+                this.zones = this.data.getZones();
             },
             error: (error) => {
                 console.error('Error fetching SR Data:', error);

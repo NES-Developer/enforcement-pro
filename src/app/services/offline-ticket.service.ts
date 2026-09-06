@@ -25,22 +25,32 @@ export class OfflineTicketService {
 
     async printHtml(ticketHTML: string): Promise<void> {
         let container: HTMLDivElement | null = null;
+        const receiptWidth = ThermalPrinterService.receiptWidthPx;
 
         try {
             container = document.createElement('div');
-            container.style.width = '410px';
+            container.style.width = `${receiptWidth}px`;
+            container.style.maxWidth = `${receiptWidth}px`;
             container.style.position = 'absolute';
             container.style.left = '-9999px';
             container.style.top = '0';
             container.style.background = '#ffffff';
             container.style.color = '#000000';
-            container.innerHTML = ticketHTML;
+            container.style.overflow = 'hidden';
+            container.innerHTML = `
+                <style>
+                    html, body, section { width: ${receiptWidth}px !important; max-width: ${receiptWidth}px !important; margin: 0 !important; }
+                    img { max-width: 100% !important; height: auto !important; }
+                </style>
+                ${ticketHTML}
+            `;
             document.body.appendChild(container);
 
             await new Promise(resolve => setTimeout(resolve, 400));
 
             const canvas = await html2canvas(container, {
-                width: 410,
+                width: receiptWidth,
+                windowWidth: receiptWidth,
                 scale: 2,
                 useCORS: true,
                 backgroundColor: '#ffffff',

@@ -20,12 +20,26 @@ export class Step7Component  implements OnInit {
 
     // enviro_post: EnviroPost;
     enviro_post = new EnviroPost();
-    ethnicities: Ethnicity[] = [];
-    weather: Weather[] = [];
-    visibility: Visibility[] = [];
 
-    builds: Build[] = [];
-    hair_colours: HairColour[] = [];
+    get ethnicities(): Ethnicity[] {
+        return this.data.getEthnicities() || [];
+    }
+
+    get weather(): Weather[] {
+        return this.data.getWeather() || [];
+    }
+
+    get visibility(): Visibility[] {
+        return this.data.getVisibility() || [];
+    }
+
+    get builds(): Build[] {
+        return this.data.getBuilds() || [];
+    }
+
+    get hair_colours(): HairColour[] {
+        return this.data.getHairColours() || [];
+    }
 
     constructor(
         private data: DataService,
@@ -35,29 +49,15 @@ export class Step7Component  implements OnInit {
         if (!this.data.checkFPNData()){
             this.fpnPage.getFPNData();
         }
-        this.loadData();
 
-        this.enviro_post = new EnviroPost();
-        this.enviro_post.notebook_entries = new NotebookEntry();
-
-        let enviro_post =  this.data.getEnviroPost();
-        if (enviro_post) {
-            this.enviro_post = enviro_post;
-        } 
+        this.enviro_post = this.data.getEnviroPost() || new EnviroPost();
+        if (!this.enviro_post.notebook_entries) {
+            this.enviro_post.notebook_entries = new NotebookEntry();
+        }
 
      }
 
     ngOnInit() {
-        this.loadData();
-    }
-
-    loadData() {
-        this.builds = this.data.getBuilds();
-        this.hair_colours = this.data.getHairColours();
-        this.ethnicities = this.data.getEthnicities();
-        this.weather = this.data.getWeather();
-        this.visibility = this.data.getVisibility();
-        
     }
   
     onInputChange(){ 
@@ -66,10 +66,10 @@ export class Step7Component  implements OnInit {
 
     saveEnviroData() {
         this.onInputChange();
-        if (this.enviro_post.notebook_entries.hair !== 0 && this.enviro_post.notebook_entries.is_fpn_advised !== '' && this.enviro_post.notebook_entries.is_fpn_handed !== '')
-        {
-            this.data.setEnviroPost(this.enviro_post);
+        if (!this.enviro_post.notebook_entries) {
+            this.enviro_post.notebook_entries = new NotebookEntry();
         }
+        this.data.setEnviroPost(this.enviro_post);
     }
 
 

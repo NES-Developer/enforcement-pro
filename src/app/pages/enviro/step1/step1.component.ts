@@ -155,7 +155,7 @@ export class Step1Component  implements OnInit, OnDestroy {
     filterOffences() {
         this.filteredOffences = this.offences.filter(offence => offence.group === this.enviro_post.offence_type_id);
         this.getOffenceById(this.enviro_post.offence_id);
-        // this.saveEnviroData();
+        this.saveEnviroData();
     }
 
     filterZones() {
@@ -178,8 +178,8 @@ export class Step1Component  implements OnInit, OnDestroy {
     }
 
     resetOffenceAndFilter() {
-        this.filterOffences();
         this.enviro_post.offence_id = 0;
+        this.filterOffences();
     }
 
     saveEnviroData() {

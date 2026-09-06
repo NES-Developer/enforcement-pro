@@ -18,6 +18,7 @@ import { UpperCaseWords } from 'src/app/helpers/utils'
 import { ValidatePersonService } from 'src/app/services/validate-person.service';
 import { AlertController, IonInput } from '@ionic/angular';
 import { EnviroPage } from '../enviro.page';
+import { formatDateOfBirth, isValidDateOfBirth, parseDateOfBirth } from '../../../helpers/fpn-core-validation';
 
 @Component({
     selector: 'app-step2',
@@ -28,9 +29,9 @@ import { EnviroPage } from '../enviro.page';
 export class Step2Component implements OnInit {
 
     form!: FormGroup;
-    birthYear: number = 1900;
-    birthMonth: number = 1;
-    birthDay: number = 1;
+    birthYear: number | null = null;
+    birthMonth: number | null = null;
+    birthDay: number | null = null;
 
     validation_message: string = 'Please provide information and validate details';
 
@@ -78,17 +79,18 @@ export class Step2Component implements OnInit {
     }
 
     updateDateOfBirth() {
-        if (this.birthYear && this.birthMonth && this.birthDay) {
-          if (this.birthMonth > 12 || this.birthDay > 31) {
-            console.error('Invalid date: Day cannot be greater than 31 and month cannot be greater than 12.');
+        if (!this.birthYear || !this.birthMonth || !this.birthDay) {
             return;
-          }
-    
-          // Format as yyyy/mm/dd and assign to date_of_birth
-          const formattedDate = `${this.birthYear.toString().padStart(4, '0')}/${this.birthMonth.toString().padStart(2, '0')}/${this.birthDay.toString().padStart(2, '0')}`;
-          this.enviro_post.date_of_birth = formattedDate;
-          this.saveEnviroData();
         }
+
+        const formattedDate = formatDateOfBirth(this.birthYear, this.birthMonth, this.birthDay);
+        if (!formattedDate) {
+            this.enviro_post.date_of_birth = '';
+            return;
+        }
+
+        this.enviro_post.date_of_birth = formattedDate;
+        this.saveEnviroData();
     } 
 
     ValidatePerson(){
@@ -148,55 +150,64 @@ export class Step2Component implements OnInit {
         };
 
         this.validatePerson.validateIdetity(offenderData)
-            .subscribe(data => {
-                console.log(data);
+            .subscribe({
+                next: (data) => {
+                    if (data?.Summary?.ResultText == "PASS")
+                    {
+                        if (data?.Address) {
+                            const dob = data.Address.DOB;
+                            if (dob && dob !== "0000-00-00")
+                            {
+                                const displayDob = this.formatDateForDisplay(dob);
+                                this.enviro_post.date_of_birth = isValidDateOfBirth(displayDob) ? displayDob : this.enviro_post.date_of_birth;
+                                this.populateDateOfBirth();
 
-                if (data?.Summary?.ResultText == "PASS")
-                {
-                    if (data?.Address) {
-                        if (data.Address.DOB !== "0000-00-00" || data.Address.DOB !== null)
-                        {
-                            this.enviro_post.date_of_birth = data.Address.DOB ? this.formatDateForDisplay(data.Address.DOB) : '';
-                            this.populateDateOfBirth();
+                                this.alertHeader = 'Success';
+                                this.alertSubHeader = 'Information Validated';
+                                this.alertMessage = 'Offenders Information Has Been Validated';
 
-                            this.alertHeader = 'Success';
-                            this.alertSubHeader = 'Information Validated';
-                            this.alertMessage = 'Offenders Information Has Been Validated';
+                                const forename = this.capitalizeSentence(data.Address.Forename || '');
+                                const middleName = this.capitalizeSentence(data.Address.MiddleName || '');
+                                this.enviro_post.first_name = `${forename} ${middleName}`.trim();
+                                this.enviro_post.last_name = this.capitalizeSentence(data.Address.Surname || '');
 
-                            const forename = this.capitalizeSentence(data.Address.Forename || '');
-                            const middleName = this.capitalizeSentence(data.Address.MiddleName || '');
-                            this.enviro_post.first_name = `${forename} ${middleName}`.trim();
-                            this.enviro_post.last_name = this.capitalizeSentence(data.Address.Surname || '');
-
-                            if (data.Address.AddressFound && data.Address.CleanedAddress) {
-                                const address1 = this.capitalizeSentence(data.Address.CleanedAddress.Address1 || '');
-                                const address2 = this.capitalizeSentence(data.Address.CleanedAddress.Address2 || '');
-                                this.validation_message = 'Validated Address: ' + address1 + ', ' + address2 + ', ' + data.Address.CleanedAddress.Postcode;
+                                if (data.Address.AddressFound && data.Address.CleanedAddress) {
+                                    const address1 = this.capitalizeSentence(data.Address.CleanedAddress.Address1 || '');
+                                    const address2 = this.capitalizeSentence(data.Address.CleanedAddress.Address2 || '');
+                                    this.validation_message = 'Validated Address: ' + address1 + ', ' + address2 + ', ' + data.Address.CleanedAddress.Postcode;
+                                }
+                                 else {
+                                    this.alertHeader = 'Invalid';
+                                    this.alertSubHeader = 'Information Incorrect';
+                                    this.alertMessage = 'Offenders Information Has Been Found False, Please request correct details.';
+                                }
                             }
-                             else {
+                            else {
                                 this.alertHeader = 'Invalid';
-                                this.alertSubHeader = 'Information Incorrect';
-                                this.alertMessage = 'Offenders Information Has Been Found False, Please request correct details.';
+                                this.alertSubHeader = 'Date of Birth Incorrect';
+                                this.alertMessage = 'Offenders Date of Birth Has Been Found False, Please request correct details. ';
                             }
-                        }
-                        else {
+                        } else {
                             this.alertHeader = 'Invalid';
-                            this.alertSubHeader = 'Date of Birth Incorrect';
-                            this.alertMessage = 'Offenders Date of Birth Has Been Found False, Please request correct details. ';
+                        this.alertSubHeader = 'Address Incorrect';
+                        this.alertMessage = 'Offenders Address Has Been Found False, Please request correct details.';
                         }
+                            
                     } else {
                         this.alertHeader = 'Invalid';
-                    this.alertSubHeader = 'Address Incorrect';
-                    this.alertMessage = 'Offenders Address Has Been Found False, Please request correct details.';
+                        this.alertSubHeader = 'Information Incorrect';
+                        this.alertMessage = 'Offenders Information Has Been Found False, Please request correct details. Some information were found Incorrect';
                     }
-                        
-                } else {
-                    this.alertHeader = 'Invalid';
-                    this.alertSubHeader = 'Information Incorrect';
-                    this.alertMessage = 'Offenders Information Has Been Found False, Please request correct details. Some information were found Incorrect';
-                }
 
-                this.showAlert();
+                    this.saveEnviroData();
+                    this.showAlert();
+                },
+                error: () => {
+                    this.alertHeader = 'Error';
+                    this.alertSubHeader = 'Validation failed';
+                    this.alertMessage = 'Could not validate these details. Check the connection and try again.';
+                    this.showAlert();
+                }
             });
 
        
@@ -219,13 +230,17 @@ export class Step2Component implements OnInit {
 
 
     populateDateOfBirth() { 
-        if (this.enviro_post.date_of_birth) {
-        const [year, month, day] = this.enviro_post.date_of_birth.split('/');
-
-        this.birthYear = +year;
-        this.birthMonth = +month;
-        this.birthDay = +day;
+        const parts = parseDateOfBirth(this.enviro_post.date_of_birth);
+        if (!parts) {
+            this.birthYear = null;
+            this.birthMonth = null;
+            this.birthDay = null;
+            return;
         }
+
+        this.birthYear = Number(parts.year);
+        this.birthMonth = Number(parts.month);
+        this.birthDay = Number(parts.day);
     }
 
 

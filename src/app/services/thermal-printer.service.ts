@@ -19,6 +19,7 @@ const UrovoPrinter = registerPlugin<UrovoPrinterPlugin>('UrovoPrinter');
   providedIn: 'root'
 })
 export class ThermalPrinterService {
+  static readonly receiptWidthPx = 384;
 
   constructor() { }
 
@@ -57,11 +58,11 @@ export class ThermalPrinterService {
   }
 
   async printBase64Image(base64Data: string): Promise<PrinterResult> {
-    const cleanBase64 = this.cleanBase64(base64Data);
+    const receiptImage = await this.toReceiptBitmap(base64Data);
     const errors: string[] = [];
 
     try {
-      await this.printSunmiBase64(cleanBase64);
+      await this.printSunmiBase64(receiptImage);
       return { printer: 'sunmi', status: 'printed' };
     } catch (error) {
       errors.push(`Sunmi: ${this.getErrorMessage(error)}`);
@@ -69,13 +70,19 @@ export class ThermalPrinterService {
 
     if (this.canUseNativePrinter()) {
       try {
-        return await UrovoPrinter.printBase64({ base64: cleanBase64 });
+        return await UrovoPrinter.printBase64({ base64: receiptImage });
       } catch (error) {
         errors.push(`Urovo: ${this.getErrorMessage(error)}`);
       }
     }
 
     throw new Error(`Unable to print ticket. ${errors.join(' ')}`);
+  }
+
+  async toReceiptBitmap(base64Data: string): Promise<string> {
+    const dataUrl = `data:image/png;base64,${this.cleanBase64(base64Data)}`;
+    const img = await this.loadImage(dataUrl);
+    return this.resizeImageToBase64(img, ThermalPrinterService.receiptWidthPx);
   }
 
   async feedPaper(): Promise<PrinterResult> {
@@ -112,7 +119,7 @@ export class ThermalPrinterService {
 
     const dataUrl = `data:image/png;base64,${response.data}`;
     const img = await this.loadImage(dataUrl);
-    const base64 = this.resizeImageToBase64(img, 384);
+    const base64 = this.resizeImageToBase64(img, ThermalPrinterService.receiptWidthPx);
 
     await this.printSunmiBase64(base64);
   }

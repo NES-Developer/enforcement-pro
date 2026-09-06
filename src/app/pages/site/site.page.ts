@@ -7,10 +7,7 @@ import { AlertController, Platform } from '@ionic/angular';
 import { LoadingService } from '../../services/loading.service';
 import { Offence } from '../../models/offence';
 import { OffenceGroup } from '../../models/offence-group';
-import { POIPrefix } from '../../models/poi-prefix';
 import { SiteOffence } from '../../models/site-offence';
-import { Visibility } from '../../models/visibility';
-import { Weather } from '../../models/weather';
 import { EnviroPost } from 'src/app/models/enviro';
 import {Site  } from '../../models/site';
 import { User } from 'src/app/models/user';
@@ -313,7 +310,10 @@ export class SitePage implements OnInit, OnDestroy
         this.api.getFPNData(site_id).subscribe({
             next: (data) => {
                 try {
-                    this.applyFPNData(data, site_id);
+                    this.data.applyFPNData(data);
+                    const enviro_post = new EnviroPost();
+                    enviro_post.site_id = site_id;
+                    this.data.setEnviroPost(enviro_post);
                 } catch (error) {
                     console.error('Error applying FPN data:', error);
                 }
@@ -355,37 +355,6 @@ export class SitePage implements OnInit, OnDestroy
                 } 
             }
         });
-    }
-
-    private applyFPNData(data: any, site_id: number): void {
-        const payload = data?.data || {};
-
-        this.data.removeEnviroLookUps();
-
-        this.data.setSalutations(payload.salutations || []);
-        this.data.setFPNNumberOfflinePrinter(payload.fpn_number_offline_printer || []);
-        this.data.setBuilds(payload.builds || []);
-        this.data.setHairColors(payload.hair_colors || []);
-        this.data.setZones(payload.zones || []);
-        this.data.setOffenceHow(payload.offence_how || []);
-        this.data.setOffenceLocationSuffix(payload.offence_location_suffix || []);
-        this.data.setAddressVerifiedBy(payload.address_verified_via || []);
-        this.data.setEthnicities(payload.ethnicities || []);
-        this.data.setIdShown(payload.id_shown || []);
-        this.data.setWeather(payload.weathers || []);
-        this.data.setVisibility(payload.visibility || []);
-        this.data.setPOIPrefix(payload.poi_prefix || []);
-
-        const site_offence = payload.site_offences || [];
-        this.data.setSiteOffences(site_offence);
-
-        const offences = this.extractOffence(site_offence);
-        this.data.setOffences(offences);
-        this.data.setOffenceGroups(this.extractOffenceGroups(offences));
-
-        const enviro_post = new EnviroPost();
-        enviro_post.site_id = site_id;
-        this.data.setEnviroPost(enviro_post);
     }
 
     extractOffence(site_offences: SiteOffence[]): Offence[] {

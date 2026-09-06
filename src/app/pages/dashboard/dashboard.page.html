@@ -1,4 +1,4 @@
-<div *ngIf="selected_site">
+<div *ngIf="selected_site?.id">
   <ion-header [translucent]="true">
     <ion-router-outlet></ion-router-outlet>
     <app-nav-bar></app-nav-bar>
@@ -129,7 +129,7 @@
   </ion-content>
 </div>
 
-<div *ngIf="!selected_site">
+<div *ngIf="!selected_site?.id">
   <ion-content [fullscreen]="true">
     <div class="ep-wait">
       <p class="ep-kicker">Please wait</p>

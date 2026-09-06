@@ -34,7 +34,7 @@
       <h3>What happened</h3>
     </div>
 
-    <ion-select interface="action-sheet" label="Offence group *" label-placement="stacked" fill="outline" (ionChange)="filterOffences()" multiple="false" [(ngModel)]="enviro_post.offence_type_id">
+    <ion-select interface="action-sheet" label="Offence group *" label-placement="stacked" fill="outline" (ionChange)="resetOffenceAndFilter()" multiple="false" [(ngModel)]="enviro_post.offence_type_id">
       <ion-select-option *ngFor="let group of offenceGroups" [value]="group.id">
         {{ group.englishName }}
       </ion-select-option>

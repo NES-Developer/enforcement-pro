@@ -1,5 +1,5 @@
 export function UpperCaseWords(enviro_post: any): any {
-    const exclude = ['offence_images', 'signature']; // Exclude these keys
+    const exclude = ['offence_images', 'signature', 'offence_datetime', 'issue_datetime', 'date_of_birth', 'email', 'language', 'is_bwc_active'];
 
     Object.keys(enviro_post).forEach(key => {
         if (enviro_post[key] && typeof enviro_post[key] === 'string') {

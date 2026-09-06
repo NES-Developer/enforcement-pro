@@ -1,8 +1,14 @@
 import { EnviroPost } from '../models/enviro';
+import { NotebookEntry } from '../models/notebook-entry';
 import {
   enviroStepperStep,
   findFirstMissingFpnField,
+  findFirstMissingNotebookField,
+  formatDateOfBirth,
+  hasInProgressFpnDraft,
+  isValidDateOfBirth,
   lemoWizardProgress,
+  previousLemoWizardStep,
 } from './fpn-core-validation';
 
 function completeDraft(): EnviroPost {
@@ -82,6 +88,38 @@ describe('fpn-core-validation', () => {
 
     expect(findFirstMissingFpnField(enviro, { requireZone: false })).toBeNull();
     expect(findFirstMissingFpnField(enviro)?.wizardStep).toBe('zone');
+  });
+
+  it('accepts any non-empty postcode', () => {
+    const enviro = completeDraft();
+    enviro.post_code = 'XYZ';
+
+    expect(findFirstMissingFpnField(enviro)).toBeNull();
+  });
+
+  it('rejects an impossible date of birth', () => {
+    expect(isValidDateOfBirth('1990/02/31')).toBeFalse();
+    expect(isValidDateOfBirth('2099/01/01')).toBeFalse();
+    expect(formatDateOfBirth('1990', '1', '2')).toBe('1990/01/02');
+    expect(findFirstMissingFpnField({
+      ...completeDraft(),
+      date_of_birth: '1990/02/31',
+    })?.field).toBe('date_of_birth');
+  });
+
+  it('treats notebook as optional after issue', () => {
+    const enviro = completeDraft();
+    enviro.notebook_entries = new NotebookEntry();
+
+    expect(findFirstMissingFpnField(enviro)).toBeNull();
+    expect(findFirstMissingNotebookField(enviro)?.field).toBe('is_fpn_advised');
+  });
+
+  it('detects an in-progress draft and previous wizard step', () => {
+    expect(hasInProgressFpnDraft(completeDraft())).toBeTrue();
+    expect(hasInProgressFpnDraft(new EnviroPost())).toBeFalse();
+    expect(previousLemoWizardStep('offender')).toBe('offence');
+    expect(previousLemoWizardStep('zone')).toBeNull();
   });
 
   it('reports wizard progress for advance and confirm', () => {

@@ -67,5 +67,5 @@ export class EnviroPost {
    // officer_statement: string = '';
    signature: string = '';
    offence_images: string[] = [];
-   notebook_entries!: NotebookEntry;
+   notebook_entries: NotebookEntry = new NotebookEntry();
 }

@@ -6,9 +6,6 @@ import { DataService } from '../../services/enforcementpro/data.service';
 import { OffenceGroup } from '../../models/offence-group';
 import { Offence } from '../../models/offence';
 import { SiteOffence } from '../../models/site-offence';
-import { Weather } from '../../models/weather';
-import { Visibility } from '../../models/visibility';
-import { POIPrefix } from '../../models/poi-prefix';
 import { EnviroPost } from '../../models/enviro';
 import { AlertController, Platform } from '@ionic/angular';
 import { Clipboard } from '@capacitor/clipboard';
@@ -31,7 +28,7 @@ import { ThermalPrinterService } from '../../services/thermal-printer.service';
 import { LemoEncourageService } from '../../services/lemo-encourage.service';
 import { OfflineTicketService } from '../../services/offline-ticket.service';
 import { QueueSyncService } from '../../services/queue-sync.service';
-import { enviroStepperStep } from '../../helpers/fpn-core-validation';
+import { enviroStepperStep, findFirstMissingFpnField } from '../../helpers/fpn-core-validation';
 
 
 @Component({
@@ -102,16 +99,7 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
 
 
         this.route2.queryParams.subscribe(params => {
-            const parsed = parseInt(params['currentStep'], 10);
-
-            if (Number.isFinite(parsed) && parsed > 1) {
-                this.currentStep = parsed;
-                return;
-            }
-
-            this.currentStep = enviroStepperStep(this.enviro_post, {
-                requireZone: this.data.getZones().length > 0,
-            });
+            this.applyResumeStep(parseInt(params['currentStep'], 10));
         });
             
 
@@ -122,6 +110,8 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
         this.loading.showLoading();
 
         await this.data.init();
+        this.loadData();
+        this.applyResumeStep(parseInt(this.route2.snapshot.queryParamMap.get('currentStep') || '', 10));
 
         if (!this.patrol.canUseFpnTools()) {
             this.loading.hideLoading();
@@ -150,7 +140,13 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
 
     blockBackButton() {
         this.backgroundTasks.registerSubscription(
-            this.platform.backButton.subscribeWithPriority(9999, () => {})
+            this.platform.backButton.subscribeWithPriority(9999, () => {
+                if (this.currentStep > 1) {
+                    this.previousStep();
+                    return;
+                }
+                void this.confirmLeave();
+            })
         );
     }
 
@@ -178,61 +174,7 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
         
         this.api.getFPNData(this.selected_site.id).subscribe({
             next: (data) => {
-
-                this.data.removeEnviroLookUps();
-
-                let salutations = data.data.salutations;
-                this.data.setSalutations(salutations);
-
-                let fpn_number_and_barcode = data.data.fpn_number_offline_printer;
-                this.data.setFPNNumberOfflinePrinter(fpn_number_and_barcode);
-                // console.log(fpn_number_and_barcode);
-
-                let builds = data.data.builds;
-                this.data.setBuilds(builds);
-
-                let hair_colours = data.data.hair_colors;//Please leave spelling as is, returned as 'hair_colors' app uses it as 'hair_colours'
-                this.data.setHairColors(hair_colours);
-
-                let zones = data.data.zones;
-                this.data.setZones(zones);
-
-                let offence_how = data.data.offence_how;
-                console.log(offence_how);
-                this.data.setOffenceHow(offence_how);
-
-                let offence_location_suffix = data.data.offence_location_suffix;
-                this.data.setOffenceLocationSuffix(offence_location_suffix);
-
-                let address_verified_by = data.data.address_verified_via;
-                this.data.setAddressVerifiedBy(address_verified_by);
-
-                let ethnicities = data.data.ethnicities;
-                this.data.setEthnicities(ethnicities);
-
-                let id_shown = data.data.id_shown;
-                this.data.setIdShown(id_shown);
-
-                let weather: Weather[] = data.data.weathers;
-                this.data.setWeather(weather);
-
-                let visibility: Visibility[] = data.data.visibility;
-                this.data.setVisibility(visibility);
-
-                let poi_prefix: POIPrefix[] = data.data.poi_prefix;
-                this.data.setPOIPrefix(poi_prefix);
-
-                let site_offence = data.data.site_offences;
-                this.data.setSiteOffences(site_offence);
-
-                let offences = this.extractOffence(site_offence);
-                this.data.setOffences(offences);
-
-                let offenceGroups = this.extractOffenceGroups(offences);
-                this.data.setOffenceGroups(offenceGroups);
-
-
-                
+                this.data.applyFPNData(data);
             },
             error: (error) => {
 
@@ -280,161 +222,48 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
           .map(id => groups.find(group => group.id === id) as OffenceGroup);
     }
     
-    validator(): boolean {
-        switch (this.currentStep) {
-            case 1:
-                if (this.enviro_post.zone_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide your Zone.');
-                    return false;
-                }
-                if (this.enviro_post.offence_type_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide the Offence Group.');
-                    return false;
-                }
-                if (this.enviro_post.offence_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide the Offence.');
-                    return false;
-                }
-                break;
-            case 2:
-                //console.log(this.enviro_post);
-                if (this.enviro_post.is_bwc_active == '') {
-                    this.presentAlert('Wait!', 'Please provide BWC.');
-                    return false;
-                }
-                if (this.enviro_post.salutation == '') {
-                    this.presentAlert('Wait!', 'Please provide offender Salutation.');
-                    return false;
-                }
-                if (this.enviro_post.first_name == '') {
-                    this.presentAlert('Wait!', 'Please provide offender First Name.');
-                    return false;
-                }
-                if (this.enviro_post.last_name == '') {
-                    this.presentAlert('Wait!', 'Please provide offender Last Name.');
-                    return false;
-                }
-                if (this.enviro_post.address == '') {
-                    this.presentAlert('Wait!', 'Please provide offender Address.');
-                    return false;
-                }
-                if (this.enviro_post.town == '') {
-                    this.presentAlert('Wait!', 'Please provide offender Town.');
-                    return false;
-                }
-                if (this.enviro_post.county == '') {
-                    this.presentAlert('Wait!', 'Please provide offender Country.');
-                    return false;
-                }
-                if (this.enviro_post.post_code == '') {
-                    this.presentAlert('Wait!', 'Please provide offender Postal Code.');
-                    return false;
-                }
-                if (this.enviro_post.town == '') {
-                    this.presentAlert('Wait!', 'Please provide offender Town.');
-                    return false;
-                }
-                break;
-            case 3:
-                if (this.enviro_post.proof_of_address == '')
-                {
-                    this.presentAlert('Wait!', 'Please provide Proof of Address');
-                    return false;
-                }
-                if (this.enviro_post.proof_of_id == '')
-                {
-                    this.presentAlert('Wait!', 'Please provide Proof of ID');
-                    return false;
-                }
-                break;
-            case 4:
-                if (this.enviro_post.location_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide Location.');
-                    return false;
-                }
-                if (this.enviro_post.action_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide Action.');
-                    return false;
-                }
-                if (this.enviro_post.language == '') {
-                    this.presentAlert('Wait!', 'Please provide Language.');
-                    return false;
-                }
-                break;
-            case 5:
-                if (this.enviro_post.offence_location == '') {
-                    this.presentAlert('Wait!', 'Please provide Offence Location');
-                    return false;
-                } 
-                if (this.enviro_post.poi == '') {
-                    this.presentAlert('Wait!', 'Please provide POI.');
-                    return false;
-                }
-                if (this.enviro_post.land_type_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide Land Type.');
-                    return false;
-                }
-                
-                if (!this.enviro_post.offence_datetime) {
-                    this.presentAlert('Wait!', 'Please provide Offence timestamp.');
-                    return false;
-                }
-                if (!this.enviro_post.issue_datetime) {
-                    this.presentAlert('Wait!', 'Please provide Issue timestamp.');
-                    return false;
-                }
-                // if (! isNaN(this.enviro_post.fpn_issued)) {
-                //     this.presentAlert('Wait!', 'Please provide informantion of issue onspot');
-                //     return false;
-                // }
-                break;
-            case 6:
-                if (this.enviro_post.offence_images.length == 0) {
-                    this.presentAlert('Wait!', 'Please provide Offence Images.');
-                    return false;
-                }
-                break;
-            case 7:
-                if (this.enviro_post.signature == '') {
-                    this.presentAlert('Wait!', 'Please provide Signature.');
-                    return false;
-                }
-                break;
-            case 8:
-                if (!this.enviro_post.notebook_entries.is_fpn_advised) {
-                    this.presentAlert('Wait!', 'Please provide if FPN is adviced.');
-                    return false;
-                }
-                if (!this.enviro_post.notebook_entries.is_fpn_handed) {
-                    this.presentAlert('Wait!', 'Please provide if FPN is handed.');
-                    return false;
-                }
-                if (this.enviro_post.notebook_entries.hair == 0) {
-                    this.presentAlert('Wait!', 'Please provide hair details.');
-                    return false;
-                }
-                if (this.enviro_post.notebook_entries.gender == '') {
-                    this.presentAlert('Wait!', 'Please provide offender Gender.');
-                    return false;
-                }
-                if (this.enviro_post.notebook_entries.visibility_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide Visibility.');
-                    return false;
-                }
-                if (this.enviro_post.notebook_entries.weather_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide Weather.');
-                    return false;
-                }
-                if (this.enviro_post.notebook_entries.ethnicity_id <= 0) {
-                    this.presentAlert('Wait!', 'Please provide offender Ethnicity.');
-                    return false;
-                }
+    validationOptions() {
+        return { requireZone: this.data.getZones().length > 0 };
+    }
 
+    firstMissingField() {
+        this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
+        return findFirstMissingFpnField(this.enviro_post, this.validationOptions());
+    }
+
+    validator(): boolean {
+        const gap = this.firstMissingField();
+        if (gap && gap.stepperStep <= this.currentStep) {
+            this.presentAlert('Wait!', gap.message);
+            return false;
         }
         return true;
     }
 
+    submitValidator(): boolean {
+        const gap = this.firstMissingField();
+        if (gap) {
+            this.presentAlert('Wait!', gap.message);
+            this.currentStep = gap.stepperStep;
+            return false;
+        }
 
+        this.assignOfficerId();
+        return true;
+    }
+
+    coreFpnValidator(): boolean {
+        return this.submitValidator();
+    }
+
+    private applyResumeStep(parsed: number): void {
+        const needed = enviroStepperStep(this.data.getEnviroPost() || this.enviro_post, this.validationOptions());
+        if (Number.isFinite(parsed) && parsed > 1) {
+            this.currentStep = Math.min(parsed, needed);
+            return;
+        }
+        this.currentStep = needed;
+    }
 
     async printImageFromUrl(imageUrl: string) {
         try {
@@ -446,190 +275,6 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
         }
     }
 
-
-    submitValidator(): boolean {
-        if (!this.coreFpnValidator()) {
-            return false;
-        }
-
-        if (!this.enviro_post.notebook_entries?.is_fpn_advised) {
-            this.presentAlert('Wait!', 'Please provide if FPN is adviced.');
-            this.currentStep = 8;
-            return false;
-        }
-        if (!this.enviro_post.notebook_entries.is_fpn_handed) {
-            this.presentAlert('Wait!', 'Please provide if FPN is handed.');
-            this.currentStep = 8;
-            return false;
-        }
-        if (this.enviro_post.notebook_entries.hair == 0) {
-            this.presentAlert('Wait!', 'Please provide hair details.');
-            this.currentStep = 8;
-            return false;
-        }
-        if (this.enviro_post.notebook_entries.gender == '') {
-            this.presentAlert('Wait!', 'Please provide offender Gender.');
-            this.currentStep = 8;
-            return false;
-        }
-        if (this.enviro_post.notebook_entries.visibility_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide Visibility.');
-            this.currentStep = 8;
-            return false;
-        }
-        if (this.enviro_post.notebook_entries.weather_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide Weather.');
-            this.currentStep = 8;
-            return false;
-        }
-        if (this.enviro_post.notebook_entries.ethnicity_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide offender Ethnicity.');
-            this.currentStep = 8;
-            return false;
-        }
-
-        return true;
-    }
-
-    coreFpnValidator(): boolean {
-        if (this.enviro_post.site_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide your Site. Please navigate on Home Page');
-            this.currentStep = 1;
-            return false;
-        }
-        if (this.enviro_post.zone_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide your Zone.');
-            this.currentStep = 1;
-            return false;
-        }
-        if (this.enviro_post.offence_type_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide the Offence Group.');
-            this.currentStep = 1;
-            return false;
-        }
-        if (this.enviro_post.offence_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide the Offence.');
-            this.currentStep = 1;
-            return false;
-        }
-        if (this.enviro_post.is_bwc_active == '') {
-            this.presentAlert('Wait!', 'Please provide BWC.');
-            this.currentStep = 2;
-            return false;
-        }
-        if (this.enviro_post.salutation == '') {
-            this.presentAlert('Wait!', 'Please provide offender Salutation.');
-            this.currentStep = 2;
-            return false;
-        }
-        if (this.enviro_post.first_name == '') {
-            this.presentAlert('Wait!', 'Please provide offender First Name.');
-            this.currentStep = 2;
-            return false;
-        }
-        if (this.enviro_post.last_name == '') {
-            this.presentAlert('Wait!', 'Please provide offender Last Name.');
-            this.currentStep = 2;
-            return false;
-        }
-        if (this.enviro_post.address == '') {
-            this.presentAlert('Wait!', 'Please provide offender Address.');
-            this.currentStep = 2;
-            return false;
-        }
-        if (this.enviro_post.town == '') {
-            this.presentAlert('Wait!', 'Please provide offender Town.');
-            this.currentStep = 2;
-            return false;
-
-        }
-        if (this.enviro_post.county == '') {
-            this.presentAlert('Wait!', 'Please provide offender Country.');
-            this.currentStep = 2;
-            return false;
-
-        }
-        if (this.enviro_post.post_code == '') {
-            this.presentAlert('Wait!', 'Please provide offender Postal Code.');
-            this.currentStep = 2;
-            return false;
-        }
-        if (this.enviro_post.town == '') {
-            this.presentAlert('Wait!', 'Please provide offender Town.');
-            this.currentStep = 2;
-            return false;
-        }
-        if (this.enviro_post.proof_of_address == '')
-        {
-            this.presentAlert('Wait!', 'Please provide Proof of Address');
-            this.currentStep = 3;
-            return false;
-        }
-        if (this.enviro_post.proof_of_id == '')
-        {
-            this.presentAlert('Wait!', 'Please provide Proof of ID');
-            this.currentStep = 3;
-            return false;
-        }
-        if (this.enviro_post.location_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide Location.');
-            this.currentStep = 4;
-            return false;
-        }
-        if (this.enviro_post.action_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide Action.');
-            this.currentStep = 4;
-            return false;
-        }
-        if (this.enviro_post.language == '') {
-            this.presentAlert('Wait!', 'Please provide Language.');
-            this.currentStep = 4;
-            return false;
-        }
-        if (this.enviro_post.offence_location == '') {
-            this.presentAlert('Wait!', 'Please provide Offence Location');
-            this.currentStep = 5;
-            return false;
-        } 
-        if (this.enviro_post.poi == '') {
-            this.presentAlert('Wait!', 'Please provide POI.');
-            this.currentStep = 5;
-            return false;
-        }
-        if (this.enviro_post.land_type_id <= 0) {
-            this.presentAlert('Wait!', 'Please provide Land Type.');
-            this.currentStep = 5;
-            return false;
-        }
-        // if (this.enviro_post.fpn_issued !== 0 || this.enviro_post.fpn_issued !== 1) {
-        //     this.presentAlert('Wait!', 'Please provide whether this FPN should be sent as postal');
-        //     this.currentStep = 5;
-        //     return false;
-        // }
-        if (this.enviro_post.offence_images.length == 0) {
-            this.presentAlert('Wait!', 'Please provide Offence Images.');
-            this.currentStep = 6;
-            return false;
-        }
-        if (this.enviro_post.signature == '') {
-            this.presentAlert('Wait!', 'Please provide Signature.');
-            this.currentStep = 7;
-            return false;
-        }
-
-        //Set the officer as current logged in user
-        if (this.enviro_post.officer_id == 0)
-        {
-            if (this.user.id == 0)
-            {
-                this.user = this.data.getUser();
-            }
-            this.enviro_post.officer_id = this.user.id;
-        }
-    
-        return true;
-    }
-    
     nextStep() {
         let checker = this.validator();
         if (checker) {
@@ -675,12 +320,12 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
             this.assignOfficerId();
 
             this.fpnSubmission.submit(this.enviro_post)
-                .then((result) => {
+                .then(async (result) => {
                     this.loading.hideLoading();
                     this.isSubmitting = false;
 
                     if (result.status === 'posted') {
-                        this.fpn = result.response.data;
+                        this.fpn = result.response?.data || result.response;
 
                         if (this.fpn?.fpn_number) {
                             Clipboard.write({
@@ -688,12 +333,7 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
                             });
                         }
 
-                        if (this.fpn?.ticket) {
-                            let ticket_image = this.baseUrl + this.fpn.ticket;
-                            this.printImageFromUrl(ticket_image);
-                        } else {
-                            this.offlineTicket.printFor(this.enviro_post).catch(() => undefined);
-                        }
+                        await this.printPostedTicket(this.fpn || result.response);
 
                         const pepTalk = this.encourage.line(this.encourage.recordPosted());
                         this.presentAlert('Success', `${result.message}\n\n${pepTalk}`);
@@ -727,12 +367,34 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
     }
 
     async presentAlert(header: string, message: string) {
-
- 
         const alert = await this.alertController.create({
             header: header,
-            message: message
-        
+            message: message,
+            buttons: ['Okay'],
+        });
+        await alert.present();
+    }
+
+    async confirmLeave(): Promise<void> {
+        const alert = await this.alertController.create({
+            header: 'Leave FPN?',
+            message: 'Keep this draft for later, or discard it?',
+            buttons: [
+                { text: 'Stay', role: 'cancel' },
+                {
+                    text: 'Keep draft',
+                    handler: () => {
+                        this.router.navigate(['/dashboard']);
+                    },
+                },
+                {
+                    text: 'Discard',
+                    role: 'destructive',
+                    handler: () => {
+                        this.cancel();
+                    },
+                },
+            ],
         });
         await alert.present();
     }
@@ -779,6 +441,54 @@ import { enviroStepperStep } from '../../helpers/fpn-core-validation';
 
     ping() {
         this.tracking.pingNow().catch(() => undefined);
+    }
+
+    private async printPostedTicket(payload: any): Promise<void> {
+        this.applyPostedTicketIdentity(payload);
+
+        const ticketUrl = this.resolveServerTicketUrl(payload);
+        if (ticketUrl) {
+            try {
+                await this.printer.printImage(ticketUrl);
+                return;
+            } catch {
+                // Server ticket images are often missing on later FPNs. Print locally instead.
+            }
+        }
+
+        try {
+            const printed = await this.offlineTicket.printFor(this.enviro_post);
+            if (!printed) {
+                this.presentAlert('Print Error', 'Unable to print ticket.');
+            }
+        } catch (error: any) {
+            this.presentAlert('Print Error', error?.message || 'Unable to print ticket.');
+        }
+    }
+
+    private applyPostedTicketIdentity(payload: any): void {
+        const number = String(payload?.fpn_number || payload?.data?.fpn_number || '').trim();
+        if (!number) {
+            return;
+        }
+
+        this.enviro_post.fpn_number = number;
+        const barcode = String(payload?.barcode || payload?.data?.barcode || '').trim();
+        this.enviro_post.barcode = barcode || this.enviro_post.barcode || number;
+    }
+
+    private resolveServerTicketUrl(payload: any): string | null {
+        const ticket = payload?.ticket || payload?.ticket_image || payload?.print_ticket || payload?.data?.ticket;
+        if (typeof ticket !== 'string' || !ticket.trim()) {
+            return null;
+        }
+
+        if (ticket.startsWith('http://') || ticket.startsWith('https://')) {
+            return ticket;
+        }
+
+        const path = ticket.includes('/') ? ticket.replace(/^\//, '') : `uploads/tickets/${ticket}`;
+        return `${this.baseUrl}${path}`;
     }
 
     saveFPN() {

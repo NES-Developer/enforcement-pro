@@ -132,8 +132,15 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   cancelCreate(): void {
-    this.lemo.cancelWizard();
+    this.lemo.requestCancel();
     this.composer = '';
+    this.shouldScroll = true;
+  }
+
+  goBack(): void {
+    this.lemo.goBack();
+    this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
+    this.syncDraftFromFields();
     this.shouldScroll = true;
   }
 
