@@ -47,6 +47,6 @@
     <ion-button expand="block" color="medium" *ngIf="currentStep < 8" (click)="previousStep()">Back</ion-button>
     <ion-button expand="block" color="light" (click)="saveFPN()">Save</ion-button>
     <ion-button expand="block" color="primary" *ngIf="currentStep === 7" (click)="nextStep()">Notebook</ion-button>
-    <ion-button expand="block" color="success" (click)="submitForm()">Submit</ion-button>
+    <ion-button expand="block" color="success" *ngIf="currentStep === 8" (click)="submitForm()">Submit</ion-button>
   </div>
 </ion-footer>

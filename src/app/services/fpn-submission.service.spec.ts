@@ -1,6 +1,7 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { EnviroPost } from '../models/enviro';
+import { NotebookEntry } from '../models/notebook-entry';
 import { ApiService } from './enforcementpro/api.service';
 import { DataService } from './enforcementpro/data.service';
 import { LocationService } from './location.service';
@@ -26,7 +27,8 @@ describe('FpnSubmissionService', () => {
             'spliceEnviroQue',
             'persistEnviroQue',
             'findOffenceById',
-            'findOffenceGroupId'
+            'findOffenceGroupId',
+            'consumeStorageWarning'
         ]);
         location = jasmine.createSpyObj('LocationService', ['requireCurrentPosition', 'peekLastKnown', 'tryCurrentPosition']);
         patrol = jasmine.createSpyObj('PatrolService', ['canUseFpnTools']);
@@ -58,6 +60,7 @@ describe('FpnSubmissionService', () => {
         });
         data.findOffenceById.and.returnValue(undefined);
         data.findOffenceGroupId.and.returnValue(undefined);
+        data.consumeStorageWarning.and.returnValue(null);
         const fix = {
             latitude: '51.4545',
             longitude: '-2.5879',
@@ -202,6 +205,59 @@ describe('FpnSubmissionService', () => {
 
         expect(result.status).toBe('posted');
         expect(result.response.data.fpn_number).toBe('BCC123');
+        expect(data.pushEnviroQueItem).not.toHaveBeenCalled();
+    });
+
+    it('flattens notebook fields onto the create payload', async () => {
+        api.postFPN.and.returnValue(of({
+            success: true,
+            data: { id: 21, fpn_number: 'BCC021' }
+        }));
+
+        const post = makePost();
+        post.notebook_entries = new NotebookEntry();
+        post.notebook_entries.hair = 4;
+        post.notebook_entries.gender = 'Male';
+        post.notebook_entries.weather_id = 2;
+        post.notebook_entries.visibility_id = 3;
+        post.notebook_entries.ethnicity_id = 8;
+        post.notebook_entries.is_fpn_advised = 'yes';
+        post.notebook_entries.officer_statement = 'Saw the offence';
+
+        await service.submit(post);
+
+        const payload = api.postFPN.calls.mostRecent().args[0] as EnviroPost & Record<string, unknown>;
+        expect(payload.local_id).toBeTruthy();
+        expect(payload['gender']).toBe('Male');
+        expect(payload['weather_id']).toBe(2);
+        expect(payload['hair']).toBe(4);
+        expect(payload['officer_statement']).toBe('Saw the offence');
+        expect(payload.notebook_entries.gender).toBe('Male');
+    });
+
+    it('queues the FPN when the server returns an auth error', async () => {
+        api.postFPN.and.returnValue(throwError(() => ({
+            status: 401,
+            message: 'Unauthorized'
+        })));
+
+        const result = await service.submit(makePost());
+
+        expect(result.status).toBe('auth');
+        expect(data.pushEnviroQueItem).toHaveBeenCalled();
+    });
+
+    it('does not retry a 409 duplicate FPN number', async () => {
+        api.postFPN.and.returnValue(throwError(() => ({
+            status: 409,
+            error: { message: 'This FPN number already exists. Please edit or take a new number.' }
+        })));
+
+        const result = await service.submit(makePost());
+
+        expect(result.status).toBe('failed');
+        expect(result.message).toContain('already exists');
+        expect(api.postFPN).toHaveBeenCalledTimes(1);
         expect(data.pushEnviroQueItem).not.toHaveBeenCalled();
     });
 });

@@ -443,6 +443,50 @@ import { QueueSyncService } from '../../services/queue-sync.service';
 
 
     submitValidator(): boolean {
+        if (!this.coreFpnValidator()) {
+            return false;
+        }
+
+        if (!this.enviro_post.notebook_entries?.is_fpn_advised) {
+            this.presentAlert('Wait!', 'Please provide if FPN is adviced.');
+            this.currentStep = 8;
+            return false;
+        }
+        if (!this.enviro_post.notebook_entries.is_fpn_handed) {
+            this.presentAlert('Wait!', 'Please provide if FPN is handed.');
+            this.currentStep = 8;
+            return false;
+        }
+        if (this.enviro_post.notebook_entries.hair == 0) {
+            this.presentAlert('Wait!', 'Please provide hair details.');
+            this.currentStep = 8;
+            return false;
+        }
+        if (this.enviro_post.notebook_entries.gender == '') {
+            this.presentAlert('Wait!', 'Please provide offender Gender.');
+            this.currentStep = 8;
+            return false;
+        }
+        if (this.enviro_post.notebook_entries.visibility_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide Visibility.');
+            this.currentStep = 8;
+            return false;
+        }
+        if (this.enviro_post.notebook_entries.weather_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide Weather.');
+            this.currentStep = 8;
+            return false;
+        }
+        if (this.enviro_post.notebook_entries.ethnicity_id <= 0) {
+            this.presentAlert('Wait!', 'Please provide offender Ethnicity.');
+            this.currentStep = 8;
+            return false;
+        }
+
+        return true;
+    }
+
+    coreFpnValidator(): boolean {
         if (this.enviro_post.site_id <= 0) {
             this.presentAlert('Wait!', 'Please provide your Site. Please navigate on Home Page');
             this.currentStep = 1;
@@ -737,7 +781,7 @@ import { QueueSyncService } from '../../services/queue-sync.service';
             return;
         }
 
-        let checker = this.submitValidator();
+        let checker = this.coreFpnValidator();
 
         if (checker) {
             this.isSubmitting = true;

@@ -80,10 +80,10 @@ export class FpnSubmissionService {
         await this.shrinkPayloadMedia(queueRecord);
         this.addToQueue(queueRecord);
 
-        return {
+        return this.appendStorageWarning({
             status: 'queued',
             message: 'FPN has been captured in Queue.'
-        };
+        });
     }
 
     private async submitSplit(queueRecord: EnviroPost, images: string[]): Promise<FpnSubmissionResult> {
@@ -92,11 +92,11 @@ export class FpnSubmissionService {
 
         const created = await this.postFpnPayload(payload);
         if (created.status !== 'posted') {
-            if (created.status === 'queued') {
+            if (created.status === 'queued' || created.status === 'auth') {
                 queueRecord.offence_images = [...images];
                 this.holdInQueue(queueRecord);
             }
-            return created;
+            return this.appendStorageWarning(created);
         }
 
         if (images.length === 0) {
@@ -114,6 +114,7 @@ export class FpnSubmissionService {
         }
 
         queueRecord.enviro_id = enviroId;
+        this.holdInQueue(queueRecord);
         queueRecord.fpn_number = created.response?.data?.fpn_number
             || created.response?.fpn_number
             || queueRecord.fpn_number;
@@ -152,11 +153,11 @@ export class FpnSubmissionService {
             queueRecord.offence_images = remaining;
             this.holdInQueue(queueRecord);
 
-            return {
+            return this.appendStorageWarning({
                 status: 'queued',
                 message: `FPN ${queueRecord.fpn_number || queueRecord.enviro_id} is held. ${remaining.length} photo(s) still need to upload.`,
                 response: existingResponse
-            };
+            });
         }
 
         this.releaseHeldRecord(queueRecord);
@@ -306,8 +307,55 @@ export class FpnSubmissionService {
         }
 
         this.applyStringLimits(payload);
+        this.flattenNotebookOntoPayload(payload);
 
         return payload;
+    }
+
+    private flattenNotebookOntoPayload(payload: EnviroPost): void {
+        const notebook = payload.notebook_entries;
+        if (!notebook) {
+            return;
+        }
+
+        const fields: Array<keyof NotebookEntry> = [
+            'is_fpn_advised',
+            'is_fpn_handed',
+            'height_in_feet',
+            'height_in_inch',
+            'gender',
+            'ethnicity_id',
+            'caution',
+            'second_caution',
+            'visibility_id',
+            'weather_id',
+            'witness_name',
+            'witness_phone',
+            'witness_address',
+            'witness_statement',
+            'officer_statement',
+            'is_witness_available',
+            'build',
+            'hair',
+            'distance_from_offender',
+            'distinguishing_features',
+            'have_reason',
+            'nearest_bin',
+            'were',
+            'did',
+            'police_comments',
+            'offender_comments',
+            'bwv_assest'
+        ];
+
+        for (const field of fields) {
+            const value = notebook[field];
+            if (value === undefined || value === null || value === '' || value === 0) {
+                continue;
+            }
+
+            (payload as any)[field] = value;
+        }
     }
 
     private applyStringLimits(payload: EnviroPost): void {
@@ -516,7 +564,16 @@ export class FpnSubmissionService {
             return true;
         }
 
-        return [0, 408, 409, 423, 425, 429, 500, 502, 503, 504].includes(status);
+        return [0, 408, 423, 425, 429, 500, 502, 503, 504].includes(status);
+    }
+
+    private appendStorageWarning(result: FpnSubmissionResult): FpnSubmissionResult {
+        const warning = this.data.consumeStorageWarning();
+        if (warning) {
+            result.message = `${result.message} ${warning}`;
+        }
+
+        return result;
     }
 
     private getErrorMessage(error: any): string {

@@ -341,6 +341,8 @@ export class DataService {
 
     /* ------------------------ Config FUNCTIONS ------------------------ */
 
+    private lastStorageWarning: string | null = null;
+
     private safeSetLocalStorage(key: string, value: string | null | undefined) {
         try {
             if (value === null || value === undefined) {
@@ -349,9 +351,15 @@ export class DataService {
                 localStorage.setItem(key, value);
             }
         } catch (e) {
-            // QuotaExceededError or other localStorage problems
+            this.lastStorageWarning = 'Device storage is full. Queued FPNs may be lost if you close the app.';
             console.warn('localStorage set failed for key:', key, e);
         }
+    }
+
+    consumeStorageWarning(): string | null {
+        const warning = this.lastStorageWarning;
+        this.lastStorageWarning = null;
+        return warning;
     }
     
 

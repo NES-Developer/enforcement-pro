@@ -723,9 +723,10 @@ export class LemoAiService {
       [remote, local].filter(Boolean).join('\n\n') || fallback,
       fromPhotos ? this.researchChoices() : this.homeChoices()
     );
-    const last = this.lastAssistant();
-    if (last && matches.length) {
-      last.offenceCards = matches.slice(0, 4);
+    if (matches.length) {
+      this.attachResearchCards(matches, 4);
+    } else if (fromPhotos) {
+      this.attachResearchCards(this.siteOffenceCards());
     }
   }
 
@@ -824,7 +825,20 @@ export class LemoAiService {
   }
 
   private offencesForGroup(groupId: number): Offence[] {
-    return this.data.getOffence().filter(item => Number(item.group) === Number(groupId));
+    const fromOffences = this.data.getOffence().filter(item =>
+      Number(item.group) === Number(groupId) || Number(item.offenceGroup?.id) === Number(groupId)
+    );
+    const fromSite = this.data.getSiteOffence()
+      .filter(item => Number(item.offence_group_id) === Number(groupId))
+      .map(item => item.offences)
+      .filter(Boolean);
+    return this.uniqueOffences([...fromOffences, ...fromSite]);
+  }
+
+  private uniqueOffences(offences: Offence[]): Offence[] {
+    return Array.from(new Set(offences.map(item => item.id)))
+      .map(id => offences.find(item => item.id === id) as Offence)
+      .filter(Boolean);
   }
 
   private async startResearch(): Promise<void> {
@@ -837,12 +851,16 @@ export class LemoAiService {
       return;
     }
 
-    const groups = this.data.getOffenceGroup();
-    const content = groups.length
-      ? 'Describe what you saw and I will match it to this site’s offences and legislation.\n\nOr pick an offence group to browse.'
-      : 'Describe what you saw and I will match it to this site’s offences and legislation.';
+    const cards = this.siteOffenceCards();
+    const groups = this.researchGroups();
+    const content = cards.length
+      ? `This site has ${cards.length} offence${cards.length === 1 ? '' : 's'}. Tap one to use it, pick a group, or describe what you saw.`
+      : groups.length
+        ? 'Describe what you saw and I will match it to this site’s offences and legislation.\n\nOr pick an offence group to browse.'
+        : 'Describe what you saw and I will match it to this site’s offences and legislation.';
 
     this.pushAssistant(content, this.researchChoices());
+    this.attachResearchCards(cards);
   }
 
   private async researchFromPhotos(): Promise<void> {
@@ -890,14 +908,11 @@ export class LemoAiService {
       this.researchChoices()
     );
 
-    const last = this.lastAssistant();
-    if (last && cards.length) {
-      last.offenceCards = cards.slice(0, 12);
-    }
+    this.attachResearchCards(cards, 24);
   }
 
   private researchChoices(): LemoChoice[] {
-    const groups: LemoChoice[] = this.data.getOffenceGroup().map(item => ({
+    const groups: LemoChoice[] = this.researchGroups().map(item => ({
       id: `rg-${item.id}`,
       label: item.englishName,
       value: item.id,
@@ -905,6 +920,21 @@ export class LemoAiService {
     }));
     groups.push({ id: 'research-cancel', label: 'Cancel', action: 'cancel' });
     return groups;
+  }
+
+  private researchGroups(): OffenceGroup[] {
+    return this.extractOffenceGroups(this.data.getOffence(), this.data.getSiteOffence());
+  }
+
+  private siteOffenceCards(): LemoOffenceCard[] {
+    return this.data.getOffence().map(item => this.toOffenceCard(item));
+  }
+
+  private attachResearchCards(cards: LemoOffenceCard[], limit = 24): void {
+    const last = this.lastAssistant();
+    if (last && cards.length) {
+      last.offenceCards = cards.slice(0, limit);
+    }
   }
 
   private beginNewFpn(prefillOffenceId?: number): EnviroPost {
@@ -1025,7 +1055,8 @@ export class LemoAiService {
   }
 
   private async ensureLookups(): Promise<void> {
-    if (this.data.checkFPNData()) {
+    this.hydrateResearchLookups();
+    if (this.data.checkFPNData() && this.data.getOffence().length) {
       return;
     }
 
@@ -1062,23 +1093,58 @@ export class LemoAiService {
         this.data.setSiteOffences(payload.site_offences);
         const offences = this.extractOffence(payload.site_offences);
         this.data.setOffences(offences);
-        this.data.setOffenceGroups(this.extractOffenceGroups(offences));
+        this.data.setOffenceGroups(this.extractOffenceGroups(offences, payload.site_offences));
       }
     } catch {
       // Local cached lookups are enough for the wizard if they already exist.
     }
   }
 
-  private extractOffence(siteOffences: SiteOffence[]): Offence[] {
-    const groups = siteOffences.map(item => item.offences).filter(Boolean);
-    return Array.from(new Set(groups.map(item => item.id)))
-      .map(id => groups.find(item => item.id === id) as Offence);
+  private hydrateResearchLookups(): void {
+    const siteOffences = this.data.getSiteOffence();
+    if (!siteOffences?.length) {
+      return;
+    }
+
+    const offences = this.extractOffence(siteOffences);
+    if (offences.length) {
+      this.data.setOffences(offences);
+    }
+    const groups = this.extractOffenceGroups(this.data.getOffence(), siteOffences);
+    if (groups.length) {
+      this.data.setOffenceGroups(groups);
+    }
   }
 
-  private extractOffenceGroups(offences: Offence[]): OffenceGroup[] {
-    const groups = offences.map(item => item.offenceGroup).filter(Boolean);
-    return Array.from(new Set(groups.map(item => item.id)))
-      .map(id => groups.find(item => item.id === id) as OffenceGroup);
+  private extractOffence(siteOffences: SiteOffence[]): Offence[] {
+    const list = (siteOffences || [])
+      .map(item => item.offences || (item as SiteOffence & { offence?: Offence }).offence)
+      .filter((item): item is Offence => !!item?.id);
+    return this.uniqueOffences(list);
+  }
+
+  private extractOffenceGroups(offences: Offence[], siteOffences: SiteOffence[] = []): OffenceGroup[] {
+    const byId = new Map<number, OffenceGroup>();
+
+    for (const offence of offences || []) {
+      const group = offence.offenceGroup || this.data.findOffenceGroupId(Number(offence.group));
+      if (group?.id) {
+        byId.set(Number(group.id), group);
+      }
+    }
+
+    for (const siteOffence of siteOffences || []) {
+      const groupId = Number(siteOffence.offence_group_id || siteOffence.offences?.group || 0);
+      if (!groupId || byId.has(groupId)) {
+        continue;
+      }
+      const group = siteOffence.offences?.offenceGroup || this.data.findOffenceGroupId(groupId);
+      if (group?.id) {
+        byId.set(Number(group.id), group);
+      }
+    }
+
+    return Array.from(byId.values());
   }
 
   private hasBwc(enviro: EnviroPost): boolean {

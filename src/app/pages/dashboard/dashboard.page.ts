@@ -186,7 +186,7 @@ export class DashboardPage implements OnInit, OnDestroy {
                     this.recent_fpns[i].offender.town == enviro_que[x].town &&
                     this.recent_fpns[i].offender.first_name == enviro_que[x].first_name &&
                     this.recent_fpns[i].offender.last_name == enviro_que[x].last_name &&
-                    this.recent_fpns[i].offence_location == enviro_que[x].offence_location,
+                    this.recent_fpns[i].offence_location == enviro_que[x].offence_location &&
                     this.recent_fpns[i].offence_id == enviro_que[x].offence_id &&
                     this.recent_fpns[i].zone_id == enviro_que[x].zone_id 
                 ) {
