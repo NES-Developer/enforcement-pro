@@ -25,7 +25,7 @@ export class LoginPage implements OnInit {
 
     login: Login;
     token: string = '';
-    appVersion: string = '';
+    appVersion: string = 'Alpha (1)';
 
     constructor(
         private apiService: ApiService,

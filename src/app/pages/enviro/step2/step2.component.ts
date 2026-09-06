@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ServiceRequest } from '../../../models/service-request';
 import { ApiService } from '../../../services/enforcementpro/api.service';
 import { AuthService } from '../../../services/enforcementpro/auth.service';
 import { DataService } from '../../../services/enforcementpro/data.service';

@@ -1,7 +1,9 @@
-import { AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, HostListener, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, IonContent } from '@ionic/angular';
+import { AlertController, IonContent, ToastController } from '@ionic/angular';
 import SignaturePad from 'signature_pad';
+import { enviroStepperStep } from '../../helpers/fpn-core-validation';
+import { bindSignaturePad } from '../../helpers/signature-canvas';
 import { EnviroPost } from '../../models/enviro';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
@@ -33,6 +35,7 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
     private data: DataService,
     private router: Router,
     private alertController: AlertController,
+    private toastController: ToastController,
     private geocoding: GeocodingService
   ) {}
 
@@ -197,7 +200,16 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
 
   continueInStepper(): void {
     this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
-    this.router.navigate(['/enviro'], { queryParams: { currentStep: this.stepperStep(this.enviro_post) } });
+    if (this.enviro_post) {
+      this.data.setEnviroPost(this.enviro_post);
+    }
+    this.router.navigate(['/enviro'], {
+      queryParams: {
+        currentStep: enviroStepperStep(this.enviro_post, {
+          requireZone: this.data.getZones().length > 0,
+        }),
+      },
+    });
   }
 
   useOffence(card: LemoOffenceCard): void {
@@ -212,10 +224,10 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   async submitFields(fields: LemoField[]): Promise<void> {
-    for (const field of fields) {
-      if (field.required && !String(this.draft[field.key] || '').trim()) {
-        return;
-      }
+    const missing = fields.find(field => field.required && !String(this.draft[field.key] || '').trim());
+    if (missing) {
+      await this.presentToast(`${missing.label} is required.`);
+      return;
     }
     this.locationSuggestions = [];
     await this.lemo.submitFields(this.draft);
@@ -259,14 +271,19 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
 
   saveSignature(): void {
     if (!this.signaturePad || this.signaturePad.isEmpty()) {
+      void this.presentToast('Please sign first, then tap Save.');
       return;
     }
     this.lemo.applyDraftPatch({ signature: this.signaturePad.toDataURL() });
     this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
+    this.lemo.continueAfterSignature();
+    this.lastSignatureCanvas = undefined;
+    this.shouldScroll = true;
   }
 
   clearSignature(): void {
     this.signaturePad?.clear();
+    this.lastSignatureCanvas = undefined;
     this.lemo.applyDraftPatch({ signature: '' });
     this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
   }
@@ -319,31 +336,6 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
     this.notebookSection?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  private stepperStep(enviro: EnviroPost): number {
-    if (!enviro?.zone_id || !enviro.offence_type_id || !enviro.offence_id) {
-      return 1;
-    }
-    if (!enviro.salutation || !enviro.first_name || !enviro.last_name || !enviro.address || !enviro.town || !enviro.post_code) {
-      return 2;
-    }
-    if (!enviro.proof_of_address || !enviro.proof_of_id) {
-      return 3;
-    }
-    if (!enviro.location_id || !enviro.action_id || !enviro.language) {
-      return 4;
-    }
-    if (!enviro.offence_location || !enviro.poi || !enviro.land_type_id) {
-      return 5;
-    }
-    if (!enviro.offence_images?.length) {
-      return 6;
-    }
-    if (!enviro.signature) {
-      return 7;
-    }
-    return 8;
-  }
-
   private syncDraftFromFields(): void {
     const last = this.lemo.lastAssistant();
     const next: Record<string, string> = { ...this.draft };
@@ -357,13 +349,35 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
 
   private lastSignatureCanvas?: HTMLCanvasElement;
 
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.resizeSignaturePad();
+  }
+
   private bindSignaturePad(): void {
     const canvas = this.signatureCanvases?.last?.nativeElement;
     if (!canvas || canvas === this.lastSignatureCanvas) {
       return;
     }
-    this.signaturePad?.off();
+    this.signaturePad = bindSignaturePad(canvas, this.signaturePad);
     this.lastSignatureCanvas = canvas;
-    this.signaturePad = new SignaturePad(canvas);
+  }
+
+  private resizeSignaturePad(): void {
+    const canvas = this.signatureCanvases?.last?.nativeElement;
+    if (!canvas || !this.signaturePad) {
+      return;
+    }
+    this.signaturePad = bindSignaturePad(canvas, this.signaturePad);
+    this.lastSignatureCanvas = canvas;
+  }
+
+  private async presentToast(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 2500,
+      position: 'top',
+    });
+    await toast.present();
   }
 }

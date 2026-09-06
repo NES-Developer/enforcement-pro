@@ -92,12 +92,12 @@
   <section class="ep-section ep-sig">
     <div class="ep-section__head">
       <p class="ep-kicker">Sign-off</p>
-      <h3 *ngIf="enviro_post.signature">Add your digital signature</h3>
-      <h3 *ngIf="!enviro_post.signature">Your stored digital picture</h3>
+      <h3 *ngIf="!enviro_post.signature">Add your digital signature</h3>
+      <h3 *ngIf="enviro_post.signature">Your stored digital signature</h3>
     </div>
 
-    <img *ngIf="enviro_post.signature" width="500" height="300" alt="" />
-    <canvas *ngIf="!enviro_post.signature" #canvas width="500" height="300"></canvas>
+    <img *ngIf="enviro_post.signature" class="ep-sig__preview" [src]="enviro_post.signature" alt="Saved signature" />
+    <canvas *ngIf="!enviro_post.signature" #canvas></canvas>
 
     <div class="ep-actions ep-actions--split" style="margin-top: 12px;">
       <ion-button expand="block" color="medium" (click)="clear()">Clear</ion-button>

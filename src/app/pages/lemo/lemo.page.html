@@ -125,10 +125,15 @@
         </div>
 
         <div class="lemo-sign" *ngIf="message.showSignature && isActiveMessage(message)">
-          <canvas #signatureCanvas width="320" height="160"></canvas>
+          <img
+            *ngIf="enviro_post.signature"
+            class="lemo-sign__preview"
+            [src]="enviro_post.signature"
+            alt="Saved signature" />
+          <canvas *ngIf="!enviro_post.signature" #signatureCanvas></canvas>
           <div class="ep-actions ep-actions--split">
             <ion-button expand="block" color="medium" (click)="clearSignature()">Clear</ion-button>
-            <ion-button expand="block" (click)="saveSignature()">Save</ion-button>
+            <ion-button expand="block" *ngIf="!enviro_post.signature" (click)="saveSignature()">Save</ion-button>
           </div>
         </div>
       </article>
@@ -140,6 +145,9 @@
 
 <ion-footer class="lemo-footer">
   <div class="lemo-composer lemo-composer--cancel" *ngIf="lemo.isCreating">
+    <p class="lemo-footer__step" *ngIf="lemo.wizardStep">
+      Step {{ lemo.wizardProgress.current }} of {{ lemo.wizardProgress.total }} · {{ lemo.wizardProgress.label }}
+    </p>
     <ion-button expand="block" color="medium" (click)="cancelCreate()">Cancel</ion-button>
   </div>
   <div class="lemo-composer" *ngIf="!lemo.isCreating">

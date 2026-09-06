@@ -124,12 +124,26 @@
   font-weight: 800;
 }
 
-.lemo-sign canvas {
+.lemo-sign canvas,
+.lemo-sign__preview {
+  display: block;
   width: 100%;
   height: 160px;
   background: #fff;
   border: 1px dashed var(--ep-line);
   border-radius: 12px;
+}
+
+.lemo-sign__preview {
+  object-fit: contain;
+}
+
+.lemo-footer__step {
+  margin: 0 0 8px;
+  color: var(--ep-slate);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .lemo-busy {

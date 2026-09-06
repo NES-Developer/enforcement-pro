@@ -14,6 +14,10 @@ import { OfflineTicketService } from './offline-ticket.service';
 import { QueueSyncService } from './queue-sync.service';
 import { GeocodingService } from './geocoding.service';
 import { compressDataUrl } from '../helpers/image-compress';
+import {
+  findFirstMissingFpnField,
+  lemoWizardProgress,
+} from '../helpers/fpn-core-validation';
 
 export interface LemoChoice {
   id: string;
@@ -245,6 +249,10 @@ export class LemoAiService {
       void this.submitFpn();
       return;
     }
+    if (choice.action === 'queue-save') {
+      void this.queueFpn();
+      return;
+    }
     if (choice.action === 'print-sunmi' || choice.action === 'print-urovo') {
       this.pushUser(choice.label);
       void this.printTicket(choice.action === 'print-sunmi' ? 'sunmi' : 'urovo');
@@ -318,6 +326,10 @@ export class LemoAiService {
     return this.mode === 'create' || this.mode === 'images';
   }
 
+  get wizardProgress(): { current: number; total: number; label: string } {
+    return lemoWizardProgress(this.wizardStep);
+  }
+
   imageCount(): number {
     const images = this.draft().offence_images;
     return Array.isArray(images) ? images.length : 0;
@@ -351,7 +363,9 @@ export class LemoAiService {
   continueAfterSignature(): void {
     const enviro = this.draft();
     if (!enviro.signature) {
+      this.wizardStep = 'signature';
       this.pushAssistant('Save a signature before submitting.');
+      this.promptCurrentStep();
       return;
     }
     this.wizardStep = 'confirm';
@@ -364,16 +378,7 @@ export class LemoAiService {
     }
 
     const enviro = this.draft();
-    if (!enviro.offence_images?.length) {
-      this.wizardStep = 'images';
-      this.pushAssistant('This FPN still needs offence images.');
-      this.promptCurrentStep();
-      return;
-    }
-    if (!enviro.signature) {
-      this.wizardStep = 'signature';
-      this.pushAssistant('This FPN still needs a signature.');
-      this.promptCurrentStep();
+    if (this.returnToMissingField(enviro)) {
       return;
     }
 
@@ -423,6 +428,37 @@ export class LemoAiService {
     }
   }
 
+  async queueFpn(): Promise<void> {
+    if (this.busy) {
+      return;
+    }
+
+    const enviro = this.draft();
+    if (this.returnToMissingField(enviro)) {
+      return;
+    }
+
+    this.busy = true;
+    this.pushUser('Save to queue');
+    try {
+      const result = await this.fpnSubmission.queueForLater(enviro);
+      if (result.status === 'queued') {
+        this.finishSubmittedDraft();
+        this.offlineTicket.printFor(enviro).catch(() => undefined);
+        this.pushAssistant('FPN Saved', this.queueOrCreateChoices());
+        return;
+      }
+
+      this.pushAssistant(result.message || 'Unable to save this FPN right now.', [
+        { id: 'retry-queue', label: 'Try save again', action: 'queue-save' },
+        { id: 'submit', label: 'Submit FPN', action: 'submit' },
+        { id: 'cancel', label: 'Cancel', action: 'cancel' },
+      ]);
+    } finally {
+      this.busy = false;
+    }
+  }
+
   cancelWizard(): void {
     this.mode = 'chat';
     this.wizardStep = null;
@@ -448,34 +484,24 @@ export class LemoAiService {
   }
 
   private nextNeededStep(enviro: EnviroPost): LemoWizardStep {
-    if (!enviro.zone_id && this.data.getZones().length > 0) {
-      return 'zone';
+    const gap = findFirstMissingFpnField(enviro, {
+      requireZone: this.data.getZones().length > 0,
+    });
+    return (gap?.wizardStep || 'confirm') as LemoWizardStep;
+  }
+
+  private returnToMissingField(enviro: EnviroPost): boolean {
+    const gap = findFirstMissingFpnField(enviro, {
+      requireZone: this.data.getZones().length > 0,
+    });
+    if (!gap) {
+      return false;
     }
-    if (!enviro.offence_type_id) {
-      return 'offence_group';
-    }
-    if (!enviro.offence_id) {
-      return 'offence';
-    }
-    if (!enviro.salutation || !enviro.first_name || !enviro.last_name || !enviro.address || !enviro.town || !enviro.post_code || !enviro.date_of_birth || !this.hasBwc(enviro)) {
-      return 'offender';
-    }
-    if (!enviro.proof_of_address || !enviro.proof_of_id) {
-      return 'proofs';
-    }
-    if (!enviro.location_id || !enviro.action_id) {
-      return 'incident';
-    }
-    if (!enviro.offence_location || !enviro.poi || !enviro.land_type_id) {
-      return 'place';
-    }
-    if (!enviro.offence_images?.length) {
-      return 'images';
-    }
-    if (!enviro.signature) {
-      return 'signature';
-    }
-    return 'confirm';
+
+    this.wizardStep = gap.wizardStep as LemoWizardStep;
+    this.pushAssistant(gap.message);
+    this.promptCurrentStep();
+    return true;
   }
 
   private promptCurrentStep(): void {
@@ -625,9 +651,11 @@ export class LemoAiService {
           this.confirmSummary(enviro),
           [
             { id: 'submit', label: 'Submit FPN', action: 'submit' },
+            { id: 'queue-save', label: 'Save to queue', action: 'queue-save' },
             { id: 'cancel', label: 'Cancel', action: 'cancel' },
           ]
         );
+        this.attachSignature();
         break;
     }
   }
@@ -663,9 +691,9 @@ export class LemoAiService {
     }
     if (this.wizardStep === 'proofs') {
       if (!enviro.proof_of_address && value) {
-        enviro.proof_of_address = String(value);
+        enviro.proof_of_address = Number(value) as any;
       } else if (value) {
-        enviro.proof_of_id = String(value);
+        enviro.proof_of_id = Number(value) as any;
       }
     }
     if (this.wizardStep === 'incident') {
@@ -1147,15 +1175,23 @@ export class LemoAiService {
     return Array.from(byId.values());
   }
 
-  private hasBwc(enviro: EnviroPost): boolean {
-    const value = String(enviro.is_bwc_active || '').trim().toLowerCase();
-    return value === 'yes' || value === 'no';
-  }
-
   private draft(): EnviroPost {
     const enviro = this.data.getEnviroPost() || new EnviroPost();
+    const defaults = new EnviroPost();
     if (!Array.isArray(enviro.offence_images)) {
       enviro.offence_images = [];
+    }
+    if (!String(enviro.language || '').trim()) {
+      enviro.language = defaults.language;
+    }
+    if (!String(enviro.county || '').trim()) {
+      enviro.county = defaults.county;
+    }
+    if (!String(enviro.offence_datetime || '').trim()) {
+      enviro.offence_datetime = defaults.offence_datetime;
+    }
+    if (!String(enviro.issue_datetime || '').trim()) {
+      enviro.issue_datetime = defaults.issue_datetime;
     }
     return enviro;
   }

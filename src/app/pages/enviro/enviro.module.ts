@@ -14,7 +14,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 // import { FPNPage } from '../../fpn.page';
-import { ExploreContainerComponentModule } from '../../explore-container/explore-container.module';
 import { NavBarModule } from '../../components/nav-bar/nav-bar.module';
 
 // import { SignaturePadModule } from '@lemonadejs/signature';
@@ -40,7 +39,6 @@ import { EvidenceCaptureModule } from '../../components/evidence-capture/evidenc
     IonicModule,
     EnviroPageRoutingModule,
     NavBarModule,
-    ExploreContainerComponentModule,
     EvidenceCaptureModule
   ],
   declarations: [

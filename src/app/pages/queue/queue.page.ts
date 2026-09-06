@@ -22,6 +22,7 @@ import { TrackingService } from '../../services/tracking.service';
 import { ThermalPrinterService } from '../../services/thermal-printer.service';
 import { OfflineTicketService } from '../../services/offline-ticket.service';
 import { QueueSyncService } from '../../services/queue-sync.service';
+import { enviroStepperStep } from '../../helpers/fpn-core-validation';
 
 @Component({
   selector: 'app-queue',
@@ -102,15 +103,7 @@ export class QueuePage implements OnInit {
     }
 
     init() {
-        this.enviro_que_addition = this.enviro_que;
-        for (let x=0; x<this.enviro_que.length; x++) {
-            const rawHtml = `` // Assuming the raw HTML exists in ``
-            this.enviro_que_addition[x] = {
-                ...this.enviro_que_addition[x], // Retain existing properties
-                html_bool: false, // Add html_bool
-                html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
-            };
-        }
+        this.hydrateQueueItems();
 
         this.ping();
         this.queueSync.start();
@@ -187,19 +180,8 @@ export class QueuePage implements OnInit {
       
 
     refresh() {
-        
         this.loadData();
-
-        this.enviro_que = this.data.getEnviroQue();
-        this.enviro_que_addition = this.enviro_que;
-        for (let x=0; x<this.enviro_que.length; x++) {
-            const rawHtml = `` // Assuming the raw HTML exists in ``
-            this.enviro_que_addition[x] = {
-                ...this.enviro_que_addition[x], // Retain existing properties
-                html_bool: false, // Add html_bool
-                html_string: this.sanitizer.bypassSecurityTrustHtml(rawHtml), // Add or sanitize html_string
-            };
-        }
+        this.hydrateQueueItems();
     }
     
     // Web: Trigger file download in the browser
@@ -219,19 +201,14 @@ export class QueuePage implements OnInit {
     }
 
     route (route: string) {
-        if (route == "/tabs/fpn")
-        {
-            if (this.currentStep ) {
-                this.router.navigate([route], { queryParams: { currentStep: this.currentStep } });
+        const target = route === '/tabs/fpn' ? '/enviro' : route;
 
-            } else {
-                this.router.navigate(['']);
-            }
-        } 
-        else
-        {
-            this.router.navigate([route]);
+        if (target === '/enviro') {
+            this.router.navigate([target], { queryParams: { currentStep: this.currentStep } });
+            return;
         }
+
+        this.router.navigate([target]);
     }
 
     async presentAlert(header: string, message: string) {
@@ -310,31 +287,54 @@ export class QueuePage implements OnInit {
     
 
     generateTicket(enviro_post: EnviroPost) {
-        this.prepareOfflineTicket(enviro_post, true);
+        this.prepareOfflineTicket(enviro_post);
     }
 
-    private prepareOfflineTicket(enviro_post: EnviroPost, copyToClipboard: boolean): string | null {
-        let ticket = this.ticket.generateWelcomeTicket(enviro_post);
-         
-        if (ticket == "refresh") {
+    private hydrateQueueItems() {
+        this.enviro_que_addition = this.enviro_que.map((enviro_post) => {
+            const ticketHtml = this.buildTicketHtml(enviro_post);
+            return {
+                ...enviro_post,
+                ticket_html: ticketHtml,
+                html_bool: false,
+                html_string: this.sanitizer.bypassSecurityTrustHtml(ticketHtml || ''),
+            };
+        });
+    }
+
+    private buildTicketHtml(enviro_post: EnviroPost): string {
+        try {
+            const ticket = this.ticket.generateWelcomeTicket(enviro_post);
+            return ticket === 'refresh' ? '' : ticket;
+        } catch {
+            return '';
+        }
+    }
+
+    private ticketHtml(enviro_post: any): string | null {
+        if (typeof enviro_post?.ticket_html === 'string' && enviro_post.ticket_html) {
+            return enviro_post.ticket_html;
+        }
+
+        return null;
+    }
+
+    private prepareOfflineTicket(enviro_post: any): string | null {
+        let ticket = this.ticketHtml(enviro_post) || this.buildTicketHtml(enviro_post);
+
+        if (!ticket) {
             this.presentAlert('Error', 'Please find Network and get latest data. To regenerate new FPN Numbers');
             return null;
         }
 
-        for (let x = 0; x<this.enviro_que_addition.length; x++) {
-            if (this.enviro_que_addition[x] == enviro_post) {
+        for (let x = 0; x < this.enviro_que_addition.length; x++) {
+            if (this.enviro_que_addition[x] === enviro_post) {
+                this.enviro_que_addition[x].ticket_html = ticket;
                 this.enviro_que_addition[x].html_bool = true;
-                this.enviro_que_addition[x].html_string = ticket;
-            }
-            else {
+                this.enviro_que_addition[x].html_string = this.sanitizer.bypassSecurityTrustHtml(ticket);
+            } else {
                 this.enviro_que_addition[x].html_bool = false;
             }
-        }
-
-        if (copyToClipboard) {
-            Clipboard.write({
-                string: ticket
-            });
         }
 
         return ticket;
@@ -345,10 +345,7 @@ export class QueuePage implements OnInit {
             return;
         }
 
-        const existingTicket = typeof enviro_post.html_string === 'string' && enviro_post.html_bool
-            ? enviro_post.html_string
-            : null;
-        const ticket = existingTicket || this.prepareOfflineTicket(enviro_post, false);
+        const ticket = this.ticketHtml(enviro_post) || this.prepareOfflineTicket(enviro_post);
 
         if (!ticket) {
             return;
@@ -524,8 +521,19 @@ export class QueuePage implements OnInit {
     }
 
     editFPN(enviro_post: EnviroPost) {
-        this.data.setEnviroPost(enviro_post);
-        this.router.navigate(['/notebook', 0], { queryParams: { currentStep: this.currentStep } });
+        const draft = { ...enviro_post } as any;
+        delete draft.html_bool;
+        delete draft.html_string;
+        delete draft.ticket_html;
+
+        this.data.setEnviroPost(draft);
+        this.router.navigate(['/enviro'], {
+            queryParams: {
+                currentStep: enviroStepperStep(draft, {
+                    requireZone: this.data.getZones().length > 0,
+                }),
+            },
+        });
     }
 
     queueStatus(enviro_post: EnviroPost): string {

@@ -31,6 +31,7 @@ import { ThermalPrinterService } from '../../services/thermal-printer.service';
 import { LemoEncourageService } from '../../services/lemo-encourage.service';
 import { OfflineTicketService } from '../../services/offline-ticket.service';
 import { QueueSyncService } from '../../services/queue-sync.service';
+import { enviroStepperStep } from '../../helpers/fpn-core-validation';
 
 
 @Component({
@@ -101,12 +102,16 @@ import { QueueSyncService } from '../../services/queue-sync.service';
 
 
         this.route2.queryParams.subscribe(params => {
-            let currentStep = params['currentStep'] ?? 1; // Fallback to 1 if null or undefined
+            const parsed = parseInt(params['currentStep'], 10);
 
-            if (currentStep !== 1)
-            {
-                this.currentStep = parseInt(currentStep);
-            } 
+            if (Number.isFinite(parsed) && parsed > 1) {
+                this.currentStep = parsed;
+                return;
+            }
+
+            this.currentStep = enviroStepperStep(this.enviro_post, {
+                requireZone: this.data.getZones().length > 0,
+            });
         });
             
 
@@ -747,13 +752,13 @@ import { QueueSyncService } from '../../services/queue-sync.service';
         });
     }
 
-    cancel() {
-        this.currentStep = 1;       
+    cancel(destination: string = '/dashboard') {
+        this.currentStep = 1;
 
         this.enviro_post = new EnviroPost();
         this.data.setEnviroPost(this.enviro_post);
 
-        this.router.navigate(['/tabs/fpn'], { queryParams: { currentStep: this.currentStep } });
+        this.router.navigate([destination]);
     }
 
     private getCurrentPosition(): any {
@@ -797,8 +802,9 @@ import { QueueSyncService } from '../../services/queue-sync.service';
                         this.isSubmitting = false;
 
                         if (result.status === 'queued') {
-                            this.presentAlert('Saved', result.message);
-                            this.cancel();
+                            this.offlineTicket.printFor(this.enviro_post).catch(() => undefined);
+                            this.presentAlert('FPN Saved', 'FPN Saved');
+                            this.cancel('/queue');
                             return;
                         }
 

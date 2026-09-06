@@ -8,5 +8,6 @@ export class ConstantsService {
     constructor() { }
 
     public readonly APP_VERSION = 'Alpha';
+    public readonly APP_VERSION_CODE = 1;
 
 }

@@ -61,23 +61,29 @@ export class AppUpdateService {
 
     async getInstalledVersion(): Promise<InstalledAppVersion> {
         const platform = Capacitor.getPlatform();
+        const fallback: InstalledAppVersion = {
+            platform,
+            packageName: 'com.enforcemnetpro.app',
+            versionName: this.constants.APP_VERSION,
+            versionCode: this.constants.APP_VERSION_CODE
+        };
 
         try {
-            const info = await App.getInfo();
+            const info = await Promise.race([
+                App.getInfo(),
+                new Promise<never>((_, reject) => {
+                    setTimeout(() => reject(new Error('version-timeout')), 1500);
+                })
+            ]);
 
             return {
                 platform,
-                packageName: info.id || 'com.enforcemnetpro.app',
-                versionName: info.version || this.constants.APP_VERSION,
-                versionCode: this.parseVersionCode(info.build)
+                packageName: info.id || fallback.packageName,
+                versionName: info.version || fallback.versionName,
+                versionCode: this.parseVersionCode(info.build) || fallback.versionCode
             };
         } catch {
-            return {
-                platform,
-                packageName: 'com.enforcemnetpro.app',
-                versionName: this.constants.APP_VERSION,
-                versionCode: 0
-            };
+            return fallback;
         }
     }
 

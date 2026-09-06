@@ -50,10 +50,6 @@ export class ApiService {
         return this.appHttp.post(`${this.baseUrl}/find/zone`, data);
     }
 
-    getSRData(): Observable<any> {
-        return this.appHttp.get(`${this.baseUrl}/sr/data`);
-    }
-
     getRecentFPNs(_user_id?: number): Observable<any> {
         return this.appHttp.get(`${this.baseUrl}/get-recent-fpn`);
     }

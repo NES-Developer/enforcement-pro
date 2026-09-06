@@ -5,13 +5,13 @@
       <h2>Validation details</h2>
     </div>
 
-    <ion-select interface="action-sheet" label="Proof of address *" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.proof_of_address">
+    <ion-select interface="action-sheet" label="Proof of address *" label-placement="stacked" fill="outline" multiple="false" [compareWith]="compareIds" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.proof_of_address">
       <ion-select-option *ngFor="let group of address_verified_by" [value]="group.id">
         {{ group.textOnMachine }}
       </ion-select-option>
     </ion-select>
 
-    <ion-select interface="action-sheet" label="Proof of ID *" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.proof_of_id">
+    <ion-select interface="action-sheet" label="Proof of ID *" label-placement="stacked" fill="outline" multiple="false" [compareWith]="compareIds" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.proof_of_id">
       <ion-select-option *ngFor="let group of id_shown" [value]="group.id">
         {{ group.textOnMachine }}
       </ion-select-option>

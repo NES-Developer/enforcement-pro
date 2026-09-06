@@ -35,7 +35,7 @@ export class SettingPage implements OnInit {
 
     api_app_version: string = "";
     api_app_url: string = "";
-    app_version_code: number = 0;
+    app_version_code: number = this.constantsService.APP_VERSION_CODE;
     releaseNotes: string = "";
     apkSizeLabel: string = "";
     updateAvailable = false;

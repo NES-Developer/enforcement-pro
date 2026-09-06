@@ -40,8 +40,7 @@ import { Drivers, Storage } from '@ionic/storage';
 
         BrowserModule, 
         IonicModule.forRoot(), 
-        AppRoutingModule, 
-        IonicStorageModule.forRoot()   // <-- Register provider only once here
+        AppRoutingModule
 
         // IonicSignaturePadModule
     ],

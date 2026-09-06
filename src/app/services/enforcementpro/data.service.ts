@@ -1,6 +1,4 @@
 import { Injectable } from '@angular/core';
-// import { ServiceRequest } from './models/service-request';
-import { ServiceRequest } from '../../models/service-request';
 import { SiteOffence } from '../../models/site-offence';
 import { Offence } from '../../models/offence';
 import { OffenceGroup } from '../../models/offence-group';
@@ -64,9 +62,7 @@ export class DataService {
     private token: string = '';
     private user: any = {};
 
-    private dynamic_feilds_data: any = {};
     private enviro_post: EnviroPost;
-    private service_request: ServiceRequest;
     private app_log: AppLog;
     private patrol_session: PatrolSession | null = null;
     private login: Login;
@@ -93,11 +89,7 @@ export class DataService {
     private hair_colours: HairColour[] = [];
     // private notebook: NotebookEntry[] = [];
 
-    private dynamic_feilds: any[] = [];
     private ethnicities: any[] = [];
-    private officers: any[] = [];
-    private request_types: any[] = [];
-    private sr_via: any[] = [];
     private sites: any[] = [];
     private offence_types: any[] = [];
 
@@ -112,7 +104,6 @@ export class DataService {
         
         this.init();
 
-        this.service_request = new ServiceRequest();
         this.enviro_post = new EnviroPost();
         this.app_log = new AppLog();
         this.patrol_session = null;
@@ -144,7 +135,6 @@ export class DataService {
         this.salutations = await this.loadArrayFromLocalStorage('salutations');
         this.builds = await this.loadArrayFromLocalStorage('builds');
         this.hair_colours = await this.loadArrayFromLocalStorage('hair_colours');        
-        this.dynamic_feilds = await this.loadArrayFromLocalStorage('dynamic_feilds');
         this.enviro_que = await this.loadArrayFromLocalStorage('enviro_que');
         this.site_offences = await this.loadArrayFromLocalStorage('site_offences');
         this.offence_how = await this.loadArrayFromLocalStorage('offence_how');
@@ -154,9 +144,6 @@ export class DataService {
         this.id_shown = await this.loadArrayFromLocalStorage('id_shown');
         this.offence_location_suffix = await this.loadArrayFromLocalStorage('offence_location_suffix');
         this.ethnicities = await this.loadArrayFromLocalStorage('ethnicities');
-        this.officers = await this.loadArrayFromLocalStorage('officers');
-        this.request_types = await this.loadArrayFromLocalStorage('request_types');
-        this.sr_via = await this.loadArrayFromLocalStorage('sr_via');
         this.sites = await this.loadArrayFromLocalStorage('sites');
         this.offence_types = await this.loadArrayFromLocalStorage('offence_types');
         this.fpn_number_offline_printer = await this.loadArrayFromLocalStorage('fpn_number_offline_printer');
@@ -166,8 +153,6 @@ export class DataService {
         this.selected_zone = await this.loadObjectFromLocalStorage('selected_zone');
         this.selectedZoneSubject.next(this.selected_zone);
         this.login = await this.loadObjectFromLocalStorage('login');
-        this.service_request = await this.loadObjectFromLocalStorage('service_request');
-        this.dynamic_feilds_data = await this.loadObjectFromLocalStorage('dynamic_feilds_data');
         this.enviro_post = await this.loadObjectFromLocalStorage('enviro_post');
         this.app_log = await this.loadObjectFromLocalStorage('app_log');
         this.removeAppLogZoneId(this.app_log);
@@ -382,11 +367,6 @@ export class DataService {
         this.saveStringToLocalStorage('api_app_url', this.api_app_url);
     }
 
-    setDynamicFeildData(dynamic_feilds_data: any): void {
-        this.dynamic_feilds_data = dynamic_feilds_data;
-        this.saveObjectToLocalStorage('dynamic_feilds_data', this.dynamic_feilds_data);
-    }
-
     setEnviroPost(enviro_post: EnviroPost): void {
         this.enviro_post = enviro_post;
         this.saveObjectToLocalStorage('enviro_post', this.enviro_post);
@@ -478,35 +458,6 @@ export class DataService {
         this.sites = sites;
         this.saveArrayToLocalStorage('sites', this.sites);
     }
-
-    setServiceRequest(service_request: ServiceRequest): void {
-        this.service_request = service_request;
-        this.saveObjectToLocalStorage('service_request', this.service_request);
-    }
-
-    setSRData(data: any): void {
-        // console.log(data);
-
-        this.dynamic_feilds = data.dynamic_fields || [];
-        this.saveArrayToLocalStorage('dynamic_feilds', this.dynamic_feilds);
-
-        this.ethnicities = data.ethnicities || [];
-        this.saveArrayToLocalStorage('ethnicities', this.ethnicities);
-
-        this.officers = data.officers || [];
-        this.saveArrayToLocalStorage('officers', this.officers);
-
-        this.request_types = data.request_types || [];
-        this.saveArrayToLocalStorage('request_types', this.request_types);
-
-        this.sr_via = data.sr_via || [];
-        this.saveArrayToLocalStorage('sr_via', this.sr_via);
-
-        // this.sites = data.sites;
-        // this.saveArrayToLocalStorage('sites', this.sites);
-    }
-
-    
 
     setSalutations(salutations: Salutation[]): void {
         this.salutations = salutations;
@@ -719,10 +670,6 @@ export class DataService {
         return this.login !== null;
     }
 
-    checkSRData(): boolean {
-        return this.ethnicities.length > 0 && this.sites.length > 0 && this.request_types.length > 0;
-    }
-
     checkOffenceType(): boolean {
         return this.offence_types.length > 0;
     }
@@ -778,10 +725,6 @@ export class DataService {
 
     getHairColours(): HairColour[] {
         return this.hair_colours;
-    }
-
-    getDynamicFeildData(): any {
-        return this.dynamic_feilds_data;
     }
 
     getEnviroPost(): EnviroPost {
@@ -852,14 +795,6 @@ export class DataService {
         return this.user;
     }
 
-    getServiceRequest(): ServiceRequest {
-        return this.service_request;
-    }
-
-    getDynamicFields(): any[] {
-        return this.dynamic_feilds;
-    }
-
     getAddressVerifiedBy(): AddressVerifiedBy[] {
         return this.address_verifed_by;
     }
@@ -914,18 +849,6 @@ export class DataService {
 
     getZones(): Zone[] {
         return this.zones;
-    }
-
-    getOfficers(): any[] {
-        return this.officers;
-    }
-
-    getRequestTypes(): any[] {
-        return this.request_types;
-    }
-
-    getSRVia(): any[] {
-        return this.sr_via;
     }
 
     getSites(): any[] {
@@ -1019,13 +942,8 @@ export class DataService {
         this.selected_site = null;
         this.selected_zone = null;
 
-        this.dynamic_feilds = [];
         this.ethnicities = [];
-        this.officers = [];
-        this.request_types = [];
-        this.sr_via = [];
         this.sites = [];
-        this.service_request = new ServiceRequest();
         this.enviro_post = new EnviroPost();
         this.app_log = new AppLog();
         this.patrol_session = null;

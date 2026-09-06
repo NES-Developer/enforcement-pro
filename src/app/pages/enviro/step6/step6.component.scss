@@ -2,6 +2,19 @@
   display: block;
 }
 
+.ep-sig canvas,
+.ep-sig__preview {
+  display: block;
+  width: 100%;
+  height: 180px;
+  background: #ece6d6;
+  border-radius: 16px;
+}
+
+.ep-sig__preview {
+  object-fit: contain;
+}
+
 .ep-photo-grid img {
   width: 100%;
   height: 80px;

@@ -44,7 +44,27 @@ export class Step3Component  implements OnInit {
         let enviro_post =  this.data.getEnviroPost();
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
+            this.enviro_post.proof_of_address = this.asSelectId(this.enviro_post.proof_of_address);
+            this.enviro_post.proof_of_id = this.asSelectId(this.enviro_post.proof_of_id);
         }
+    }
+
+    compareIds = (option: any, selected: any): boolean => {
+        if (option === selected) {
+            return true;
+        }
+        if (option == null || selected == null || option === '' || selected === '') {
+            return false;
+        }
+        return String(option) === String(selected);
+    };
+
+    private asSelectId(value: unknown): any {
+        if (value === '' || value === null || value === undefined) {
+            return '';
+        }
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : value;
     }
 
     onInputChange(){

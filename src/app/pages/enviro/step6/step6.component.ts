@@ -1,6 +1,7 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnInit } from '@angular/core';
-// import Signature from "@lemonadejs/signature";
+import { AfterViewChecked, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import SignaturePad from 'signature_pad';
+import { bindSignaturePad } from '../../../helpers/signature-canvas';
+import { UpperCaseWords } from 'src/app/helpers/utils';
 import { EnviroPost } from '../../../models/enviro';
 import { Site } from '../../../models/site';
 import { Zone } from '../../../models/zone';
@@ -8,7 +9,6 @@ import { DataService } from '../../../services/enforcementpro/data.service';
 import { OffenceGroup } from '../../../models/offence-group';
 import { Offence } from '../../../models/offence';
 import { SiteOffence } from 'src/app/models/site-offence';
-import { UpperCaseWords } from 'src/app/helpers/utils'
 import { EnviroPage } from '../enviro.page';
 
 @Component({
@@ -16,9 +16,10 @@ import { EnviroPage } from '../enviro.page';
   templateUrl: './step6.component.html',
   styleUrls: ['./step6.component.scss'],
 })
-export class Step6Component implements OnInit, AfterViewInit {
-    @ViewChild('canvas') canvasEl!: ElementRef<HTMLCanvasElement>;
-    private signaturePad!: SignaturePad;
+export class Step6Component implements OnInit, AfterViewChecked {
+    @ViewChild('canvas') canvasEl?: ElementRef<HTMLCanvasElement>;
+    private signaturePad?: SignaturePad;
+    private lastCanvas?: HTMLCanvasElement;
 
     enviro_post: EnviroPost = new EnviroPost();
     selected_site_offence: SiteOffence | undefined;
@@ -39,26 +40,30 @@ export class Step6Component implements OnInit, AfterViewInit {
     ngOnInit() {
     }
 
-    ngAfterViewInit() {
-        this.signaturePad = new SignaturePad(this.canvasEl.nativeElement);
+    ngAfterViewChecked() {
+        this.bindSignaturePad();
+    }
+
+    @HostListener('window:resize')
+    onWindowResize() {
+        this.bindSignaturePad(true);
     }
 
     clear() {
-        this.signaturePad.clear();
+        this.signaturePad?.clear();
+        this.lastCanvas = undefined;
         this.enviro_post.signature = '';
         this.saveEnviroData();
     }
 
     save() {
-        if (this.signaturePad.isEmpty()) {
-            console.log('Please provide a signature first.');
-        } else {
-            const dataURL = this.signaturePad.toDataURL();
-            this.enviro_post.signature = dataURL;
-            this.saveEnviroData();
-
-            console.log(dataURL);  // Here you can send the dataURL to your server or save it
+        if (!this.signaturePad || this.signaturePad.isEmpty()) {
+            return;
         }
+
+        this.enviro_post.signature = this.signaturePad.toDataURL();
+        this.lastCanvas = undefined;
+        this.saveEnviroData();
     }
 
     loadData() {
@@ -105,6 +110,16 @@ export class Step6Component implements OnInit, AfterViewInit {
                 break;
         }
         return name;
+    }
+
+    private bindSignaturePad(force = false) {
+        const canvas = this.canvasEl?.nativeElement;
+        if (!canvas || (!force && canvas === this.lastCanvas)) {
+            return;
+        }
+
+        this.signaturePad = bindSignaturePad(canvas, this.signaturePad, 500, 180);
+        this.lastCanvas = canvas;
     }
 
 }
