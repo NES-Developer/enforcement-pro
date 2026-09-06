@@ -10,6 +10,10 @@ import { FpnSubmissionService } from './fpn-submission.service';
 import { PatrolService } from './patrol.service';
 import { ThermalPrinterService } from './thermal-printer.service';
 import { LemoEncourageService } from './lemo-encourage.service';
+import { OfflineTicketService } from './offline-ticket.service';
+import { QueueSyncService } from './queue-sync.service';
+import { GeocodingService } from './geocoding.service';
+import { compressDataUrl } from '../helpers/image-compress';
 
 export interface LemoChoice {
   id: string;
@@ -79,7 +83,10 @@ export class LemoAiService {
     private fpnSubmission: FpnSubmissionService,
     private patrol: PatrolService,
     private printer: ThermalPrinterService,
-    private encourage: LemoEncourageService
+    private encourage: LemoEncourageService,
+    private offlineTicket: OfflineTicketService,
+    private queueSync: QueueSyncService,
+    private geocoding: GeocodingService
   ) {}
 
   async start(): Promise<void> {
@@ -260,7 +267,7 @@ export class LemoAiService {
     this.advanceWizard();
   }
 
-  submitFields(values: Record<string, string>): void {
+  async submitFields(values: Record<string, string>): Promise<void> {
     const enviro = this.draft();
     const step = this.wizardStep;
 
@@ -299,6 +306,7 @@ export class LemoAiService {
         this.promptCurrentStep();
         return;
       }
+      await this.applyGoogleLocation(enviro);
     }
 
     this.saveDraft(enviro);
@@ -388,15 +396,19 @@ export class LemoAiService {
             ...this.afterSubmitChoices(),
           ]);
         } else {
-          this.pushAssistant(`${created}\n\n${pep}`, this.afterSubmitChoices());
+          this.offlineTicket.printFor(enviro).catch(() => undefined);
+          this.pushAssistant(`${created}\n\n${pep}\n\nAn offline ticket is printing.`, this.afterSubmitChoices());
         }
+        this.queueSync.flush().catch(() => undefined);
         return;
       }
 
       if (result.status === 'queued') {
         this.finishSubmittedDraft();
+        this.offlineTicket.printFor(enviro).catch(() => undefined);
+        this.queueSync.start();
         this.pushAssistant(
-          `${result.message}\n\nThat notice is in the queue. Submit it from there, or start a new FPN.`,
+          `${result.message}\n\nAn offline ticket is printing. The notice will upload in the background.`,
           this.queueOrCreateChoices()
         );
         return;
@@ -672,8 +684,13 @@ export class LemoAiService {
     this.saveDraft(enviro);
   }
 
-  private async replyWithResearch(query: string, matches: LemoOffenceCard[]): Promise<void> {
-    const local = this.localResearchReply(query, matches);
+  private async replyWithResearch(
+    query: string,
+    matches: LemoOffenceCard[],
+    options?: { images?: string[]; fromPhotos?: boolean }
+  ): Promise<void> {
+    const fromPhotos = !!options?.fromPhotos;
+    const images = options?.images?.length ? options.images : undefined;
     let remote = '';
 
     try {
@@ -684,6 +701,7 @@ export class LemoAiService {
         chat_id: this.chatId,
         site_id: site?.id || null,
         zone_id: zone?.id || null,
+        images,
       }));
       if (response?.chat_id) {
         this.chatId = response.chat_id;
@@ -693,12 +711,37 @@ export class LemoAiService {
       remote = '';
     }
 
-    const content = [remote, local].filter(Boolean).join('\n\n');
-    this.pushAssistant(content || 'I could not match that to a site offence. Try a shorter description, or start an FPN and pick the group.', this.homeChoices());
+    if (fromPhotos && remote) {
+      matches = this.mergeOffenceCards(matches, this.searchOffences(remote));
+    }
+
+    const local = this.localResearchReply(fromPhotos ? 'those photos' : query, matches);
+    const fallback = fromPhotos
+      ? 'I could not match those photos to a site offence. Describe what you saw, or pick an offence group below.'
+      : 'I could not match that to a site offence. Try a shorter description, or start an FPN and pick the group.';
+    this.pushAssistant(
+      [remote, local].filter(Boolean).join('\n\n') || fallback,
+      fromPhotos ? this.researchChoices() : this.homeChoices()
+    );
     const last = this.lastAssistant();
     if (last && matches.length) {
       last.offenceCards = matches.slice(0, 4);
     }
+  }
+
+  private mergeOffenceCards(...lists: LemoOffenceCard[][]): LemoOffenceCard[] {
+    const seen = new Set<number>();
+    const merged: LemoOffenceCard[] = [];
+    for (const list of lists) {
+      for (const card of list) {
+        if (seen.has(card.id)) {
+          continue;
+        }
+        seen.add(card.id);
+        merged.push(card);
+      }
+    }
+    return merged;
   }
 
   private localResearchReply(query: string, matches: LemoOffenceCard[]): string {
@@ -789,16 +832,49 @@ export class LemoAiService {
     this.wizardStep = null;
     await this.ensureLookups();
 
-    const photos = this.imageCount();
-    const photoHint = photos
-      ? ` You already have ${photos} photo${photos === 1 ? '' : 's'} on this FPN — describe what they show.`
-      : '';
+    if (this.imageCount() > 0) {
+      await this.researchFromPhotos();
+      return;
+    }
+
     const groups = this.data.getOffenceGroup();
     const content = groups.length
-      ? `Describe what you saw and I will match it to this site’s offences and legislation.${photoHint}\n\nOr pick an offence group to browse.`
-      : `Describe what you saw and I will match it to this site’s offences and legislation.${photoHint}`;
+      ? 'Describe what you saw and I will match it to this site’s offences and legislation.\n\nOr pick an offence group to browse.'
+      : 'Describe what you saw and I will match it to this site’s offences and legislation.';
 
     this.pushAssistant(content, this.researchChoices());
+  }
+
+  private async researchFromPhotos(): Promise<void> {
+    const photos = this.imageCount();
+    this.pushAssistant(`Looking at your ${photos} photo${photos === 1 ? '' : 's'} on this FPN…`);
+    this.busy = true;
+    try {
+      const images = await this.compressResearchImages();
+      const hint = this.siteOffenceHint();
+      const query = [
+        `Using the ${images.length} photo${images.length === 1 ? '' : 's'} on this FPN.`,
+        'Describe what is visible, then name the closest site offences and legislation only.',
+        'Do not invent an offence, fine, or act. If unsure, say so.',
+        hint,
+      ].filter(Boolean).join(' ');
+      await this.replyWithResearch(query, [], { images, fromPhotos: true });
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private async compressResearchImages(): Promise<string[]> {
+    const source = (this.draft().offence_images || [])
+      .filter((item): item is string => typeof item === 'string' && item.length > 0)
+      .slice(0, 2);
+
+    return Promise.all(source.map(item => compressDataUrl(item, 80000, 0.6)));
+  }
+
+  private siteOffenceHint(): string {
+    const names = this.data.getOffence().map(item => item.name).filter(Boolean).slice(0, 40);
+    return names.length ? `Site offences: ${names.join(', ')}.` : '';
   }
 
   private showResearchGroup(groupId: number): void {
@@ -821,7 +897,7 @@ export class LemoAiService {
   }
 
   private researchChoices(): LemoChoice[] {
-    const groups = this.data.getOffenceGroup().map(item => ({
+    const groups: LemoChoice[] = this.data.getOffenceGroup().map(item => ({
       id: `rg-${item.id}`,
       label: item.englishName,
       value: item.id,
@@ -1020,6 +1096,17 @@ export class LemoAiService {
 
   private saveDraft(enviro: EnviroPost): void {
     this.data.setEnviroPost(enviro);
+  }
+
+  private async applyGoogleLocation(enviro: EnviroPost): Promise<void> {
+    const result = await this.geocoding.geocodeAddress(enviro.offence_location);
+    if (!result) {
+      return;
+    }
+
+    enviro.offence_location = result.formattedAddress || enviro.offence_location;
+    enviro.lat = String(result.lat);
+    enviro.lng = String(result.lng);
   }
 
   private currentZone() {

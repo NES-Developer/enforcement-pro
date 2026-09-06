@@ -6,6 +6,7 @@ import { EnviroPost } from '../../models/enviro';
 import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { LemoAiService, LemoChoice, LemoField, LemoOffenceCard } from '../../services/lemo-ai.service';
+import { GeocodingService, PlaceSuggestion } from '../../services/geocoding.service';
 
 @Component({
   selector: 'app-lemo',
@@ -21,15 +22,18 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
   composer = '';
   enviro_post: EnviroPost = new EnviroPost();
   recentFpns: any[] = [];
+  locationSuggestions: PlaceSuggestion[] = [];
   private signaturePad?: SignaturePad;
   private shouldScroll = false;
+  private suggestTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     public lemo: LemoAiService,
     private api: ApiService,
     private data: DataService,
     private router: Router,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private geocoding: GeocodingService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -70,6 +74,9 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
 
   ngOnDestroy(): void {
     this.signaturePad?.off();
+    if (this.suggestTimer) {
+      clearTimeout(this.suggestTimer);
+    }
   }
 
   get siteName(): string {
@@ -204,15 +211,50 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
     this.shouldScroll = true;
   }
 
-  submitFields(fields: LemoField[]): void {
+  async submitFields(fields: LemoField[]): Promise<void> {
     for (const field of fields) {
       if (field.required && !String(this.draft[field.key] || '').trim()) {
         return;
       }
     }
-    this.lemo.submitFields(this.draft);
+    this.locationSuggestions = [];
+    await this.lemo.submitFields(this.draft);
     this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
     this.shouldScroll = true;
+  }
+
+  onLocationInput(event: any): void {
+    const value = String(event?.detail?.value || this.draft['offence_location'] || '');
+    this.draft['offence_location'] = value;
+
+    if (this.suggestTimer) {
+      clearTimeout(this.suggestTimer);
+    }
+
+    this.suggestTimer = setTimeout(() => {
+      void this.loadLocationSuggestions(value);
+    }, 250);
+  }
+
+  async selectLocationSuggestion(suggestion: PlaceSuggestion): Promise<void> {
+    this.locationSuggestions = [];
+    const result = await this.geocoding.geocodePlaceId(suggestion.placeId);
+    this.draft['offence_location'] = result?.formattedAddress || suggestion.description;
+    if (result) {
+      this.lemo.applyDraftPatch({
+        offence_location: this.draft['offence_location'],
+        lat: String(result.lat),
+        lng: String(result.lng),
+      });
+    }
+  }
+
+  private async loadLocationSuggestions(query: string): Promise<void> {
+    try {
+      this.locationSuggestions = await this.geocoding.suggestPlaces(query);
+    } catch {
+      this.locationSuggestions = [];
+    }
   }
 
   saveSignature(): void {

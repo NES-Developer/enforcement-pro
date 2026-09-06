@@ -15,8 +15,29 @@
         <p class="ep-kicker">Build</p>
         <h3>App version</h3>
       </div>
-      <p class="ep-stat__value">{{ app_version }}</p>
-      <ion-button expand="block" (click)="navigate('/dashboard')">Home</ion-button>
+      <div class="ep-stat-grid">
+        <div class="ep-stat">
+          <div class="ep-stat__label">Installed</div>
+          <div class="ep-stat__value ep-stat__value--sm">{{ app_version }}</div>
+          <div class="ep-stat__sub">{{ app_version_code ? 'Code ' + app_version_code : 'Device build' }}</div>
+        </div>
+        <div class="ep-stat">
+          <div class="ep-stat__label">Published</div>
+          <div class="ep-stat__value ep-stat__value--sm">{{ api_app_version || '—' }}</div>
+          <div class="ep-stat__sub">{{ updateStatusLabel }}</div>
+        </div>
+      </div>
+      <p class="ep-ticket__meta" *ngIf="apkSizeLabel">{{ apkSizeLabel }}</p>
+      <p class="ep-update-notes" *ngIf="releaseNotes">{{ releaseNotes }}</p>
+      <div class="ep-actions">
+        <ion-button expand="block" color="light" [disabled]="updateBusy" (click)="checkForUpdate()">
+          {{ checkingUpdate ? 'Checking…' : 'Check for update' }}
+        </ion-button>
+        <ion-button expand="block" color="primary" *ngIf="updateAvailable" [disabled]="updateBusy" (click)="installPublishedUpdate()">
+          {{ installingUpdate ? 'Installing…' : (forceUpdate ? 'Install required update' : 'Install update') }}
+        </ion-button>
+        <ion-button expand="block" (click)="navigate('/dashboard')">Home</ion-button>
+      </div>
     </section>
 
     <section class="ep-section">

@@ -22,6 +22,7 @@ import { BackgroundTaskService } from '../../services/background-task.service';
 import { PatrolService } from '../../services/patrol.service';
 import { TrackingService } from '../../services/tracking.service';
 import { ThermalPrinterService } from '../../services/thermal-printer.service';
+import { QueueSyncService } from '../../services/queue-sync.service';
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { OnDestroy } from '@angular/core';
@@ -113,7 +114,8 @@ export class DashboardPage implements OnInit, OnDestroy {
         private backgroundTasks: BackgroundTaskService,
         private patrol: PatrolService,
         private tracking: TrackingService,
-        private printer: ThermalPrinterService
+        private printer: ThermalPrinterService,
+        private queueSync: QueueSyncService
 
     ) {
         this.app_log = new AppLog();
@@ -333,6 +335,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
         try {
             await this.tracking.syncTrackingState();
+            this.queueSync.start();
             this.refresh();
             this.presentAlert('Patrol Started', 'Location tracking is now active for your patrol hours.');
         } catch (error: any) {

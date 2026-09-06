@@ -24,7 +24,7 @@ import { EnviroPost } from 'src/app/models/enviro';
 import { LoadingService } from 'src/app/services/loading.service';
 import { BackgroundTaskService } from '../../services/background-task.service';
 import { TrackingService } from '../../services/tracking.service';
-import { AppUpdateService } from '../../services/app-update.service';
+import { AppUpdateCheckResult, AppUpdateService } from '../../services/app-update.service';
 
 @Component({
     selector: 'app-setting',
@@ -35,6 +35,14 @@ export class SettingPage implements OnInit {
 
     api_app_version: string = "";
     api_app_url: string = "";
+    app_version_code: number = 0;
+    releaseNotes: string = "";
+    apkSizeLabel: string = "";
+    updateAvailable = false;
+    forceUpdate = false;
+    checkingUpdate = false;
+    installingUpdate = false;
+    updateStatusLabel = 'Checking server…';
 
     map: any;
     selected_site!: Site;
@@ -104,24 +112,87 @@ export class SettingPage implements OnInit {
             this.navigate('site');
         }   
         
-        if (this.data.checkApiAppVersion() == false) {
-            this.getVersion();
-        }
+        void this.refreshInstalledVersion();
+        void this.checkForUpdate(false);
 
         this.loadData();
     }
 
-    async getVersion(): Promise<void>
-    {
-        const result = await this.appUpdate.checkAndInstallIfNeeded('settings');
-        const manifest = result.manifest;
+    get updateBusy(): boolean {
+        return this.checkingUpdate || this.installingUpdate;
+    }
 
+    async refreshInstalledVersion(): Promise<void> {
+        const current = await this.appUpdate.getInstalledVersion();
+        this.app_version = current.versionName;
+        this.app_version_code = current.versionCode;
+    }
+
+    async checkForUpdate(showFeedback = true): Promise<void> {
+        if (this.updateBusy) {
+            return;
+        }
+
+        this.checkingUpdate = true;
+
+        try {
+            const result = await this.appUpdate.check('settings');
+            this.applyUpdateResult(result);
+
+            if (showFeedback && result.error) {
+                await this.presentAlert('Update check failed', result.error);
+            } else if (showFeedback && !result.updateAvailable) {
+                await this.presentAlert('Up to date', 'This device is already on the published Android version.');
+            }
+        } finally {
+            this.checkingUpdate = false;
+        }
+    }
+
+    async installPublishedUpdate(): Promise<void> {
+        if (this.updateBusy) {
+            return;
+        }
+
+        this.installingUpdate = true;
+
+        try {
+            const result = await this.appUpdate.install();
+            this.applyUpdateResult(result);
+
+            if (result.installStarted) {
+                await this.presentAlert('Install started', 'Android will ask you to confirm the update.');
+            } else if (result.error) {
+                await this.presentAlert('Update failed', result.error);
+            }
+        } finally {
+            this.installingUpdate = false;
+        }
+    }
+
+    private applyUpdateResult(result: AppUpdateCheckResult): void {
+        if (result.current) {
+            this.app_version = result.current.versionName;
+            this.app_version_code = result.current.versionCode;
+        }
+
+        const manifest = result.manifest;
         if (manifest) {
             this.api_app_version = manifest.latestVersionName || '';
             this.api_app_url = manifest.apkUrl || '';
+            this.releaseNotes = (manifest.releaseNotes || '').trim();
+            this.apkSizeLabel = this.appUpdate.formatApkSize(manifest.apkSizeBytes);
             this.data.setApiAppVersion(this.api_app_version);
             this.data.setApiAppUrl(this.api_app_url);
         }
+
+        this.updateAvailable = !!result.updateAvailable;
+        this.forceUpdate = !!result.forceUpdate;
+        this.updateStatusLabel = result.error
+            ? 'Could not reach the update server'
+            : this.updateAvailable
+                ? (this.forceUpdate ? 'Required update' : 'Update available')
+                : 'Up to date';
     }
 
     autoLogin() {
@@ -143,7 +214,7 @@ export class SettingPage implements OnInit {
     }
 
     downloadFile() {
-        this.appUpdate.checkAndInstallIfNeeded('settings').catch(() => undefined);
+        void this.installPublishedUpdate();
     }
 
     
@@ -264,7 +335,7 @@ export class SettingPage implements OnInit {
         this.site_id = this.selected_site.id;
 
         this.api_app_version = this.data.getApiAppVersion();
-        this.api_app_url = this.data.getApiAppVersion();
+        this.api_app_url = this.data.getApiAppUrl();
 
         this.sites = this.data.getSites();
         this.zones = this.data.getZones();
@@ -320,30 +391,6 @@ export class SettingPage implements OnInit {
     ping() {
         this.tracking.pingNow().catch(() => undefined);
     }
-
-    deviceValidation() {
-        this.api.deviceValidation(this.app_log.device_id).subscribe({
-            next: (response) => {
-                // console.log('Response:', response);
-                // Handle the response here
-                let message = response.message;
-                if(response.success === false) 
-                {
-                    this.presentAlert('Error', response.msg);
-
-                } else {
-                    this.storeAppLog();
-                    
-                    this.presentAlert('Success', response.msg);
-                }
-            },
-            error: (error) => {
-                console.error('Error:', error);
-                this.presentAlert('Error', 'Server Error: ' + error.message );
-            }
-        });
-    }
-
 
     forceCloseApp() {
         App.exitApp(); // Force closes the app

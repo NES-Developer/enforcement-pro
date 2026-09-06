@@ -20,11 +20,11 @@ export interface FpnSubmissionResult {
     providedIn: 'root'
 })
 export class FpnSubmissionService {
-    private readonly postTimeoutMs = 90000;
+    private readonly postTimeoutMs = 45000;
     private readonly imageTimeoutMs = 45000;
     private readonly maxAttempts = 3;
-    private readonly maxInlinePayloadBytes = 750000;
     private readonly imageCompressBudgets = [220000, 140000, 80000, 45000];
+    private readonly inFlight = new Set<string>();
 
     constructor(
         private api: ApiService,
@@ -42,75 +42,30 @@ export class FpnSubmissionService {
         }
 
         const queueRecord = await this.prepareQueueRecord(enviroPost);
-        await this.shrinkPayloadMedia(queueRecord);
-        const images = [...(queueRecord.offence_images || [])];
+        const lockKey = this.getQueueKey(queueRecord);
 
-        if (queueRecord.enviro_id) {
-            this.holdInQueue(queueRecord);
-            return this.uploadHeldImages(queueRecord, images);
+        if (this.inFlight.has(lockKey)) {
+            return {
+                status: 'queued',
+                message: 'This FPN is already uploading.'
+            };
         }
 
-        const payload = this.prepareServerPayload(queueRecord);
-        if (this.shouldSplitSubmission(payload, images)) {
-            return this.submitSplit(queueRecord, images);
-        }
+        this.inFlight.add(lockKey);
 
-        let lastError: any = null;
+        try {
+            await this.shrinkPayloadMedia(queueRecord);
+            const images = [...(queueRecord.offence_images || [])];
 
-        for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
-            try {
-                const response = await firstValueFrom(
-                    this.api.postFPN(payload).pipe(timeout(this.postTimeoutMs))
-                );
-
-                if (response?.success === false) {
-                    return {
-                        status: 'failed',
-                        message: `${response.message || 'The server rejected this FPN.'} (Please edit)`,
-                        response
-                    };
-                }
-
-                this.releaseHeldRecord(queueRecord);
-
-                return {
-                    status: 'posted',
-                    message: 'FPN submitted successfully.',
-                    response
-                };
-            } catch (error: any) {
-                lastError = error;
-
-                if (this.isAuthError(error)) {
-                    return {
-                        status: 'auth',
-                        message: 'Server has logged you off. Please auto login and submit again.'
-                    };
-                }
-
-                if (this.isPayloadTooLarge(error)) {
-                    return this.submitSplit(queueRecord, images);
-                }
-
-                if (!this.isRetryableError(error)) {
-                    return {
-                        status: 'failed',
-                        message: this.getErrorMessage(error)
-                    };
-                }
-
-                if (attempt < this.maxAttempts) {
-                    await this.sleep(this.getBackoffMs(attempt));
-                }
+            if (queueRecord.enviro_id) {
+                this.holdInQueue(queueRecord);
+                return this.uploadHeldImages(queueRecord, images);
             }
+
+            return this.submitSplit(queueRecord, images);
+        } finally {
+            this.inFlight.delete(lockKey);
         }
-
-        this.addToQueue(queueRecord);
-
-        return {
-            status: 'queued',
-            message: `FPN kept in queue after ${this.maxAttempts} failed attempts. ${this.getErrorMessage(lastError)}`
-        };
     }
 
     async queueForLater(enviroPost: EnviroPost): Promise<FpnSubmissionResult> {
@@ -144,6 +99,11 @@ export class FpnSubmissionService {
             return created;
         }
 
+        if (images.length === 0) {
+            this.releaseHeldRecord(queueRecord);
+            return created;
+        }
+
         const enviroId = this.extractEnviroId(created.response);
         if (!enviroId) {
             return {
@@ -170,14 +130,21 @@ export class FpnSubmissionService {
     ): Promise<FpnSubmissionResult> {
         const remaining: string[] = [];
         const pending = [...images];
+        const concurrency = 3;
 
-        for (let index = 0; index < pending.length; index++) {
-            const uploaded = await this.uploadImageWithCompression(queueRecord.enviro_id, pending[index]);
-            if (!uploaded) {
-                remaining.push(pending[index]);
-            }
+        for (let index = 0; index < pending.length; index += concurrency) {
+            const batch = pending.slice(index, index + concurrency);
+            const results = await Promise.all(
+                batch.map(image => this.uploadImageWithCompression(queueRecord.enviro_id, image))
+            );
 
-            queueRecord.offence_images = [...remaining, ...pending.slice(index + 1)];
+            results.forEach((uploaded, batchIndex) => {
+                if (!uploaded) {
+                    remaining.push(batch[batchIndex]);
+                }
+            });
+
+            queueRecord.offence_images = [...remaining, ...pending.slice(index + concurrency)];
             this.holdInQueue(queueRecord);
         }
 
@@ -287,18 +254,6 @@ export class FpnSubmissionService {
         };
     }
 
-    private shouldSplitSubmission(payload: EnviroPost, images: string[]): boolean {
-        return images.length > 2 || this.estimatePayloadBytes(payload) > this.maxInlinePayloadBytes;
-    }
-
-    private estimatePayloadBytes(payload: EnviroPost): number {
-        try {
-            return new Blob([JSON.stringify(payload)]).size;
-        } catch {
-            return JSON.stringify(payload || {}).length;
-        }
-    }
-
     private extractEnviroId(response: any): number {
         const id = Number(response?.data?.id || response?.id || 0);
         return id > 0 ? id : 0;
@@ -320,11 +275,25 @@ export class FpnSubmissionService {
             record.officer_id = user.id;
         }
 
-        const position = await this.location.requireCurrentPosition();
-        record.lat = position.latitude;
-        record.lng = position.longitude;
+        if (!this.hasMappedLocation(record)) {
+            const lastKnown = this.location.peekLastKnown();
+            record.lat = lastKnown.latitude;
+            record.lng = lastKnown.longitude;
+
+            const fresh = await this.location.tryCurrentPosition(4000);
+            if (fresh) {
+                record.lat = fresh.latitude;
+                record.lng = fresh.longitude;
+            }
+        }
 
         return record;
+    }
+
+    private hasMappedLocation(record: EnviroPost): boolean {
+        const lat = Number(record.lat);
+        const lng = Number(record.lng);
+        return Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0;
     }
 
     private prepareServerPayload(enviroPost: EnviroPost): EnviroPost {

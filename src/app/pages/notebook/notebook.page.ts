@@ -24,6 +24,8 @@ import { BackgroundTaskService } from '../../services/background-task.service';
 import { TrackingService } from '../../services/tracking.service';
 import { FpnSubmissionService } from '../../services/fpn-submission.service';
 import { ThermalPrinterService } from '../../services/thermal-printer.service';
+import { OfflineTicketService } from '../../services/offline-ticket.service';
+import { QueueSyncService } from '../../services/queue-sync.service';
 
 @Component({
   selector: 'app-notebook',
@@ -64,6 +66,8 @@ export class NotebookPage implements OnInit {
         private tracking: TrackingService,
         private fpnSubmission: FpnSubmissionService,
         private printer: ThermalPrinterService,
+        private offlineTicket: OfflineTicketService,
+        private queueSync: QueueSyncService,
     ) 
     {
 
@@ -245,6 +249,10 @@ export class NotebookPage implements OnInit {
                     }
 
                     if (result.status === 'queued') {
+                        if (print && !result.message.includes('already uploading')) {
+                            this.offlineTicket.printFor(this.enviro_post).catch(() => undefined);
+                        }
+                        this.queueSync.start();
                         this.presentAlert('Queued', result.message);
                         this.route('/queue');
                         return;
@@ -312,9 +320,7 @@ export class NotebookPage implements OnInit {
                         this.presentAlert('Server Error', 'Please place in que and report error.');
                     } 
                     else if (error.status == 401) {
-                        this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
-                        this.auth.autoLogin(); 
-                        this.submitForm();
+                        this.presentAlert('Auth Failed', 'Please login again.');
                     } 
                     else if (error.status == 0)
                     {

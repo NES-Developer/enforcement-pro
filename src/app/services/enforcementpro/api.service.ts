@@ -1,10 +1,7 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { from, Observable } from 'rxjs';
-
+import { tap } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
-import { CapacitorHttp } from '@capacitor/core';
-
-import { AuthService } from './auth.service';
+import { AppHttpService } from './app-http.service';
 import { DataService } from './data.service';
 import { EnviroPost } from '../../models/enviro';
 import { AppLog } from '../../models/app-log';
@@ -15,177 +12,108 @@ import { NotebookEntry } from '../../models/notebook-entry';
   providedIn: 'root'
 })
 export class ApiService {
-
     private baseUrl: string = 'https://app.enforcementpro.co.uk/api/app';
 
-    holder: any;
-
     constructor(
-        private http: HttpClient,
-        private auth: AuthService, // Inject AuthService for token handling
+        private appHttp: AppHttpService,
         private data: DataService
     ) {}
 
-    private getHeaders(): HttpHeaders {
-        // Create headers with authentication token
-        const token = this.data.getToken();
-        return new HttpHeaders({
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-        });
-    }
-
     postFPN(data: EnviroPost): Observable<any> {
-        const url = `${this.baseUrl}/enviro1`;
-        return from(this.nativePost(url, data, 90000));
+        return from(this.appHttp.request('POST', `${this.baseUrl}/enviro1`, data, {
+            timeoutMs: 45000
+        }));
     }
 
     postFPNImage(enviroId: number, image: string): Observable<any> {
-        const url = `${this.baseUrl}/enviro/images`;
-        return from(this.nativePost(url, {
+        return from(this.appHttp.request('POST', `${this.baseUrl}/enviro/images`, {
             enviro_id: enviroId,
             image
-        }, 45000));
+        }, {
+            timeoutMs: 45000
+        }));
     }
 
     postNoteBook(data: NotebookEntry): Observable<any> {
-        const url = `${this.baseUrl}/enviro/notebook`;
-        return this.http.post(url, data, { headers: this.getHeaders() });
+        return this.appHttp.post(`${this.baseUrl}/enviro/notebook`, data);
     }
-    
+
     postTrack(data: AppLog): Observable<any> {
         if (data && Object.prototype.hasOwnProperty.call(data, 'zone_id')) {
             delete (data as any).zone_id;
         }
 
-        const url = `${this.baseUrl}/user/track`;
-        return this.http.post(url, data, { headers: this.getHeaders() });
+        return this.appHttp.post(`${this.baseUrl}/user/track`, data);
     }
 
     zoneDetection(data: ZoneDetection): Observable<any> {
-        const url = `${this.baseUrl}/find/zone`;
-        return this.http.post(url, data, { headers: this.getHeaders() });
-    }
-
-    deviceValidation(data: string): Observable<any> {
-        let object = {
-            device_id: data
-        };
-        const url = `${this.baseUrl}/device/verify`;
-        console.log(url, object, this.http.post(url, object))
-        return this.http.post(url, object);
+        return this.appHttp.post(`${this.baseUrl}/find/zone`, data);
     }
 
     getSRData(): Observable<any> {
-        const url = `${this.baseUrl}/sr/data`;
-        return this.http.get(url, { headers: this.getHeaders() });
+        return this.appHttp.get(`${this.baseUrl}/sr/data`);
     }
 
-    getApiVersion(): Observable<any> {
-        const url = `${this.baseUrl}/version`;
-        return this.http.get(url);//Nemo
-    }
-
-    getRecentFPNs(user_id: number): Observable<any> {
-        const url = `${this.baseUrl}/get-recent-fpn/${user_id}`;
-        return this.http.get(url, { headers: this.getHeaders() });
+    getRecentFPNs(_user_id?: number): Observable<any> {
+        return this.appHttp.get(`${this.baseUrl}/get-recent-fpn`);
     }
 
     getFPNData(site_id: number): Observable<any> {
-        const url = `${this.baseUrl}/sites/${site_id}/fpn`;
-        return this.http.get(url, { headers: this.getHeaders() });
+        return this.appHttp.get(`${this.baseUrl}/sites/${site_id}/fpn`, {
+            timeoutMs: 20000
+        }).pipe(
+            tap((response) => {
+                const key = response?.data?.google_maps_api_key;
+                if (key) {
+                    this.data.setGoogleKey(key);
+                }
+            })
+        );
     }
 
-    postLemoChat(body: { message: string; chat_id?: number | null; site_id?: number | null; zone_id?: number | null }): Observable<any> {
-        const url = `${this.baseUrl}/lemo/chat`;
-        return this.http.post(url, body, { headers: this.getHeaders() });
-    }
+    postLemoChat(body: {
+        message: string;
+        chat_id?: number | null;
+        site_id?: number | null;
+        zone_id?: number | null;
+        images?: string[];
+    }): Observable<any> {
+        const payload: Record<string, unknown> = {
+            message: body.message,
+            chat_id: body.chat_id,
+            site_id: body.site_id,
+            zone_id: body.zone_id,
+        };
+        if (body.images?.length) {
+            payload['images'] = body.images;
+        }
 
+        return this.appHttp.post(`${this.baseUrl}/lemo/chat`, payload, {
+            timeoutMs: body.images?.length ? 90000 : 45000
+        });
+    }
 
     getSites(): Observable<any> {
-        const url = `${this.baseUrl}/sites`;
-        return this.http.get(url, { headers: this.getHeaders() });
+        return this.appHttp.get(`${this.baseUrl}/sites`);
     }
 
     getOffenceTypes(site_id: number, id: number): Observable<any> {
-        const url = `${this.baseUrl}/sites/${site_id}/offence/${id}/types`;
-        return this.http.get(url, { headers: this.getHeaders() });
+        return this.appHttp.get(`${this.baseUrl}/sites/${site_id}/offence/${id}/types`);
     }
 
     get(endpoint: string): Observable<any> {
-        const url = `${this.baseUrl}/${endpoint}`;
-        return this.http.get(url, { headers: this.getHeaders() });
+        return this.appHttp.get(`${this.baseUrl}/${endpoint}`);
     }
 
     post(endpoint: string, body: any): Observable<any> {
-        const url = `${this.baseUrl}/${endpoint}`;
-        return this.http.post(url, body, { headers: this.getHeaders() });
+        return this.appHttp.post(`${this.baseUrl}/${endpoint}`, body);
     }
 
     put(endpoint: string, body: any): Observable<any> {
-        const url = `${this.baseUrl}/${endpoint}`;
-        return this.http.put(url, body, { headers: this.getHeaders() });
+        return this.appHttp.put(`${this.baseUrl}/${endpoint}`, body);
     }
 
     delete(endpoint: string): Observable<any> {
-        const url = `${this.baseUrl}/${endpoint}`;
-        return this.http.delete(url, { headers: this.getHeaders() });
-    }
-
-    private async nativePost(url: string, data: any, timeoutMs: number): Promise<any> {
-        try {
-            const response = await CapacitorHttp.post({
-                url,
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${this.data.getToken()}`
-                },
-                data,
-                connectTimeout: Math.min(timeoutMs, 30000),
-                readTimeout: timeoutMs
-            });
-
-            const payload = this.parseNativeData(response.data);
-
-            if (response.status >= 200 && response.status < 300) {
-                return payload;
-            }
-
-            throw this.toHttpLikeError(url, response.status, payload);
-        } catch (error: any) {
-            if (typeof error?.status === 'number') {
-                throw error;
-            }
-
-            throw this.toHttpLikeError(url, 0, {
-                message: error?.message || 'Could not reach the server.'
-            });
-        }
-    }
-
-    private parseNativeData(data: any): any {
-        if (typeof data !== 'string') {
-            return data;
-        }
-
-        try {
-            return JSON.parse(data);
-        } catch {
-            return { message: data };
-        }
-    }
-
-    private toHttpLikeError(url: string, status: number, payload: any): Error {
-        const statusText = status === 0 ? 'Unknown Error' : 'Error';
-        const serverMessage = payload?.message || payload?.error;
-        const message = typeof serverMessage === 'string' && serverMessage.trim()
-            ? serverMessage
-            : `Http failure response for ${url}: ${status} ${statusText}`;
-        const error: any = new Error(message);
-        error.status = status;
-        error.statusText = statusText;
-        error.url = url;
-        error.error = payload;
-        return error;
+        return this.appHttp.delete(`${this.baseUrl}/${endpoint}`);
     }
 }

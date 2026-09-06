@@ -95,14 +95,25 @@
         </div>
 
         <div class="lemo-fields" *ngIf="message.fields?.length && isActiveMessage(message)">
-          <ion-input
-            *ngFor="let field of message.fields"
-            [label]="field.label + (field.required ? ' *' : '')"
-            label-placement="stacked"
-            fill="outline"
-            [type]="field.type === 'textarea' ? 'text' : field.type"
-            [(ngModel)]="draft[field.key]">
-          </ion-input>
+          <ng-container *ngFor="let field of message.fields">
+            <ion-input
+              [label]="field.label + (field.required ? ' *' : '')"
+              label-placement="stacked"
+              fill="outline"
+              [type]="field.type === 'textarea' ? 'text' : field.type"
+              [(ngModel)]="draft[field.key]"
+              (ionInput)="field.key === 'offence_location' && onLocationInput($event)">
+            </ion-input>
+            <div class="place-suggestions" *ngIf="field.key === 'offence_location' && locationSuggestions.length">
+              <button
+                type="button"
+                class="place-suggestions__item"
+                *ngFor="let suggestion of locationSuggestions"
+                (click)="selectLocationSuggestion(suggestion)">
+                {{ suggestion.description }}
+              </button>
+            </div>
+          </ng-container>
           <ion-button expand="block" (click)="submitFields(message.fields || [])">Continue</ion-button>
         </div>
 

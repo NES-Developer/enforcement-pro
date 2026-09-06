@@ -57,7 +57,7 @@ export class DataService {
 
     private live_url: string = 'https://app.enforcementpro.co.uk';
     private dev_url: string = 'https://app.enforcementpro.co.uk';
-    private google_key: string = 'AIzaSyAfk02RCKQgVc4__wbyFgnpraBOhMeK6K4';
+    private google_key: string = 'AIzaSyArU_KfqFdnmzBy7Rl0KcMJ4JjCQX65kTI';
     private api_app_version: string = '';
     private api_app_url: string = 'https://drive.google.com/file/d/15KLQYvY5-qyyTNBI4WlGiDpPZ6m9yLns/view';
 
@@ -182,6 +182,10 @@ export class DataService {
         this.api_app_version = await this.loadStringFromLocalStorage('api_app_version');
         this.api_app_url = await this.loadStringFromLocalStorage('api_app_url');
         this.last_fpn_id = await this.loadIntFromLocalStorage('last_fpn_id');
+        const storedGoogleKey = await this.loadStringFromLocalStorage('google_key');
+        if (storedGoogleKey) {
+            this.google_key = storedGoogleKey;
+        }
     }
 
     /* ------------------------ LOAD FUNCTIONS ------------------------ */
@@ -517,7 +521,17 @@ export class DataService {
     }
 
     setFPNNumberOfflinePrinter(fpn_number_offline_printer: any[]): void {
-        this.fpn_number_offline_printer = fpn_number_offline_printer || [];
+        const existing = this.fpn_number_offline_printer || [];
+        const seen = new Set(existing.map((item: any) => item?.fpn_number).filter(Boolean));
+
+        for (const item of fpn_number_offline_printer || []) {
+            if (item?.fpn_number && !seen.has(item.fpn_number)) {
+                existing.push(item);
+                seen.add(item.fpn_number);
+            }
+        }
+
+        this.fpn_number_offline_printer = existing;
         this.saveArrayToLocalStorage('fpn_number_offline_printer', this.fpn_number_offline_printer);
     }
 
@@ -650,12 +664,22 @@ export class DataService {
     }
 
     spliceFPNNumberOfflinePrinter(fpn_number_and_barcode: any): void {
-        const index = this.fpn_number_offline_printer.indexOf(fpn_number_and_barcode);
+        const index = this.fpn_number_offline_printer.findIndex((item: any) =>
+            item === fpn_number_and_barcode
+            || (item?.fpn_number && item.fpn_number === fpn_number_and_barcode?.fpn_number)
+        );
         if (index > -1) {
-            this.fpn_number_offline_printer.indexOf(index, 1);
+            this.fpn_number_offline_printer.splice(index, 1);
         }
-        this.saveArrayToLocalStorage('fpn_number_offline_printer', this.fpn_number_offline_printer)
+        this.saveArrayToLocalStorage('fpn_number_offline_printer', this.fpn_number_offline_printer);
+    }
 
+    takeFPNNumberOfflinePrinter(): any | null {
+        const next = this.fpn_number_offline_printer[0] || null;
+        if (next) {
+            this.spliceFPNNumberOfflinePrinter(next);
+        }
+        return next;
     }
 
     addFpnNumberAndBarcodeQue(fpn_number: string, barcode: string, index: number): void {
@@ -713,6 +737,15 @@ export class DataService {
 
     getGoogleKey(): string {
         return this.google_key;
+    }
+
+    setGoogleKey(google_key: string): void {
+        const key = (google_key || '').trim();
+        if (!key || key === this.google_key) {
+            return;
+        }
+        this.google_key = key;
+        this.saveStringToLocalStorage('google_key', this.google_key);
     }
 
     getApiAppUrl(): string {

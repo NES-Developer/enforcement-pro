@@ -7,6 +7,23 @@ ion-content.hiddenLeaf {
   --background: transparent;
 }
 
+.place-suggestions {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 10px;
+}
+
+.place-suggestions__item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--ep-line);
+  background: var(--ep-paper);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: inherit;
+}
+
 ion-datetime-button {
   margin-bottom: 8px;
 }

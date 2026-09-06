@@ -16,8 +16,25 @@
       </div>
     </ion-content>
 
-    <ion-input #firstInput label="Offence location *" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.offence_location"></ion-input>
-    <ion-button expand="block" class="location-search" (click)="toggleMap();">Search location</ion-button>
+    <ion-input
+      #locationInput
+      label="Offence location *"
+      label-placement="stacked"
+      fill="outline"
+      type="text"
+      maxlength="250"
+      (ionInput)="onLocationInput($event)"
+      (ionChange)="saveEnviroData()"
+      [(ngModel)]="enviro_post.offence_location">
+    </ion-input>
+    <div class="place-suggestions" *ngIf="suggestions.length">
+      <button type="button" class="place-suggestions__item" *ngFor="let suggestion of suggestions" (click)="selectSuggestion(suggestion)">
+        {{ suggestion.description }}
+      </button>
+    </div>
+    <ion-button expand="block" class="location-search" [disabled]="searching" (click)="toggleMap()">
+      {{ searching ? 'Searching…' : 'Search location' }}
+    </ion-button>
 
     <ion-select interface="action-sheet" label="Type of land *" label-placement="stacked" fill="outline" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.land_type_id">
       <ion-select-option [value]="1">Public</ion-select-option>
@@ -25,7 +42,7 @@
     </ion-select>
 
     <ion-input label="Town / ward" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town_area"></ion-input>
-    <ion-input #firstInput label="POI *" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi"></ion-input>
+    <ion-input label="POI *" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi"></ion-input>
 
     <ion-select interface="action-sheet" label="POI prefix" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi_prefix_id">
       <ion-select-option *ngFor="let group of poi_prefix" [value]="group.id">

@@ -28,7 +28,7 @@ describe('FpnSubmissionService', () => {
             'findOffenceById',
             'findOffenceGroupId'
         ]);
-        location = jasmine.createSpyObj('LocationService', ['requireCurrentPosition']);
+        location = jasmine.createSpyObj('LocationService', ['requireCurrentPosition', 'peekLastKnown', 'tryCurrentPosition']);
         patrol = jasmine.createSpyObj('PatrolService', ['canUseFpnTools']);
 
         data.getUser.and.returnValue({ id: 12 });
@@ -58,7 +58,7 @@ describe('FpnSubmissionService', () => {
         });
         data.findOffenceById.and.returnValue(undefined);
         data.findOffenceGroupId.and.returnValue(undefined);
-        location.requireCurrentPosition.and.resolveTo({
+        const fix = {
             latitude: '51.4545',
             longitude: '-2.5879',
             accuracy: 12,
@@ -67,7 +67,10 @@ describe('FpnSubmissionService', () => {
             speed: null,
             heading: null,
             timestamp: Date.now()
-        });
+        };
+        location.requireCurrentPosition.and.resolveTo(fix);
+        location.peekLastKnown.and.returnValue(fix);
+        location.tryCurrentPosition.and.resolveTo(fix);
         patrol.canUseFpnTools.and.returnValue(true);
 
         TestBed.configureTestingModule({
@@ -110,17 +113,11 @@ describe('FpnSubmissionService', () => {
         expect(api.postFPN).toHaveBeenCalledTimes(3);
     }));
 
-    it('splits a 413 payload and uploads images one at a time', async () => {
-        api.postFPN.and.returnValues(
-            throwError(() => ({
-                status: 413,
-                message: 'Payload Too Large'
-            })),
-            of({
-                success: true,
-                data: { id: 99, fpn_number: 'BCC123', ticket: 'uploads/tickets/t.pdf' }
-            })
-        );
+    it('creates the FPN without photos then uploads them separately', async () => {
+        api.postFPN.and.returnValue(of({
+            success: true,
+            data: { id: 99, fpn_number: 'BCC123', ticket: 'uploads/tickets/t.pdf' }
+        }));
         api.postFPNImage.and.returnValue(of({ success: true }));
 
         const post = makePost();
@@ -130,7 +127,7 @@ describe('FpnSubmissionService', () => {
 
         expect(result.status).toBe('posted');
         expect(result.message).toContain('uploaded separately');
-        expect(api.postFPN).toHaveBeenCalledTimes(2);
+        expect(api.postFPN).toHaveBeenCalledTimes(1);
         expect(api.postFPN.calls.mostRecent().args[0].offence_images).toEqual([]);
         expect(api.postFPNImage).toHaveBeenCalledTimes(2);
         expect(api.postFPNImage.calls.first().args[0]).toBe(99);

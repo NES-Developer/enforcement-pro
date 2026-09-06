@@ -29,6 +29,8 @@ import { PatrolService } from '../../services/patrol.service';
 import { TrackingService } from '../../services/tracking.service';
 import { ThermalPrinterService } from '../../services/thermal-printer.service';
 import { LemoEncourageService } from '../../services/lemo-encourage.service';
+import { OfflineTicketService } from '../../services/offline-ticket.service';
+import { QueueSyncService } from '../../services/queue-sync.service';
 
 
 @Component({
@@ -79,7 +81,9 @@ import { LemoEncourageService } from '../../services/lemo-encourage.service';
         private patrol: PatrolService,
         private tracking: TrackingService,
         private printer: ThermalPrinterService,
-        private encourage: LemoEncourageService
+        private encourage: LemoEncourageService,
+        private offlineTicket: OfflineTicketService,
+        private queueSync: QueueSyncService
 
 
     ) {
@@ -232,9 +236,7 @@ import { LemoEncourageService } from '../../services/lemo-encourage.service';
                     this.presentAlert('Server Error', 'Please contact support');
                 } 
                 else if (error.status == 401) {
-                    this.presentAlert('Wait', 'We are auto-logging you in. Please wait.');
-                    this.auth.autoLogin(); 
-                    this.getFPNData();
+                    this.presentAlert('Auth Failed', 'Please login again.');
                 } 
                 else if (error.status == 0)
                 {
@@ -640,6 +642,8 @@ import { LemoEncourageService } from '../../services/lemo-encourage.service';
                         if (this.fpn?.ticket) {
                             let ticket_image = this.baseUrl + this.fpn.ticket;
                             this.printImageFromUrl(ticket_image);
+                        } else {
+                            this.offlineTicket.printFor(this.enviro_post).catch(() => undefined);
                         }
 
                         const pepTalk = this.encourage.line(this.encourage.recordPosted());
@@ -649,6 +653,10 @@ import { LemoEncourageService } from '../../services/lemo-encourage.service';
                     }
 
                     if (result.status === 'queued') {
+                        if (!result.message.includes('already uploading')) {
+                            this.offlineTicket.printFor(this.enviro_post).catch(() => undefined);
+                        }
+                        this.queueSync.start();
                         this.presentAlert('Queued', result.message);
                         this.cancel();
                         return;

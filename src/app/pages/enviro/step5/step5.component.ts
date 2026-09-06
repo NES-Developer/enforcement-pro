@@ -1,83 +1,83 @@
-import { Component, ElementRef, OnInit, AfterViewInit, ViewChild, HostListener } from '@angular/core';
-import { ApiService } from '../../../services/enforcementpro/api.service';
+import { Component, ElementRef, OnInit, AfterViewInit, OnDestroy, ViewChild } from '@angular/core';
 import { DataService } from '../../../services/enforcementpro/data.service';
-
 import { POIPrefix } from '../../../models/poi-prefix';
 import { EnviroPost } from '../../../models/enviro';
 import { Observable, Subscriber } from 'rxjs';
 import { AlertController, IonInput } from '@ionic/angular';
-import moment from 'moment';  // Import moment.js for date formatting
-import { GeocodingService } from '../../../services/geocoding.service';
-// import { GoogleMap } from '@capacitor/google-maps';
-import * as L from 'leaflet';
-import { HttpClient } from '@angular/common/http';
-import { UpperCaseWords } from 'src/app/helpers/utils'
+import moment from 'moment';
+import { GeocodingService, PlaceSuggestion } from '../../../services/geocoding.service';
+import { GoogleMapsLoaderService } from '../../../services/google-maps-loader.service';
+import { UpperCaseWords } from 'src/app/helpers/utils';
 import { EnviroPage } from '../enviro.page';
-
-
 
 @Component({
   selector: 'app-step5',
   templateUrl: './step5.component.html',
   styleUrls: ['./step5.component.scss'],
 })
-export class Step5Component  implements OnInit, AfterViewInit {
-    @ViewChild('firstInput', { static: false }) firstInput: IonInput | any;
-    @ViewChild('mapContainer', { static: false }) mapRef!: ElementRef<HTMLElement>;
-    apiKey: string = '';
-    address: string = '';
-    map!: L.Map;
-    showLeaf=false;
-    marker!: L.Marker;
-    markersLayer!: L.LayerGroup; 
+export class Step5Component implements OnInit, AfterViewInit, OnDestroy {
+    @ViewChild('locationInput', { static: false }) locationInput: IonInput | any;
     poi_prefix: POIPrefix[] = [];
     enviro_post: EnviroPost = new EnviroPost();
-    private accessToken = 'pryBQPsykVwwDlHKRCzuceqEyJjYgmcNXjLk11h0hzFzWdVRDygST2uJMGmWO5Av';
+    suggestions: PlaceSuggestion[] = [];
+    showLeaf = false;
+    searching = false;
 
+    private map: any;
+    private marker: any;
+    private suggestTimer: ReturnType<typeof setTimeout> | null = null;
+    private clickListener: any;
 
-    alertHeader:string= '';
-    alertSubHeader:string=  '';
-    alertMessage:string=  '';
+    alertHeader = '';
+    alertSubHeader = '';
+    alertMessage = '';
 
     constructor(
-        private api: ApiService,
         private data: DataService,
         private geocodingService: GeocodingService,
+        private mapsLoader: GoogleMapsLoaderService,
         private elementRef: ElementRef,
-        private http: HttpClient,
         private alertController: AlertController,
         private fpnPage: EnviroPage
-
     ) {
-        if (!this.data.checkFPNData()){
+        if (!this.data.checkFPNData()) {
             this.fpnPage.getFPNData();
         }
         this.loadData();
     }
-    
+
     ngOnInit() {
         setTimeout(() => {
-            this.firstInput.setFocus();
-        }, 300); // Add a small delay to ensure the view is fully loaded
+            this.locationInput?.setFocus();
+        }, 300);
     }
 
     ngAfterViewInit(): void {
-        this.loadMap();
-      }
+        void this.loadMap();
+    }
 
+    ngOnDestroy(): void {
+        if (this.suggestTimer) {
+            clearTimeout(this.suggestTimer);
+        }
+        if (this.clickListener) {
+            this.clickListener.remove();
+        }
+    }
 
     loadData() {
-        
         this.poi_prefix = this.data.getPOIPrefix();
-        let enviro_post =  this.data.getEnviroPost();
+        const enviro_post = this.data.getEnviroPost();
         if (enviro_post !== null) {
             this.enviro_post = enviro_post;
         }
 
-        this.getCurrentPosition()
-        .subscribe((position: any) => {
-            this.enviro_post.lat = position.latitude;
-            this.enviro_post.lng = position.longitude;
+        this.getCurrentPosition().subscribe((position: any) => {
+            if (!this.hasMappedLocation()) {
+                this.enviro_post.lat = String(position.latitude);
+                this.enviro_post.lng = String(position.longitude);
+            }
+            void this.centerMap(Number(this.enviro_post.lat), Number(this.enviro_post.lng));
         });
 
         const defaultDate = moment().format('YYYY-MM-DDTHH:mm:ss');
@@ -89,8 +89,8 @@ export class Step5Component  implements OnInit, AfterViewInit {
         }
     }
 
-    onInputChange(){
-        UpperCaseWords(this.enviro_post); 
+    onInputChange() {
+        UpperCaseWords(this.enviro_post);
     }
 
     saveEnviroData() {
@@ -98,159 +98,190 @@ export class Step5Component  implements OnInit, AfterViewInit {
 
         this.enviro_post.offence_datetime = moment(this.enviro_post.offence_datetime)
             .format('YYYY-MM-DDTHH:mm:ss');
-        
+
         this.enviro_post.issue_datetime = moment(this.enviro_post.issue_datetime)
             .format('YYYY-MM-DDTHH:mm:ss');
-
-        // console.log(this.enviro_post.issue_datetime, this.enviro_post.offence_datetime)
 
         this.data.setEnviroPost(this.enviro_post);
     }
 
-    // Method to combine date and time into a datetime string
-    formatDateTime(date: string, time: string): string {
-        return moment(`${date} ${time}`).format('YYYY-MM-DD HH:mm');
-    }
+    onLocationInput(event: any) {
+        const value = String(event?.detail?.value || this.enviro_post.offence_location || '');
+        this.enviro_post.offence_location = value;
+        this.saveEnviroData();
 
-    onSearch() {
-        this.geocodingService.geocode(this.address).subscribe((result) => {
-        if (result.length > 0) {
-            this.enviro_post.offence_location = this.address;
-            const lat = result[0].lat;
-            const lon = result[0].lon;
-
-            if (this.marker) {
-            this.marker.setLatLng([lat, lon]);
-            } else {
-            this.marker = L.marker([lat, lon]).addTo(this.map);
-            }
-
-            this.map.setView([lat, lon], 13);
+        if (this.suggestTimer) {
+            clearTimeout(this.suggestTimer);
         }
-        });
+
+        this.suggestTimer = setTimeout(() => {
+            void this.loadSuggestions(value);
+        }, 250);
     }
 
-
-    private getCurrentPosition(): any {
-        return new Observable((observer: Subscriber<any>) => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position: any) => {
-            observer.next({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-            });
-            observer.complete();
-            });
-        } else {
-            observer.error();
-        }
-        });
-    }
-
-    toggleMap(){
-        if(this.enviro_post.offence_location == ""){
-
-            this.alertHeader= 'Wait';
-            this.alertSubHeader=  'Location missing';
-            this.alertMessage=  'Please enter a location before searching.';
-
-            this.showAlert();
-            this.showLeaf=false; 
+    async selectSuggestion(suggestion: PlaceSuggestion) {
+        this.suggestions = [];
+        const result = await this.geocodingService.geocodePlaceId(suggestion.placeId);
+        if (!result) {
             return;
         }
-        this.showLeaf=true; 
-        this.searchPlace();
+
+        this.enviro_post.offence_location = result.formattedAddress || suggestion.description;
+        this.applyCoordinates(result.lat, result.lng);
+        this.showLeaf = true;
+        await this.centerMap(result.lat, result.lng, true);
+        this.saveEnviroData();
     }
 
-    searchPlace(): void {
-        var query = this.enviro_post.offence_location;
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
-    
-        // Clear all existing markers before adding a new one
-        this.markersLayer.clearLayers();
-    
-        this.http.get(url).subscribe((results: any) => {
-          console.log(results);
-          if (results.length > 0) {
-            const place = results[0];
-            this.map.flyTo([place.lat, place.lon], 15); 
-    
-            const icon = L.icon({
-              iconUrl: 'assets/marker-icon.png',
-              shadowUrl: 'assets/marker-shadow.png',
-              popupAnchor: [13, 0],
-            });
-    
-            const marker = L.marker([place.lat, place.lon], { icon }).bindPopup(
-              `You searched for: ${place.display_name}`
-            );
-    
-           
-            this.markersLayer.addLayer(marker);
-    
-            // Optionally open the popup immediately
-            marker.openPopup();
-          } else {
-            // alert('Place not found!');
-          }
-        });
-      }
-    
-    private loadMap(): void {
-        this.map = L.map(this.elementRef.nativeElement.querySelector('#map')).setView([51.5074, -0.1278], 12);
-
-        L.tileLayer(
-        `https://tile.jawg.io/jawg-terrain/{z}/{x}/{y}.png?access-token=${this.accessToken}`, {
-            attribution: '<a href="http://jawg.io" title="Tiles Courtesy of Jawg Maps" target="_blank" class="jawg-attrib">&copy; <b>Jawg</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>',
-            maxZoom: 22
+    async toggleMap() {
+        if (!this.enviro_post.offence_location) {
+            this.alertHeader = 'Wait';
+            this.alertSubHeader = 'Location missing';
+            this.alertMessage = 'Please enter a location before searching.';
+            await this.showAlert();
+            this.showLeaf = false;
+            return;
         }
-        ).addTo(this.map);
 
-        this.markersLayer = L.layerGroup().addTo(this.map);
+        this.showLeaf = true;
+        this.searching = true;
+        try {
+            const result = await this.geocodingService.geocodeAddress(this.enviro_post.offence_location);
+            if (!result) {
+                this.alertHeader = 'Not found';
+                this.alertSubHeader = 'Google Maps';
+                this.alertMessage = 'That offence location could not be found. Try a street, town, or postcode.';
+                await this.showAlert();
+                return;
+            }
 
-        this.getCurrentPosition()
-        .subscribe((position: any) => {
-            this.map.flyTo([position.latitude, position.longitude], 15);
-        
-            const icon = L.icon({
-                iconUrl: 'assets/marker-icon.png',
-                shadowUrl: 'assets/marker-shadow.png',
-                popupAnchor: [13, 0],
-              });
-        
-            const marker = L.marker([position.latitude, position.longitude], {icon  }).bindPopup('Angular Leaflet');
-            this.markersLayer.addLayer(marker);
-        });
+            this.enviro_post.offence_location = result.formattedAddress || this.enviro_post.offence_location;
+            this.applyCoordinates(result.lat, result.lng);
+            await this.centerMap(result.lat, result.lng, true);
+            this.saveEnviroData();
+        } finally {
+            this.searching = false;
+        }
+    }
 
-        this.map.whenReady(() => {
-            this.map!.invalidateSize();
+    private async loadSuggestions(query: string) {
+        try {
+            this.suggestions = await this.geocodingService.suggestPlaces(query);
+        } catch {
+            this.suggestions = [];
+        }
+    }
+
+    private applyCoordinates(lat: number, lng: number) {
+        this.enviro_post.lat = String(lat);
+        this.enviro_post.lng = String(lng);
+    }
+
+    private hasMappedLocation(): boolean {
+        const lat = Number(this.enviro_post.lat);
+        const lng = Number(this.enviro_post.lng);
+        return Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0;
+    }
+
+    private getCurrentPosition(): Observable<any> {
+        return new Observable((observer: Subscriber<any>) => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position: any) => {
+                    observer.next({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+                    observer.complete();
+                });
+            } else {
+                observer.error();
+            }
         });
     }
 
-    private invalidateMapSize(): void {
-        if (this.map) {
+    private async loadMap(): Promise<void> {
+        await this.mapsLoader.load(this.data.getGoogleKey());
+        const google = (window as any).google;
+        const el = this.elementRef.nativeElement.querySelector('#map');
+        if (!google?.maps || !el) {
+            return;
+        }
+
+        const lat = this.hasMappedLocation() ? Number(this.enviro_post.lat) : 51.5074;
+        const lng = this.hasMappedLocation() ? Number(this.enviro_post.lng) : -0.1278;
+
+        this.map = new google.maps.Map(el, {
+            center: { lat, lng },
+            zoom: 15,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+        });
+
+        this.marker = new google.maps.Marker({
+            map: this.map,
+            position: { lat, lng },
+            draggable: true,
+        });
+
+        this.clickListener = this.map.addListener('click', async (event: any) => {
+            const clickedLat = event.latLng.lat();
+            const clickedLng = event.latLng.lng();
+            this.applyCoordinates(clickedLat, clickedLng);
+            this.marker.setPosition({ lat: clickedLat, lng: clickedLng });
+            const result = await this.geocodingService.reverseGeocode(clickedLat, clickedLng);
+            if (result?.formattedAddress) {
+                this.enviro_post.offence_location = result.formattedAddress;
+            }
+            this.saveEnviroData();
+        });
+
+        this.marker.addListener('dragend', async () => {
+            const position = this.marker.getPosition();
+            const draggedLat = position.lat();
+            const draggedLng = position.lng();
+            this.applyCoordinates(draggedLat, draggedLng);
+            const result = await this.geocodingService.reverseGeocode(draggedLat, draggedLng);
+            if (result?.formattedAddress) {
+                this.enviro_post.offence_location = result.formattedAddress;
+            }
+            this.saveEnviroData();
+        });
+    }
+
+    private async centerMap(lat: number, lng: number, reveal = false): Promise<void> {
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+            return;
+        }
+
+        if (reveal) {
+            this.showLeaf = true;
+        }
+
+        if (!this.map) {
+            return;
+        }
+
+        const google = (window as any).google;
+        const position = { lat, lng };
+        this.marker?.setPosition(position);
+        this.map.setCenter(position);
+        this.map.setZoom(16);
+
         setTimeout(() => {
-            this.map!.invalidateSize();
-        }, 0);
-        }
+            google?.maps?.event?.trigger(this.map, 'resize');
+            this.map.setCenter(position);
+        }, 80);
     }
 
     async showAlert() {
         const alert = await this.alertController.create({
-          header: this.alertHeader,
-          subHeader: this.alertSubHeader,
-          message: this.alertMessage,
-          buttons: ['OK']
+            header: this.alertHeader,
+            subHeader: this.alertSubHeader,
+            message: this.alertMessage,
+            buttons: ['OK']
         });
-    
+
         await alert.present();
-      }
-
-    @HostListener('window:resize', ['$event'])
-    onResize(event: Event): void {
-        if (this.map) {
-        this.map.invalidateSize();
-        }
     }
-
 }

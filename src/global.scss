@@ -408,6 +408,14 @@ ion-select {
   font-size: 13px;
 }
 
+.ep-update-notes {
+  margin: 12px 0 0;
+  color: var(--ep-ink);
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
 .ep-ticket__actions {
   display: flex;
   flex-wrap: wrap;
@@ -834,6 +842,23 @@ ion-select {
   height: 100%;
   width: 100%;
   border-radius: 16px;
+}
+
+.place-suggestions {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 10px;
+}
+
+.place-suggestions__item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--ep-line);
+  background: var(--ep-paper);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {

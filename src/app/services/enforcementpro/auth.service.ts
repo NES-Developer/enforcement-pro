@@ -1,19 +1,16 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { from, Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
-import { AlertController } from '@ionic/angular';
-
 import { Injectable } from '@angular/core';
-import { User } from '../../models/user';
+import { CapacitorHttp } from '@capacitor/core';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
-import { Router } from '@angular/router'; // Import Router
+import { User } from '../../models/user';
+import { Router } from '@angular/router';
 import { DataService } from './data.service';
-import { LoadingService } from '../loading.service';
+import { AppHttpService } from './app-http.service';
 import { Login } from '../../models/login';
 import { AppLog } from '../../models/app-log';
 import { BackgroundTaskService } from '../background-task.service';
 import { LocationService } from '../location.service';
-// import { Site as SiteObj } from '../../models/site';
 
 @Injectable({
   providedIn: 'root'
@@ -23,178 +20,115 @@ export class AuthService {
     private login_detail: Login;
     private user: User;
     private selected_site: any = null;
+    private refreshInFlight: Promise<boolean> | null = null;
 
     private baseUrl: string = 'https://app.enforcementpro.co.uk/api/app';
 
     constructor(
-        private http: HttpClient,
+        private appHttp: AppHttpService,
         private router: Router,
         private data: DataService,
-        private loading:LoadingService,
         private backgroundTasks: BackgroundTaskService,
-        private location: LocationService,
-        // private alertController: AlertController
-
+        private location: LocationService
     ) {
         this.user = new User();
         this.login_detail = new Login();
-        // this.selected_site = new SiteObj();
     }
 
     login(id: string, pin: string): Observable<any> {
-        const url = `${this.baseUrl}/login`;
+        const coords = this.location.peekLastKnown();
 
-        return from(this.location.requireCurrentPosition()).pipe(
-            switchMap(position => {
-                const body = {
-                    id,
-                    pin,
-                    lat: position.latitude,
-                    lng: position.longitude
-                };
-
-                return this.http.post(url, body, {
-                    headers: new HttpHeaders({
-                        'Content-Type': 'application/json'
-                    })
-                });
+        return this.appHttp.post(`${this.baseUrl}/login`, {
+            id,
+            pin,
+            lat: coords.latitude,
+            lng: coords.longitude
+        }, {
+            auth: false,
+            timeoutMs: 20000
+        }).pipe(
+            tap((response: any) => {
+                if (response?.access_token && response?.user) {
+                    this.storeToken(response.access_token);
+                    this.storeUser(response.user);
+                    this.primeLocationAfterLogin();
+                }
             })
         );
     }
 
-    
-    autoLogin() {
-
-        if (this.token == '')
-        {
-            this.token = this.getToken();
-            this.user = this.getUser() ?? new User();
-
-            if (this.token == '')
-            {
-                this.login_detail = this.data.getLogin();
-
-                if (this.login_detail.id == '' && this.login_detail.pin == '')
-                {
-                    this.logout();
-                } 
-                else 
-                {
-                    this.login(this.login_detail.id, this.login_detail.pin).subscribe(
-                        (response: any) => {
-                            if (response.access_token !== '') 
-                            {
-                                this.token = response.access_token;
-                                this.user = response.access_user;
-
-                                this.storeToken(this.token);
-                                this.storeUser(this.user);
-
-                                // return false;
-                            }
-                            else 
-                            {
-                                this.logout();
-
-                                // return false;
-                            }
-                        },
-                        (error) => {
-                            this.autoLogin();
-                            // this.logout();
-                        }
-                    );
-                }
-            }
-            // else 
-            // {
-            //     // return true;
-            // }
+    async refreshSession(): Promise<boolean> {
+        if (this.refreshInFlight) {
+            return this.refreshInFlight;
         }
-        //  else 
-        //  {
-        //     // return true;
-        // }
+
+        this.refreshInFlight = this.performRefresh();
+
+        try {
+            return await this.refreshInFlight;
+        } finally {
+            this.refreshInFlight = null;
+        }
     }
 
-    isLoggedIn()
-    {
-        if (this.token == '') {
+    autoLogin(): void {
+        this.refreshSession().then((ok) => {
+            if (!ok && !this.data.getToken()) {
+                this.logout();
+            }
+        });
+    }
 
+    isLoggedIn() {
+        if (this.token == '') {
             this.token = this.getToken();
 
             if (this.token == '') {
-
                 this.login_detail = this.data.getLogin();
-
-                if (this.login_detail.id == '' && this.login_detail.pin == '')
-                {
-                    return false;
-                } else {
-                    return true;
-                }
-            } else {
-                return true;
+                return !(this.login_detail.id == '' && this.login_detail.pin == '');
             }
 
-        } else {
             return true;
         }
+
+        return true;
     }
 
-
-    authChecker() 
-    {
-
-        if (this.token !== '')
-        {
-            // alert(1);
+    authChecker() {
+        if (this.token !== '') {
             this.token = this.data.getToken();
-            let hasSite: boolean = this.data.checkSites();
-            // this.user = this.data.getUser();
+            const hasSite: boolean = this.data.checkSites();
 
-
-
-            if (this.token == '')
-            {
+            if (this.token == '') {
                 this.router.navigate(['/login']);
-            } else {
-                if (hasSite)
-                {
-                    if (this.selected_site == null)
-                    {
-                        this.selected_site = this.data.getSelectedSite();
-                    }
-                }
-                else
-                {
-                    this.router.navigate(['/site']);
-                }
+                return;
             }
-            
+
+            if (hasSite) {
+                if (this.selected_site == null) {
+                    this.selected_site = this.data.getSelectedSite();
+                }
+            } else {
+                this.router.navigate(['/site']);
+            }
         }
     }
 
-
-      
-    
     handleLoginResponse(response: any): void {
+        if (response?.access_token) {
+            this.storeToken(response.access_token);
+        }
 
-        this.storeToken(response.access_token);
-        this.storeUser(response.user);
-
-        // this.storeToken();
-        // console.log(11, response.user, this.user);
-        // this.storeUser();
+        if (response?.user) {
+            this.storeUser(response.user);
+        }
 
         this.router.navigate(['/site']);
     }
 
     storeToken(token: string) {
         this.token = token;
-
-        this.data.setToken(this.token)
-
+        this.data.setToken(this.token);
     }
 
     storeUser(user: any) {
@@ -205,31 +139,22 @@ export class AuthService {
         this.user.last_name = user.last_name;
         this.user.operator_number = user.operator_number;
         this.user.role = user.role;
-
-       this.data.setUser(this.user);
+        this.data.setUser(this.user);
     }
 
     getToken(): string {
-        let token: string = this.data.getToken();
-
-        return token;
+        return this.data.getToken();
     }
 
     getUser(): User | null {
-        let user: any = this.data.getUser();
-
-        return user;
+        return this.data.getUser();
     }
 
     checkLoggedIn() {
         if (this.data.getToken() === '') {
-
             this.logout();
-        } 
-
-        // this.autoLogin();
+        }
     }
-      
 
     async logout() {
         this.sendLogoutInBackground();
@@ -243,6 +168,60 @@ export class AuthService {
         this.router.navigate(['/login']);
     }
 
+    private async performRefresh(): Promise<boolean> {
+        const login = this.data.getLogin();
+
+        if (!login?.id || !login?.pin) {
+            return false;
+        }
+
+        const coords = this.location.peekLastKnown();
+
+        try {
+            const response = await CapacitorHttp.post({
+                url: `${this.baseUrl}/login`,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: {
+                    id: login.id,
+                    pin: login.pin,
+                    lat: coords.latitude,
+                    lng: coords.longitude
+                },
+                connectTimeout: 15000,
+                readTimeout: 20000
+            });
+
+            const payload = typeof response.data === 'string'
+                ? JSON.parse(response.data)
+                : response.data;
+
+            if (response.status >= 200 && response.status < 300 && payload?.access_token && payload?.user) {
+                this.storeToken(payload.access_token);
+                this.storeUser(payload.user);
+                return true;
+            }
+        } catch {
+            return false;
+        }
+
+        return false;
+    }
+
+    private primeLocationAfterLogin(): void {
+        this.location.tryCurrentPosition(6000).then((fix) => {
+            if (!fix) {
+                return;
+            }
+
+            const appLog = this.data.getAppLog() || new AppLog();
+            appLog.lat = fix.latitude;
+            appLog.lng = fix.longitude;
+            this.data.setAppLog(appLog);
+        }).catch(() => undefined);
+    }
+
     private sendLogoutInBackground(): void {
         const token = this.token || this.data.getToken();
 
@@ -251,27 +230,17 @@ export class AuthService {
         }
 
         const appLog: AppLog = this.data.getAppLog() || new AppLog();
-        const url = `${this.baseUrl}/logout`;
 
-        const body = {
+        this.appHttp.post(`${this.baseUrl}/logout`, {
             lat: appLog.lat || '0',
             lng: appLog.lng || '0',
             device_id: appLog.device_id || '0'
-        };
-
-        this.http.post(url, body, {
-            headers: new HttpHeaders({
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
-            })
+        }, {
+            allowRefresh: false,
+            timeoutMs: 15000
         }).subscribe({
             next: () => {},
             error: () => {}
         });
     }
-
-   
-
-    
-
 }

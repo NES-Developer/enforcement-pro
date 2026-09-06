@@ -12,7 +12,6 @@ import { SiteOffence } from '../../models/site-offence';
 import { Visibility } from '../../models/visibility';
 import { Weather } from '../../models/weather';
 import { EnviroPost } from 'src/app/models/enviro';
-import { timeout } from 'rxjs/operators';
 import {Site  } from '../../models/site';
 import { User } from 'src/app/models/user';
 import { BackgroundTaskService } from '../../services/background-task.service';
@@ -210,14 +209,7 @@ export class SitePage implements OnInit, OnDestroy
                 } 
                 else if (error.status == 401) 
                 {
-                    // this.presentAlert('Processing', 'Retrieving data. '+this.token);
-
-                    // this.auth.autoLogin();
-                    if (this.token == '')
-                    {
-                        this.auth.autoLogin();
-                    }
-                    
+                    this.presentAlert('Auth Failed', 'Please login again.');
                 } 
                 else if (error.status == 0)
                 {
@@ -288,7 +280,8 @@ export class SitePage implements OnInit, OnDestroy
             return;
         }
 
-        this.loading.showLoading();
+        const cachedSiteId = Number(this.data.getEnviroPost()?.site_id || 0);
+        const canUseCache = this.data.checkFPNData() && cachedSiteId === Number(this.selected_site.id);
 
         let enviro_post = new EnviroPost();
         enviro_post.site_id = this.selected_site.id;
@@ -296,10 +289,17 @@ export class SitePage implements OnInit, OnDestroy
         this.data.setSelectedSite(this.selected_site);
         this.data.setEnviroPost(enviro_post);
 
-        this.getFPNData();
+        if (canUseCache) {
+            this.navigate('/dashboard');
+            this.getFPNData(false);
+            return;
+        }
+
+        this.loading.showLoading();
+        this.getFPNData(true);
     }
 
-    getFPNData(): void {
+    getFPNData(navigateOnComplete = true): void {
 
         let site_id: number = 0;
 
@@ -310,7 +310,7 @@ export class SitePage implements OnInit, OnDestroy
             site_id = site.id; 
         }
 
-        this.api.getFPNData(site_id).pipe(timeout(20000)).subscribe({
+        this.api.getFPNData(site_id).subscribe({
             next: (data) => {
                 try {
                     this.applyFPNData(data, site_id);
@@ -319,13 +319,17 @@ export class SitePage implements OnInit, OnDestroy
                 }
 
                 this.loading.hideLoading();
-                this.navigate('/dashboard');
+                if (navigateOnComplete) {
+                    this.navigate('/dashboard');
+                }
             },
             error: (error) => {
                 this.loading.hideLoading();
 
                 if (this.selected_site || this.data.getSelectedSite()) {
-                    this.navigate('/dashboard');
+                    if (navigateOnComplete) {
+                        this.navigate('/dashboard');
+                    }
                     return;
                 }
 

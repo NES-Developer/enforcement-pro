@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { DataService } from 'src/app/services/enforcementpro/data.service';
 import { Login } from '../../models/login';
 import { LoadingService } from 'src/app/services/loading.service';
+import { AppUpdateService } from '../../services/app-update.service';
 
 
 // import { NgForm } from '@angular/forms';
@@ -24,6 +25,7 @@ export class LoginPage implements OnInit {
 
     login: Login;
     token: string = '';
+    appVersion: string = '';
 
     constructor(
         private apiService: ApiService,
@@ -32,8 +34,8 @@ export class LoginPage implements OnInit {
         private router: Router,
         private loading:LoadingService,
         private data: DataService,
-        private platform: Platform
-        
+        private platform: Platform,
+        private appUpdate: AppUpdateService
     ) {
         this.login = new Login();
         this.loadData();
@@ -53,12 +55,20 @@ export class LoginPage implements OnInit {
         this.loading.showLoading();
 
         await this.data.init();
-
+        await this.refreshAppVersion();
+        this.appUpdate.checkAndPromptIfNeeded('login-page').catch(() => undefined);
 
         this.init();
 
         this.loading.hideLoading();
 
+    }
+
+    async refreshAppVersion(): Promise<void> {
+        const current = await this.appUpdate.getInstalledVersion();
+        this.appVersion = current.versionCode
+            ? `${current.versionName} (${current.versionCode})`
+            : current.versionName;
     }
 
     init() {

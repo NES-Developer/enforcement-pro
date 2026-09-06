@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
-import { CapacitorHttp, registerPlugin } from '@capacitor/core';
+import { registerPlugin } from '@capacitor/core';
 import type {
     BackgroundGeolocationPlugin,
     CallbackError,
     Location as BackgroundLocation
 } from '@capacitor-community/background-geolocation';
+import { firstValueFrom } from 'rxjs';
 import { AppLog } from '../models/app-log';
+import { AppHttpService } from './enforcementpro/app-http.service';
 import { DataService } from './enforcementpro/data.service';
 import { LocationFix, LocationService } from './location.service';
 import { PatrolService } from './patrol.service';
@@ -39,7 +41,8 @@ export class TrackingService {
         private data: DataService,
         private location: LocationService,
         private patrol: PatrolService,
-        private appUpdate: AppUpdateService
+        private appUpdate: AppUpdateService,
+        private appHttp: AppHttpService
     ) {}
 
     async syncTrackingState(): Promise<void> {
@@ -148,6 +151,16 @@ export class TrackingService {
             location.longitude.toString(),
             this.telemetryFromBackgroundLocation(location)
         );
+        this.location.rememberFix({
+            latitude: log.lat,
+            longitude: log.lng,
+            accuracy: log.accuracy_meters || 0,
+            altitude: log.altitude_meters,
+            altitudeAccuracy: log.altitude_accuracy_meters,
+            speed: log.speed_mps,
+            heading: log.heading_degrees,
+            timestamp: Date.now()
+        });
         this.postTrack(log);
     }
 
@@ -252,34 +265,25 @@ export class TrackingService {
         this.isPosting = true;
 
         try {
-            const response = await CapacitorHttp.post({
-                url: this.trackUrl,
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                data: appLog
-            });
+            const payload = await firstValueFrom(this.appHttp.post(this.trackUrl, appLog, {
+                timeoutMs: 20000
+            }));
 
-            const ok = response.status >= 200 && response.status < 300;
-
-            if (ok) {
-                this.lastPostedAt = Date.now();
-                this.handleTrackResponse(response.data);
-            } else if (queueOnFailure) {
+            this.lastPostedAt = Date.now();
+            this.handleTrackResponse(payload);
+            return true;
+        } catch (error: any) {
+            if (queueOnFailure) {
                 this.data.pushTrackingQueue(appLog);
-                if (!this.handleTrackProblem(response.data) && !this.data.checkSelectedZone()) {
+                if (!this.handleTrackProblem(error?.error) && !this.data.checkSelectedZone()) {
                     this.handleGenericProblem();
                 }
             }
 
-            return ok;
-        } catch {
-            if (queueOnFailure) {
-                this.data.pushTrackingQueue(appLog);
+            if (!error?.status || error.status === 0) {
+                this.handleNetworkProblem();
             }
 
-            this.handleNetworkProblem();
             return false;
         } finally {
             this.isPosting = false;

@@ -1,12 +1,17 @@
 import { TestBed } from '@angular/core/testing';
-
-import { ValidatePersonService } from '../validate-person.service';
+import { ValidatePersonService } from './validate-person.service';
+import { AppHttpService } from './enforcementpro/app-http.service';
 
 describe('ValidatePersonService', () => {
   let service: ValidatePersonService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [
+        ValidatePersonService,
+        { provide: AppHttpService, useValue: { post: () => undefined } }
+      ]
+    });
     service = TestBed.inject(ValidatePersonService);
   });
 

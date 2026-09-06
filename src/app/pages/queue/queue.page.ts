@@ -20,6 +20,8 @@ import { FpnSubmissionService } from '../../services/fpn-submission.service';
 import { PatrolService } from '../../services/patrol.service';
 import { TrackingService } from '../../services/tracking.service';
 import { ThermalPrinterService } from '../../services/thermal-printer.service';
+import { OfflineTicketService } from '../../services/offline-ticket.service';
+import { QueueSyncService } from '../../services/queue-sync.service';
 
 @Component({
   selector: 'app-queue',
@@ -55,7 +57,9 @@ export class QueuePage implements OnInit {
         private fpnSubmission: FpnSubmissionService,
         private patrol: PatrolService,
         private tracking: TrackingService,
-        private printer: ThermalPrinterService
+        private printer: ThermalPrinterService,
+        private offlineTicket: OfflineTicketService,
+        private queueSync: QueueSyncService
     ) {
 
         // this.auth.checkLoggedIn();
@@ -109,8 +113,10 @@ export class QueuePage implements OnInit {
         }
 
         this.ping();
+        this.queueSync.start();
         this.backgroundTasks.setInterval(() => {
             this.ping();
+            this.queueSync.flush().catch(() => undefined);
         }, 30000); // 30 seconds in milliseconds
     }
 
@@ -285,7 +291,10 @@ export class QueuePage implements OnInit {
             }
 
             if (result.status === 'queued') {
-                this.presentAlert('Queued', result.message);
+                if (print) {
+                    this.offlineTicket.printFor(enviro_post).catch(() => undefined);
+                }
+                this.queueSync.start();
                 this.refresh();
                 return;
             }
@@ -349,7 +358,7 @@ export class QueuePage implements OnInit {
         this.loading.showLoading();
 
         try {
-            await this.printTicketHtml(ticket);
+            await this.offlineTicket.printHtml(ticket);
             this.presentAlert('Success', 'Ticket printed successfully.');
         } catch (error: any) {
             this.presentAlert('Print Error', error?.message || 'Unable to print ticket.');
