@@ -1,70 +1,53 @@
-
 <ion-header [translucent]="true">
     <ion-router-outlet></ion-router-outlet>
     <app-nav-bar [currentStep]="currentStep"></app-nav-bar>
 </ion-header>
 
+<ion-content [fullscreen]="true">
+    <div class="ep-page">
+        <div class="ep-page-head">
+            <p class="ep-kicker">Pending work</p>
+            <h1>Submission queue</h1>
+            <p>Review, generate, print, then send.</p>
+        </div>
 
+        <div class="ep-empty" *ngIf="!enviro_que_addition?.length">
+            <h3>Queue is clear</h3>
+            <p>Saved tickets waiting to submit will show here.</p>
+        </div>
 
-
-<ion-content [fullscreen]="true" color="light">
-    
-    <ion-list [inset]="true">
-
-        <div *ngFor="let enviro_post of enviro_que_addition">
-
-            <ion-item [button]="true">
-
-                <ion-label>Offender Name: {{ enviro_post.first_name }} {{ enviro_post.last_name }}</ion-label>
-                <ion-icon color="danger" slot="start" name="create" size="large" (click)="editFPN(enviro_post)"></ion-icon>
-    
-                <ion-note slot="end">
-                   
-                </ion-note>
-            </ion-item>
-
-            <ion-row>
-                <ion-col>
-                    <ion-button color="success" (click)="submitFPN(enviro_post, true)">
-                        Submit & Print
-                    </ion-button>
-                </ion-col>
-                <ion-col>
-                    <ion-button color="success" (click)="submitFPN(enviro_post, false)">
-                        Submit
-                    </ion-button>
-                </ion-col>
-            </ion-row>
-
-
-            <div> 
-                <ion-item>
-                    <ion-button *ngIf="!enviro_post.html_bool" color="success" (click)="generateTicket(enviro_post)">
-                        Generate Ticket
-                    </ion-button>
-                    <ion-button color="dark" (click)="printOfflineTicket(enviro_post)">
-                        Print
-                    </ion-button>
-                    <ion-button *ngIf="enviro_post.html_bool" color="danger" (click)="enviro_post.html_bool = false">
-                        x
-                    </ion-button>
-
-                </ion-item>
-
-                <ion-item>
-                    <div>
-                    </div>
-                    <div>
-                        <div *ngIf="enviro_post.html_bool" id="html_ticket" [innerHTML]="enviro_post.html_string"></div>
-                    </div>
-                </ion-item>
-                
+        <article class="ep-ticket" *ngFor="let enviro_post of enviro_que_addition">
+            <div class="ep-ticket__top">
+                <div>
+                    <h3 class="ep-ticket__title">{{ enviro_post.first_name }} {{ enviro_post.last_name }}</h3>
+                    <p class="ep-ticket__meta">{{ queueStatus(enviro_post) }}</p>
+                </div>
+                <ion-button fill="clear" size="small" (click)="editFPN(enviro_post)">
+                    <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                </ion-button>
             </div>
 
-            <br/>
+            <div class="ep-ticket__photos" *ngIf="enviro_post.offence_images?.length">
+                <p class="ep-ticket__meta">{{ enviro_post.offence_images.length }} photo{{ enviro_post.offence_images.length === 1 ? '' : 's' }} attached.</p>
+                <div class="ep-photo-grid">
+                    <div class="ep-photo-tile" *ngFor="let src of enviro_post.offence_images">
+                        <img [src]="src" alt="" />
+                    </div>
+                </div>
+            </div>
 
-        </div>
-        
-    </ion-list>
+            <div class="ep-actions ep-actions--split">
+                <ion-button expand="block" color="success" (click)="submitFPN(enviro_post, true)">Submit & print</ion-button>
+                <ion-button expand="block" color="success" (click)="submitFPN(enviro_post, false)">Submit</ion-button>
+            </div>
 
+            <div class="ep-ticket__actions" style="margin-top: 10px;">
+                <ion-button *ngIf="!enviro_post.html_bool" size="small" (click)="generateTicket(enviro_post)">Generate ticket</ion-button>
+                <ion-button size="small" color="dark" (click)="printOfflineTicket(enviro_post)">Print</ion-button>
+                <ion-button *ngIf="enviro_post.html_bool" size="small" color="danger" (click)="enviro_post.html_bool = false">Close preview</ion-button>
+            </div>
+
+            <div *ngIf="enviro_post.html_bool" id="html_ticket" [innerHTML]="enviro_post.html_string"></div>
+        </article>
+    </div>
 </ion-content>

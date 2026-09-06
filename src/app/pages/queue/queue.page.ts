@@ -518,4 +518,16 @@ export class QueuePage implements OnInit {
         this.data.setEnviroPost(enviro_post);
         this.router.navigate(['/notebook', 0], { queryParams: { currentStep: this.currentStep } });
     }
+
+    queueStatus(enviro_post: EnviroPost): string {
+        if (enviro_post.enviro_id && enviro_post.offence_images?.length) {
+            return `Held — ${enviro_post.offence_images.length} photo(s) still to upload`;
+        }
+
+        if (enviro_post.offence_images?.length) {
+            return `Ready for submission · ${enviro_post.offence_images.length} photo(s)`;
+        }
+
+        return 'Ready for submission';
+    }
 }

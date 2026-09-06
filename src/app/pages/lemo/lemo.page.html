@@ -5,9 +5,60 @@
 <ion-content [fullscreen]="true">
   <div class="ep-page lemo-page">
     <section class="ep-hero lemo-hero">
-      <p class="ep-kicker">Officer assistant</p>
-      <h1>Lemo AI</h1>
+      <div class="lemo-hero__top">
+        <div>
+          <p class="ep-kicker">Officer assistant</p>
+          <h1>Lemo AI</h1>
+        </div>
+        <ion-button size="small" fill="outline" [disabled]="lemo.busy" (click)="newChat()">
+          New chat
+        </ion-button>
+      </div>
       <p>{{ siteName }}<span *ngIf="zoneName"> · {{ zoneName }}</span></p>
+    </section>
+
+    <section class="ep-section lemo-notebook" #notebookSection>
+      <div class="ep-section__head">
+        <p class="ep-kicker">Evidence notes</p>
+        <h2>Notebook entry</h2>
+      </div>
+      <p class="lemo-notebook__intro">If the FPN is already in the system, review it here. The FPN form asks for anything still required and submits it.</p>
+
+      <article class="lemo-notebook__item" *ngIf="hasDraftPreview">
+        <div class="ep-ticket__top">
+          <div>
+            <h3 class="ep-ticket__title">{{ draftTitle }}</h3>
+            <p class="ep-ticket__meta">{{ draftSummary }}</p>
+          </div>
+          <ion-badge color="medium">In progress</ion-badge>
+        </div>
+        <div class="ep-ticket__actions">
+          <ion-button size="small" (click)="continueInStepper()">Continue in FPN form</ion-button>
+        </div>
+      </article>
+
+      <article class="lemo-notebook__item" *ngFor="let fpn of recentFpns">
+        <div class="ep-ticket__top">
+          <div>
+            <h3 class="ep-ticket__title">{{ fpn.fpn_number || 'Issued FPN' }}</h3>
+            <p class="ep-ticket__meta">{{ issuedSummary(fpn) }}</p>
+          </div>
+          <ion-badge *ngIf="!notebookEntryIsEmpty(fpn)">Notebook found</ion-badge>
+          <ion-badge *ngIf="notebookEntryIsEmpty(fpn)" color="warning">Needs notebook</ion-badge>
+        </div>
+        <div class="ep-ticket__actions">
+          <ion-button *ngIf="notebookEntryIsEmpty(fpn)" size="small" (click)="openIssuedNotebook(fpn)">
+            Open notebook
+          </ion-button>
+        </div>
+      </article>
+
+      <div class="ep-empty lemo-notebook__empty" *ngIf="!hasDraftPreview && !recentFpns.length">
+        <h3>No issued FPN yet</h3>
+        <p>Posted tickets will preview here. Open the FPN form to continue a notice.</p>
+      </div>
+
+      <ion-button expand="block" fill="outline" (click)="continueInStepper()">Open FPN form</ion-button>
     </section>
 
     <div class="lemo-thread">
@@ -33,7 +84,7 @@
           </button>
         </div>
 
-        <div class="lemo-choices" *ngIf="message.choices?.length">
+        <div class="lemo-choices" *ngIf="message.choices?.length && isActiveMessage(message)">
           <ion-button
             size="small"
             fill="outline"
@@ -43,7 +94,7 @@
           </ion-button>
         </div>
 
-        <div class="lemo-fields" *ngIf="message.fields?.length">
+        <div class="lemo-fields" *ngIf="message.fields?.length && isActiveMessage(message)">
           <ion-input
             *ngFor="let field of message.fields"
             [label]="field.label + (field.required ? ' *' : '')"
@@ -55,11 +106,14 @@
           <ion-button expand="block" (click)="submitFields(message.fields || [])">Continue</ion-button>
         </div>
 
-        <div class="lemo-camera" *ngIf="message.showCamera">
-          <app-evidence-capture [compact]="true"></app-evidence-capture>
+        <div class="lemo-camera" *ngIf="message.showCamera && isActiveMessage(message)">
+          <app-evidence-capture [compact]="true" (photosChanged)="onPhotosChanged()"></app-evidence-capture>
+          <ion-button expand="block" color="success" [disabled]="photoCount < 1" (click)="continueImages()">
+            Continue with {{ photoCount }} photo{{ photoCount === 1 ? '' : 's' }}
+          </ion-button>
         </div>
 
-        <div class="lemo-sign" *ngIf="message.showSignature">
+        <div class="lemo-sign" *ngIf="message.showSignature && isActiveMessage(message)">
           <canvas #signatureCanvas width="320" height="160"></canvas>
           <div class="ep-actions ep-actions--split">
             <ion-button expand="block" color="medium" (click)="clearSignature()">Clear</ion-button>
@@ -74,13 +128,16 @@
 </ion-content>
 
 <ion-footer class="lemo-footer">
-  <div class="lemo-composer">
+  <div class="lemo-composer lemo-composer--cancel" *ngIf="lemo.isCreating">
+    <ion-button expand="block" color="medium" (click)="cancelCreate()">Cancel</ion-button>
+  </div>
+  <div class="lemo-composer" *ngIf="!lemo.isCreating">
     <ion-textarea
       [(ngModel)]="composer"
       auto-grow="true"
       rows="1"
       maxlength="4000"
-      placeholder="Ask about an offence, or create an FPN"
+      placeholder="{{ lemo.mode === 'research' ? 'Describe what you saw' : 'Ask about an offence, or create an FPN' }}"
       (keydown.enter)="send(); $event.preventDefault()">
     </ion-textarea>
     <ion-button [disabled]="lemo.busy || !composer.trim()" (click)="send()">

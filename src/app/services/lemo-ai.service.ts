@@ -8,6 +8,8 @@ import { ApiService } from './enforcementpro/api.service';
 import { DataService } from './enforcementpro/data.service';
 import { FpnSubmissionService } from './fpn-submission.service';
 import { PatrolService } from './patrol.service';
+import { ThermalPrinterService } from './thermal-printer.service';
+import { LemoEncourageService } from './lemo-encourage.service';
 
 export interface LemoChoice {
   id: string;
@@ -45,7 +47,7 @@ export interface LemoMessage {
   offenceCards?: LemoOffenceCard[];
 }
 
-export type LemoMode = 'chat' | 'create' | 'images';
+export type LemoMode = 'chat' | 'create' | 'images' | 'research';
 export type LemoWizardStep =
   | 'zone'
   | 'offence_group'
@@ -67,18 +69,25 @@ export class LemoAiService {
   wizardStep: LemoWizardStep | null = null;
   busy = false;
   chatId: number | null = null;
+  lastPosted: { id: number; fpnNumber: string } | null = null;
+  private pendingTicketUrl: string | null = null;
+  private readonly ticketBaseUrl = 'https://app.enforcementpro.co.uk/';
 
   constructor(
     private api: ApiService,
     private data: DataService,
     private fpnSubmission: FpnSubmissionService,
-    private patrol: PatrolService
+    private patrol: PatrolService,
+    private printer: ThermalPrinterService,
+    private encourage: LemoEncourageService
   ) {}
 
   async start(): Promise<void> {
     this.messages = [];
     this.mode = 'chat';
     this.wizardStep = null;
+    this.chatId = null;
+    this.pendingTicketUrl = null;
     await this.ensureLookups();
 
     const site = this.data.getSelectedSite();
@@ -111,10 +120,34 @@ export class LemoAiService {
       return;
     }
 
+    if (this.looksLikeResearch(message)) {
+      if (this.mode === 'research') {
+        this.pushAssistant(
+          'Tell me what you saw — for example littering, dog fouling, or fly-tipping — or pick an offence group below.',
+          this.researchChoices()
+        );
+        return;
+      }
+      await this.startResearch();
+      return;
+    }
+
+    if (this.looksLikeNotebook(message)) {
+      this.pushAssistant(
+        'Use Notebook entry above for issued FPNs, or open the FPN form. The stepper already knows what is required and where to submit.',
+        [
+          { id: 'notebook', label: 'Notebook entry', action: 'notebook' },
+          { id: 'stepper', label: 'Open FPN form', action: 'stepper' },
+        ]
+      );
+      return;
+    }
+
     this.busy = true;
     try {
       const matches = this.searchOffences(message);
       await this.replyWithResearch(message, matches);
+      this.mode = 'chat';
     } finally {
       this.busy = false;
     }
@@ -132,29 +165,13 @@ export class LemoAiService {
       return;
     }
 
-    const enviro = this.draft();
-    enviro.site_id = Number(site.id);
-    const user = this.data.getUser();
-    if (user?.id) {
-      enviro.officer_id = user.id;
-    }
-
-    const zone = this.currentZone();
-    if (zone?.id && !enviro.zone_id) {
-      enviro.zone_id = Number(zone.id);
-    }
-
-    if (prefillOffenceId) {
-      const offence = this.data.findOffenceById(Number(prefillOffenceId));
-      if (offence) {
-        enviro.offence_id = offence.id;
-        enviro.offence_type_id = Number(offence.group);
-      }
-    }
-
-    this.saveDraft(enviro);
+    this.beginNewFpn(prefillOffenceId);
     this.mode = 'create';
-    this.pushAssistant('Creating an FPN. I will reuse the site, and the zone if it is already set. Images will be asked for on this flow.');
+    this.pushAssistant(
+      prefillOffenceId
+        ? 'Starting a new FPN with that offence. Site and zone stay set. Offender, photos, and signature start blank.'
+        : 'Starting a new FPN. Site and zone stay set. Offender, offence, photos, and signature start blank.'
+    );
     this.advanceWizard();
   }
 
@@ -186,9 +203,17 @@ export class LemoAiService {
       this.startCreateFpn();
       return;
     }
+    if (choice.action === 'queue' || choice.action === 'notebook' || choice.action === 'stepper') {
+      return;
+    }
     if (choice.action === 'research') {
       this.pushUser(choice.label);
-      this.pushAssistant('Describe what you saw. I will match it to site offences and legislation.', this.homeChoices());
+      void this.startResearch();
+      return;
+    }
+    if (choice.action === 'research-group' && choice.value) {
+      this.pushUser(choice.label);
+      this.showResearchGroup(Number(choice.value));
       return;
     }
     if (choice.action === 'images') {
@@ -211,6 +236,17 @@ export class LemoAiService {
     }
     if (choice.action === 'submit') {
       void this.submitFpn();
+      return;
+    }
+    if (choice.action === 'print-sunmi' || choice.action === 'print-urovo') {
+      this.pushUser(choice.label);
+      void this.printTicket(choice.action === 'print-sunmi' ? 'sunmi' : 'urovo');
+      return;
+    }
+    if (choice.action === 'print-skip') {
+      this.pushUser('Skip print');
+      this.pendingTicketUrl = null;
+      this.pushAssistant(`No problem. Ticket was not printed.\n\n${this.encourage.line()}`, this.afterSubmitChoices());
       return;
     }
     if (choice.action === 'use-offence' && choice.value) {
@@ -239,10 +275,9 @@ export class LemoAiService {
       enviro.email = (values['email'] || '').trim();
       enviro.phone = (values['phone'] || '').trim();
       enviro.date_of_birth = this.formatDob(values['dob_year'], values['dob_month'], values['dob_day']);
-      enviro.is_bwc_active = (values['is_bwc_active'] || enviro.is_bwc_active || '').trim();
 
-      if (!enviro.salutation || !enviro.first_name || !enviro.last_name || !enviro.address || !enviro.town || !enviro.post_code || !enviro.date_of_birth || !enviro.is_bwc_active) {
-        this.pushAssistant('I still need title, name, address, town, postcode, date of birth, and BWC.');
+      if (!enviro.salutation || !enviro.first_name || !enviro.last_name || !enviro.address || !enviro.town || !enviro.post_code || !enviro.date_of_birth) {
+        this.pushAssistant('I still need title, name, address, town, postcode, and date of birth.');
         this.promptCurrentStep();
         return;
       }
@@ -271,10 +306,23 @@ export class LemoAiService {
     this.advanceWizard();
   }
 
+  get isCreating(): boolean {
+    return this.mode === 'create' || this.mode === 'images';
+  }
+
+  imageCount(): number {
+    const images = this.draft().offence_images;
+    return Array.isArray(images) ? images.length : 0;
+  }
+
   continueAfterImages(): void {
     const enviro = this.draft();
-    if (!enviro.offence_images?.length) {
-      this.pushAssistant('Please capture at least one offence image before continuing.');
+    if (!Array.isArray(enviro.offence_images)) {
+      enviro.offence_images = [];
+      this.saveDraft(enviro);
+    }
+    if (!enviro.offence_images.length) {
+      this.pushAssistant('Please capture at least one offence image, then tap Continue with photos.');
       return;
     }
 
@@ -326,14 +374,30 @@ export class LemoAiService {
     try {
       const result = await this.fpnSubmission.submit(enviro);
       if (result.status === 'posted') {
-        const fpnNumber = result.response?.data?.fpn_number || result.response?.fpn_number || '';
-        this.mode = 'chat';
-        this.wizardStep = null;
+        const payload = result.response?.data || result.response || {};
+        const fpnNumber = payload.fpn_number || '';
+        const postedId = Number(payload.id || result.response?.id || 0);
+        this.lastPosted = postedId > 0 ? { id: postedId, fpnNumber: String(fpnNumber || '') } : null;
+        this.finishSubmittedDraft();
+        this.pendingTicketUrl = this.resolveTicketUrl(payload, fpnNumber);
+        const created = fpnNumber ? `FPN ${fpnNumber} has been created.` : 'FPN has been created.';
+        const pep = this.encourage.line(this.encourage.recordPosted());
+        if (this.pendingTicketUrl) {
+          this.pushAssistant(`${created}\n\n${pep}\n\nPrint on Sunmi or Urovo?`, [
+            ...this.printChoices(),
+            ...this.afterSubmitChoices(),
+          ]);
+        } else {
+          this.pushAssistant(`${created}\n\n${pep}`, this.afterSubmitChoices());
+        }
+        return;
+      }
+
+      if (result.status === 'queued') {
+        this.finishSubmittedDraft();
         this.pushAssistant(
-          fpnNumber
-            ? `FPN ${fpnNumber} has been created. ${result.message}`
-            : result.message,
-          this.homeChoices()
+          `${result.message}\n\nThat notice is in the queue. Submit it from there, or start a new FPN.`,
+          this.queueOrCreateChoices()
         );
         return;
       }
@@ -350,6 +414,7 @@ export class LemoAiService {
   cancelWizard(): void {
     this.mode = 'chat';
     this.wizardStep = null;
+    this.pendingTicketUrl = null;
     this.pushAssistant('Cancelled. I can still research an offence or start a new FPN.', this.homeChoices());
   }
 
@@ -380,7 +445,7 @@ export class LemoAiService {
     if (!enviro.offence_id) {
       return 'offence';
     }
-    if (!enviro.salutation || !enviro.first_name || !enviro.last_name || !enviro.address || !enviro.town || !enviro.post_code || !enviro.date_of_birth || !enviro.is_bwc_active) {
+    if (!enviro.salutation || !enviro.first_name || !enviro.last_name || !enviro.address || !enviro.town || !enviro.post_code || !enviro.date_of_birth || !this.hasBwc(enviro)) {
       return 'offender';
     }
     if (!enviro.proof_of_address || !enviro.proof_of_id) {
@@ -449,20 +514,29 @@ export class LemoAiService {
           );
           break;
         }
-        this.pushAssistant('Enter the offender details.');
-        this.attachFields([
-          { key: 'first_name', label: 'Forename', type: 'text', required: true, value: enviro.first_name },
-          { key: 'last_name', label: 'Surname', type: 'text', required: true, value: enviro.last_name },
-          { key: 'address', label: 'Address', type: 'textarea', required: true, value: enviro.address },
-          { key: 'town', label: 'Town', type: 'text', required: true, value: enviro.town },
-          { key: 'post_code', label: 'Postcode', type: 'text', required: true, value: enviro.post_code },
-          { key: 'dob_day', label: 'DOB day', type: 'number', required: true },
-          { key: 'dob_month', label: 'DOB month', type: 'number', required: true },
-          { key: 'dob_year', label: 'DOB year', type: 'number', required: true },
-          { key: 'phone', label: 'Mobile', type: 'tel', value: enviro.phone },
-          { key: 'email', label: 'Email', type: 'email', value: enviro.email },
-          { key: 'is_bwc_active', label: 'BWC Yes or No', type: 'text', required: true, value: enviro.is_bwc_active },
-        ]);
+        if (!enviro.first_name || !enviro.last_name || !enviro.address || !enviro.town || !enviro.post_code || !enviro.date_of_birth) {
+          this.pushAssistant('Enter the offender details.');
+          this.attachFields([
+            { key: 'first_name', label: 'Forename', type: 'text', required: true, value: enviro.first_name },
+            { key: 'last_name', label: 'Surname', type: 'text', required: true, value: enviro.last_name },
+            { key: 'address', label: 'Address', type: 'textarea', required: true, value: enviro.address },
+            { key: 'town', label: 'Town', type: 'text', required: true, value: enviro.town },
+            { key: 'post_code', label: 'Postcode', type: 'text', required: true, value: enviro.post_code },
+            { key: 'dob_day', label: 'DOB day', type: 'number', required: true },
+            { key: 'dob_month', label: 'DOB month', type: 'number', required: true },
+            { key: 'dob_year', label: 'DOB year', type: 'number', required: true },
+            { key: 'phone', label: 'Mobile', type: 'tel', value: enviro.phone },
+            { key: 'email', label: 'Email', type: 'email', value: enviro.email },
+          ]);
+          break;
+        }
+        this.pushAssistant(
+          'Did you activate BWC?',
+          this.choiceList([
+            { id: 'bwc-yes', label: 'Yes', value: 'Yes' },
+            { id: 'bwc-no', label: 'No', value: 'No' },
+          ], 'bwc')
+        );
         break;
       case 'proofs':
         if (!enviro.proof_of_address) {
@@ -514,20 +588,17 @@ export class LemoAiService {
           enviro.fpn_issued = 0;
           this.saveDraft(enviro);
         }
-        this.pushAssistant('Where exactly? I need the offence location and POI. Description is optional.');
+        this.pushAssistant('Where exactly? Point of interest is the place name, such as a street, shop, or landmark.');
         this.attachFields([
           { key: 'offence_location', label: 'Offence location', type: 'text', required: true, value: enviro.offence_location },
           { key: 'town_area', label: 'Town / ward', type: 'text', value: enviro.town_area },
-          { key: 'poi', label: 'POI', type: 'text', required: true, value: enviro.poi },
+          { key: 'poi', label: 'Point of interest', type: 'text', required: true, value: enviro.poi },
           { key: 'description', label: 'Description', type: 'textarea', value: enviro.description },
           { key: 'offender_reply', label: 'Offender reply', type: 'textarea', value: enviro.offender_reply },
         ]);
         break;
       case 'images':
-        this.pushAssistant(
-          'Add offence images now. Take at least one photo, then continue.',
-          [{ id: 'images-done', label: 'Images added', action: 'images-done' }]
-        );
+        this.pushAssistant('Add offence images now. Take at least one photo, then tap Continue with photos.');
         this.attachCamera();
         break;
       case 'signature':
@@ -572,7 +643,11 @@ export class LemoAiService {
       }
     }
     if (this.wizardStep === 'offender' && typeof value === 'string') {
-      enviro.salutation = value;
+      if (value === 'Yes' || value === 'No') {
+        enviro.is_bwc_active = value;
+      } else {
+        enviro.salutation = value;
+      }
     }
     if (this.wizardStep === 'proofs') {
       if (!enviro.proof_of_address && value) {
@@ -709,12 +784,162 @@ export class LemoAiService {
     return this.data.getOffence().filter(item => Number(item.group) === Number(groupId));
   }
 
+  private async startResearch(): Promise<void> {
+    this.mode = 'research';
+    this.wizardStep = null;
+    await this.ensureLookups();
+
+    const photos = this.imageCount();
+    const photoHint = photos
+      ? ` You already have ${photos} photo${photos === 1 ? '' : 's'} on this FPN — describe what they show.`
+      : '';
+    const groups = this.data.getOffenceGroup();
+    const content = groups.length
+      ? `Describe what you saw and I will match it to this site’s offences and legislation.${photoHint}\n\nOr pick an offence group to browse.`
+      : `Describe what you saw and I will match it to this site’s offences and legislation.${photoHint}`;
+
+    this.pushAssistant(content, this.researchChoices());
+  }
+
+  private showResearchGroup(groupId: number): void {
+    this.mode = 'research';
+    const group = this.data.findOffenceGroupId(groupId);
+    const cards = this.offencesForGroup(groupId).map(item => this.toOffenceCard(item));
+    const name = group?.englishName || 'this group';
+
+    this.pushAssistant(
+      cards.length
+        ? `${name}: ${cards.length} offence${cards.length === 1 ? '' : 's'} on this site. Tap one to use it, or describe what you saw.`
+        : `No offences in ${name} for this site. Describe what you saw, or pick another group.`,
+      this.researchChoices()
+    );
+
+    const last = this.lastAssistant();
+    if (last && cards.length) {
+      last.offenceCards = cards.slice(0, 12);
+    }
+  }
+
+  private researchChoices(): LemoChoice[] {
+    const groups = this.data.getOffenceGroup().map(item => ({
+      id: `rg-${item.id}`,
+      label: item.englishName,
+      value: item.id,
+      action: 'research-group',
+    }));
+    groups.push({ id: 'research-cancel', label: 'Cancel', action: 'cancel' });
+    return groups;
+  }
+
+  private beginNewFpn(prefillOffenceId?: number): EnviroPost {
+    const next = new EnviroPost();
+    const site = this.data.getSelectedSite();
+    const user = this.data.getUser();
+    const zone = this.currentZone();
+
+    if (site?.id) {
+      next.site_id = Number(site.id);
+    }
+    if (user?.id) {
+      next.officer_id = user.id;
+    }
+    if (zone?.id) {
+      next.zone_id = Number(zone.id);
+    }
+    if (prefillOffenceId) {
+      const offence = this.data.findOffenceById(Number(prefillOffenceId));
+      if (offence) {
+        next.offence_id = offence.id;
+        next.offence_type_id = Number(offence.group);
+      }
+    }
+
+    this.saveDraft(next);
+    return next;
+  }
+
+  private finishSubmittedDraft(): void {
+    this.mode = 'chat';
+    this.wizardStep = null;
+    this.beginNewFpn();
+  }
+
   private homeChoices(): LemoChoice[] {
     return [
       { id: 'create', label: 'Create FPN', action: 'create' },
+      { id: 'notebook', label: 'Notebook entry', action: 'notebook' },
+      { id: 'queue', label: 'Submit from queue', action: 'queue' },
       { id: 'research', label: 'Research offence', action: 'research' },
       { id: 'images', label: 'Upload images', action: 'images' },
     ];
+  }
+
+  private afterSubmitChoices(): LemoChoice[] {
+    const choices: LemoChoice[] = [
+      { id: 'create', label: 'Create new FPN', action: 'create' },
+      { id: 'queue', label: 'Submit from queue', action: 'queue' },
+    ];
+    if (this.lastPosted?.id) {
+      choices.unshift({ id: 'notebook', label: 'Add notebook', action: 'notebook', value: this.lastPosted.id });
+    }
+    return choices;
+  }
+
+  private queueOrCreateChoices(): LemoChoice[] {
+    return [
+      { id: 'queue', label: 'Submit from queue', action: 'queue' },
+      { id: 'create', label: 'Create new FPN', action: 'create' },
+    ];
+  }
+
+  private printChoices(): LemoChoice[] {
+    return [
+      { id: 'print-sunmi', label: 'Sunmi', action: 'print-sunmi' },
+      { id: 'print-urovo', label: 'Urovo', action: 'print-urovo' },
+      { id: 'print-skip', label: 'Skip print', action: 'print-skip' },
+    ];
+  }
+
+  private async printTicket(printer: 'sunmi' | 'urovo'): Promise<void> {
+    const ticketUrl = this.pendingTicketUrl;
+    if (!ticketUrl) {
+      this.pushAssistant('I do not have a ticket image to print.', this.homeChoices());
+      return;
+    }
+
+    this.busy = true;
+    try {
+      await this.printer.printImageOn(ticketUrl, printer);
+      this.pendingTicketUrl = null;
+      this.pushAssistant(
+        `Printed on ${printer === 'sunmi' ? 'Sunmi' : 'Urovo'}.\n\n${this.encourage.line()}`,
+        this.afterSubmitChoices()
+      );
+    } catch (error: any) {
+      this.pushAssistant(
+        error?.message || `Unable to print on ${printer === 'sunmi' ? 'Sunmi' : 'Urovo'}.`,
+        this.printChoices()
+      );
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private resolveTicketUrl(payload: any, fpnNumber: string): string | null {
+    const ticket = payload?.ticket || payload?.ticket_image || payload?.print_ticket;
+    if (typeof ticket === 'string' && ticket.trim()) {
+      if (ticket.startsWith('http://') || ticket.startsWith('https://')) {
+        return ticket;
+      }
+      const path = ticket.includes('/') ? ticket.replace(/^\//, '') : `uploads/tickets/${ticket}`;
+      return `${this.ticketBaseUrl}${path}`;
+    }
+
+    if (fpnNumber) {
+      return `${this.ticketBaseUrl}uploads/tickets/EP1_${fpnNumber}_PRINT_1_fpn.png`;
+    }
+
+    return null;
   }
 
   private choiceList(items: LemoChoice[], actionPrefix: string): LemoChoice[] {
@@ -780,8 +1005,17 @@ export class LemoAiService {
       .map(id => groups.find(item => item.id === id) as OffenceGroup);
   }
 
+  private hasBwc(enviro: EnviroPost): boolean {
+    const value = String(enviro.is_bwc_active || '').trim().toLowerCase();
+    return value === 'yes' || value === 'no';
+  }
+
   private draft(): EnviroPost {
-    return this.data.getEnviroPost() || new EnviroPost();
+    const enviro = this.data.getEnviroPost() || new EnviroPost();
+    if (!Array.isArray(enviro.offence_images)) {
+      enviro.offence_images = [];
+    }
+    return enviro;
   }
 
   private saveDraft(enviro: EnviroPost): void {
@@ -816,6 +1050,14 @@ export class LemoAiService {
 
   private looksLikeImages(text: string): boolean {
     return /upload\s+(images?|photos?)|add\s+(images?|photos?)|offence\s+images?|evidence/i.test(text);
+  }
+
+  private looksLikeResearch(text: string): boolean {
+    return /^(research(\s+(an\s+)?offence)?|look\s*up(\s+(an\s+)?offence)?|reassure(\s+(an\s+)?offence)?)$/i.test(text.trim());
+  }
+
+  private looksLikeNotebook(text: string): boolean {
+    return /^(notebook(\s+entry)?|add\s+(a\s+)?notebook|note\s*book)$/i.test(text.trim());
   }
 
   private pushUser(content: string): void {

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AlertController, IonContent } from '@ionic/angular';
 import SignaturePad from 'signature_pad';
 import { EnviroPost } from '../../models/enviro';
+import { ApiService } from '../../services/enforcementpro/api.service';
 import { DataService } from '../../services/enforcementpro/data.service';
 import { LemoAiService, LemoChoice, LemoField, LemoOffenceCard } from '../../services/lemo-ai.service';
 
@@ -13,16 +14,19 @@ import { LemoAiService, LemoChoice, LemoField, LemoOffenceCard } from '../../ser
 })
 export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild(IonContent) content?: IonContent;
+  @ViewChild('notebookSection') notebookSection?: ElementRef<HTMLElement>;
   @ViewChildren('signatureCanvas') signatureCanvases?: QueryList<ElementRef<HTMLCanvasElement>>;
 
   draft: Record<string, string> = {};
   composer = '';
   enviro_post: EnviroPost = new EnviroPost();
+  recentFpns: any[] = [];
   private signaturePad?: SignaturePad;
   private shouldScroll = false;
 
   constructor(
     public lemo: LemoAiService,
+    private api: ApiService,
     private data: DataService,
     private router: Router,
     private alertController: AlertController
@@ -46,8 +50,14 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
     if (!this.lemo.messages.length) {
       await this.lemo.start();
     }
+    this.loadRecentFpns();
     this.syncDraftFromFields();
     this.shouldScroll = true;
+  }
+
+  ionViewWillEnter(): void {
+    this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
+    this.loadRecentFpns();
   }
 
   ngAfterViewChecked(): void {
@@ -71,12 +81,65 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   get photoCount(): number {
-    return this.data.getEnviroPost()?.offence_images?.length || 0;
+    return this.lemo.imageCount();
+  }
+
+  get hasDraftPreview(): boolean {
+    const enviro = this.enviro_post;
+    return !!(enviro?.offence_id || enviro?.first_name || enviro?.offence_images?.length || enviro?.signature || enviro?.offence_location);
+  }
+
+  get draftTitle(): string {
+    const name = [this.enviro_post.salutation, this.enviro_post.first_name, this.enviro_post.last_name]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    return name || 'FPN in progress';
+  }
+
+  get draftSummary(): string {
+    const offence = this.data.findOffenceById(this.enviro_post.offence_id)?.name;
+    const location = this.enviro_post.offence_location;
+    const photos = this.enviro_post.offence_images?.length
+      ? `${this.enviro_post.offence_images.length} photo${this.enviro_post.offence_images.length === 1 ? '' : 's'}`
+      : '';
+    return [offence, location, photos].filter(Boolean).join(' · ') || 'Continue in the FPN form.';
+  }
+
+  isActiveMessage(message: { id: string }): boolean {
+    return this.lemo.lastAssistant()?.id === message.id;
+  }
+
+  async newChat(): Promise<void> {
+    if (this.lemo.busy) {
+      return;
+    }
+    this.composer = '';
+    this.draft = {};
+    await this.lemo.start();
+    this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
+    this.shouldScroll = true;
+  }
+
+  cancelCreate(): void {
+    this.lemo.cancelWizard();
+    this.composer = '';
+    this.shouldScroll = true;
+  }
+
+  continueImages(): void {
+    this.lemo.continueAfterImages();
+    this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
+    this.shouldScroll = true;
+  }
+
+  onPhotosChanged(): void {
+    this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
   }
 
   async send(): Promise<void> {
     const text = this.composer.trim();
-    if (!text || this.lemo.busy) {
+    if (!text || this.lemo.busy || this.lemo.isCreating) {
       return;
     }
     this.composer = '';
@@ -87,10 +150,47 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   choose(choice: LemoChoice): void {
+    if (choice?.action === 'queue') {
+      this.router.navigate(['/queue']);
+      return;
+    }
+    if (choice?.action === 'notebook') {
+      this.openNotebookChoice(choice);
+      return;
+    }
+    if (choice?.action === 'stepper') {
+      this.continueInStepper();
+      return;
+    }
+
     this.lemo.choose(choice);
     this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
     this.syncDraftFromFields();
     this.shouldScroll = true;
+  }
+
+  issuedSummary(fpn: any): string {
+    const offender = [fpn?.offender?.first_name, fpn?.offender?.last_name].filter(Boolean).join(' ').trim();
+    const offence = fpn?.offence?.name || fpn?.offence_name || '';
+    const location = fpn?.offence_location || '';
+    return [offender, offence, location].filter(Boolean).join(' · ') || 'Issued FPN';
+  }
+
+  notebookEntryIsEmpty(fpn: any): boolean {
+    return !fpn?.notebook_entry || fpn.notebook_entry.length === 0;
+  }
+
+  openIssuedNotebook(fpn: any): void {
+    const id = Number(fpn?.id || 0);
+    if (!id) {
+      return;
+    }
+    this.router.navigate(['/notebook', id], { queryParams: { fpn_number: fpn.fpn_number || '' } });
+  }
+
+  continueInStepper(): void {
+    this.enviro_post = this.data.getEnviroPost() || this.enviro_post;
+    this.router.navigate(['/enviro'], { queryParams: { currentStep: this.stepperStep(this.enviro_post) } });
   }
 
   useOffence(card: LemoOffenceCard): void {
@@ -135,6 +235,71 @@ export class LemoPage implements OnInit, AfterViewChecked, OnDestroy {
 
   trackMessage(index: number, message: { id: string }): string {
     return message.id;
+  }
+
+  private loadRecentFpns(): void {
+    const user = this.data.getUser();
+    if (!user?.id) {
+      this.recentFpns = [];
+      return;
+    }
+
+    this.api.getRecentFPNs(user.id).subscribe({
+      next: (response) => {
+        this.recentFpns = Array.isArray(response?.data) ? response.data : [];
+      },
+      error: () => {
+        this.recentFpns = [];
+      },
+    });
+  }
+
+  private openNotebookChoice(choice: LemoChoice): void {
+    const postedId = Number(choice.value || this.lemo.lastPosted?.id || 0);
+    if (postedId > 0) {
+      this.router.navigate(['/notebook', postedId], {
+        queryParams: { fpn_number: this.lemo.lastPosted?.fpnNumber || '' },
+      });
+      return;
+    }
+
+    const outstanding = this.recentFpns.filter(fpn => this.notebookEntryIsEmpty(fpn));
+    if (outstanding.length === 1) {
+      this.openIssuedNotebook(outstanding[0]);
+      return;
+    }
+
+    if (this.hasDraftPreview) {
+      this.continueInStepper();
+      return;
+    }
+
+    this.notebookSection?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  private stepperStep(enviro: EnviroPost): number {
+    if (!enviro?.zone_id || !enviro.offence_type_id || !enviro.offence_id) {
+      return 1;
+    }
+    if (!enviro.salutation || !enviro.first_name || !enviro.last_name || !enviro.address || !enviro.town || !enviro.post_code) {
+      return 2;
+    }
+    if (!enviro.proof_of_address || !enviro.proof_of_id) {
+      return 3;
+    }
+    if (!enviro.location_id || !enviro.action_id || !enviro.language) {
+      return 4;
+    }
+    if (!enviro.offence_location || !enviro.poi || !enviro.land_type_id) {
+      return 5;
+    }
+    if (!enviro.offence_images?.length) {
+      return 6;
+    }
+    if (!enviro.signature) {
+      return 7;
+    }
+    return 8;
   }
 
   private syncDraftFromFields(): void {

@@ -28,6 +28,7 @@ import { FpnSubmissionService } from '../../services/fpn-submission.service';
 import { PatrolService } from '../../services/patrol.service';
 import { TrackingService } from '../../services/tracking.service';
 import { ThermalPrinterService } from '../../services/thermal-printer.service';
+import { LemoEncourageService } from '../../services/lemo-encourage.service';
 
 
 @Component({
@@ -77,7 +78,8 @@ import { ThermalPrinterService } from '../../services/thermal-printer.service';
         private fpnSubmission: FpnSubmissionService,
         private patrol: PatrolService,
         private tracking: TrackingService,
-        private printer: ThermalPrinterService
+        private printer: ThermalPrinterService,
+        private encourage: LemoEncourageService
 
 
     ) {
@@ -640,7 +642,8 @@ import { ThermalPrinterService } from '../../services/thermal-printer.service';
                             this.printImageFromUrl(ticket_image);
                         }
 
-                        this.presentAlert('Success', result.message);
+                        const pepTalk = this.encourage.line(this.encourage.recordPosted());
+                        this.presentAlert('Success', `${result.message}\n\n${pepTalk}`);
                         this.cancel();
                         return;
                     }
