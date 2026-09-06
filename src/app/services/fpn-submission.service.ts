@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { firstValueFrom, timeout } from 'rxjs';
-import { compressDataUrl } from '../helpers/image-compress';
+import { compressDataUrl, estimateDataUrlBytes } from '../helpers/image-compress';
 import { EnviroPost } from '../models/enviro';
 import { NotebookEntry } from '../models/notebook-entry';
 import { ApiService } from './enforcementpro/api.service';
@@ -21,7 +21,10 @@ export interface FpnSubmissionResult {
 })
 export class FpnSubmissionService {
     private readonly postTimeoutMs = 90000;
+    private readonly imageTimeoutMs = 45000;
     private readonly maxAttempts = 3;
+    private readonly maxInlinePayloadBytes = 750000;
+    private readonly imageCompressBudgets = [220000, 140000, 80000, 45000];
 
     constructor(
         private api: ApiService,
@@ -40,7 +43,200 @@ export class FpnSubmissionService {
 
         const queueRecord = await this.prepareQueueRecord(enviroPost);
         await this.shrinkPayloadMedia(queueRecord);
+        const images = [...(queueRecord.offence_images || [])];
+
+        if (queueRecord.enviro_id) {
+            this.holdInQueue(queueRecord);
+            return this.uploadHeldImages(queueRecord, images);
+        }
+
         const payload = this.prepareServerPayload(queueRecord);
+        if (this.shouldSplitSubmission(payload, images)) {
+            return this.submitSplit(queueRecord, images);
+        }
+
+        let lastError: any = null;
+
+        for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
+            try {
+                const response = await firstValueFrom(
+                    this.api.postFPN(payload).pipe(timeout(this.postTimeoutMs))
+                );
+
+                if (response?.success === false) {
+                    return {
+                        status: 'failed',
+                        message: `${response.message || 'The server rejected this FPN.'} (Please edit)`,
+                        response
+                    };
+                }
+
+                this.releaseHeldRecord(queueRecord);
+
+                return {
+                    status: 'posted',
+                    message: 'FPN submitted successfully.',
+                    response
+                };
+            } catch (error: any) {
+                lastError = error;
+
+                if (this.isAuthError(error)) {
+                    return {
+                        status: 'auth',
+                        message: 'Server has logged you off. Please auto login and submit again.'
+                    };
+                }
+
+                if (this.isPayloadTooLarge(error)) {
+                    return this.submitSplit(queueRecord, images);
+                }
+
+                if (!this.isRetryableError(error)) {
+                    return {
+                        status: 'failed',
+                        message: this.getErrorMessage(error)
+                    };
+                }
+
+                if (attempt < this.maxAttempts) {
+                    await this.sleep(this.getBackoffMs(attempt));
+                }
+            }
+        }
+
+        this.addToQueue(queueRecord);
+
+        return {
+            status: 'queued',
+            message: `FPN kept in queue after ${this.maxAttempts} failed attempts. ${this.getErrorMessage(lastError)}`
+        };
+    }
+
+    async queueForLater(enviroPost: EnviroPost): Promise<FpnSubmissionResult> {
+        if (!this.patrol.canUseFpnTools()) {
+            return {
+                status: 'blocked',
+                message: 'You must be on patrol before saving an FPN.'
+            };
+        }
+
+        const queueRecord = await this.prepareQueueRecord(enviroPost);
+        await this.shrinkPayloadMedia(queueRecord);
+        this.addToQueue(queueRecord);
+
+        return {
+            status: 'queued',
+            message: 'FPN has been captured in Queue.'
+        };
+    }
+
+    private async submitSplit(queueRecord: EnviroPost, images: string[]): Promise<FpnSubmissionResult> {
+        const payload = this.prepareServerPayload(queueRecord);
+        payload.offence_images = [];
+
+        const created = await this.postFpnPayload(payload);
+        if (created.status !== 'posted') {
+            if (created.status === 'queued') {
+                queueRecord.offence_images = [...images];
+                this.holdInQueue(queueRecord);
+            }
+            return created;
+        }
+
+        const enviroId = this.extractEnviroId(created.response);
+        if (!enviroId) {
+            return {
+                status: 'failed',
+                message: 'FPN was created but no enviro_id was returned for image upload.',
+                response: created.response
+            };
+        }
+
+        queueRecord.enviro_id = enviroId;
+        queueRecord.fpn_number = created.response?.data?.fpn_number
+            || created.response?.fpn_number
+            || queueRecord.fpn_number;
+        queueRecord.offence_images = [...images];
+        this.holdInQueue(queueRecord);
+
+        return this.uploadHeldImages(queueRecord, images, created.response);
+    }
+
+    private async uploadHeldImages(
+        queueRecord: EnviroPost,
+        images: string[],
+        existingResponse?: any
+    ): Promise<FpnSubmissionResult> {
+        const remaining: string[] = [];
+        const pending = [...images];
+
+        for (let index = 0; index < pending.length; index++) {
+            const uploaded = await this.uploadImageWithCompression(queueRecord.enviro_id, pending[index]);
+            if (!uploaded) {
+                remaining.push(pending[index]);
+            }
+
+            queueRecord.offence_images = [...remaining, ...pending.slice(index + 1)];
+            this.holdInQueue(queueRecord);
+        }
+
+        if (remaining.length > 0) {
+            queueRecord.offence_images = remaining;
+            this.holdInQueue(queueRecord);
+
+            return {
+                status: 'queued',
+                message: `FPN ${queueRecord.fpn_number || queueRecord.enviro_id} is held. ${remaining.length} photo(s) still need to upload.`,
+                response: existingResponse
+            };
+        }
+
+        this.releaseHeldRecord(queueRecord);
+
+        return {
+            status: 'posted',
+            message: images.length
+                ? 'FPN submitted successfully. Photos were uploaded separately.'
+                : 'FPN submitted successfully.',
+            response: existingResponse || {
+                data: {
+                    id: queueRecord.enviro_id,
+                    fpn_number: queueRecord.fpn_number
+                }
+            }
+        };
+    }
+
+    private async uploadImageWithCompression(enviroId: number, image: string): Promise<boolean> {
+        let current = image;
+
+        for (let attempt = 0; attempt < this.imageCompressBudgets.length; attempt++) {
+            if (attempt > 0 || estimateDataUrlBytes(current) > this.imageCompressBudgets[attempt]) {
+                current = await compressDataUrl(
+                    current,
+                    this.imageCompressBudgets[attempt],
+                    Math.max(0.35, 0.72 - attempt * 0.12)
+                );
+            }
+
+            try {
+                const response = await firstValueFrom(
+                    this.api.postFPNImage(enviroId, current).pipe(timeout(this.imageTimeoutMs))
+                );
+
+                if (response?.success !== false) {
+                    return true;
+                }
+            } catch {
+                // Compress further and try the same photo again.
+            }
+        }
+
+        return false;
+    }
+
+    private async postFpnPayload(payload: EnviroPost): Promise<FpnSubmissionResult> {
         let lastError: any = null;
 
         for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
@@ -85,33 +281,34 @@ export class FpnSubmissionService {
             }
         }
 
-        this.addToQueue(queueRecord);
-
         return {
             status: 'queued',
             message: `FPN kept in queue after ${this.maxAttempts} failed attempts. ${this.getErrorMessage(lastError)}`
         };
     }
 
-    async queueForLater(enviroPost: EnviroPost): Promise<FpnSubmissionResult> {
-        if (!this.patrol.canUseFpnTools()) {
-            return {
-                status: 'blocked',
-                message: 'You must be on patrol before saving an FPN.'
-            };
+    private shouldSplitSubmission(payload: EnviroPost, images: string[]): boolean {
+        return images.length > 2 || this.estimatePayloadBytes(payload) > this.maxInlinePayloadBytes;
+    }
+
+    private estimatePayloadBytes(payload: EnviroPost): number {
+        try {
+            return new Blob([JSON.stringify(payload)]).size;
+        } catch {
+            return JSON.stringify(payload || {}).length;
         }
+    }
 
-        const queueRecord = await this.prepareQueueRecord(enviroPost);
-        await this.shrinkPayloadMedia(queueRecord);
-        this.addToQueue(queueRecord);
-
-        return {
-            status: 'queued',
-            message: 'FPN has been captured in Queue.'
-        };
+    private extractEnviroId(response: any): number {
+        const id = Number(response?.data?.id || response?.id || 0);
+        return id > 0 ? id : 0;
     }
 
     private async prepareQueueRecord(enviroPost: EnviroPost): Promise<EnviroPost> {
+        if (!enviroPost.local_id) {
+            enviroPost.local_id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        }
+
         const record = this.cloneEnviroPost(enviroPost);
         const user = this.data.getUser();
 
@@ -251,16 +448,41 @@ export class FpnSubmissionService {
     }
 
     private addToQueue(enviroPost: EnviroPost): void {
+        this.holdInQueue(enviroPost);
+    }
+
+    private holdInQueue(enviroPost: EnviroPost): void {
         const existing = this.data.getEnviroQue();
         const key = this.getQueueKey(enviroPost);
-        const isDuplicate = existing.some(item => this.getQueueKey(item) === key);
+        const match = existing.find(item => this.getQueueKey(item) === key);
 
-        if (!isDuplicate) {
-            this.data.pushEnviroQueItem(enviroPost);
+        if (match) {
+            this.data.updateEnviroInQue(match, enviroPost);
+            return;
+        }
+
+        this.data.pushEnviroQueItem(enviroPost);
+    }
+
+    private releaseHeldRecord(enviroPost: EnviroPost): void {
+        const existing = this.data.getEnviroQue();
+        const key = this.getQueueKey(enviroPost);
+        const match = existing.find(item => this.getQueueKey(item) === key);
+
+        if (match) {
+            this.data.spliceEnviroQue(match);
         }
     }
 
     private getQueueKey(enviroPost: EnviroPost): string {
+        if (enviroPost.local_id) {
+            return `local:${enviroPost.local_id}`;
+        }
+
+        if (enviroPost.enviro_id) {
+            return `enviro:${enviroPost.enviro_id}`;
+        }
+
         if (enviroPost.fpn_number) {
             return `fpn:${enviroPost.fpn_number}`;
         }
@@ -313,7 +535,11 @@ export class FpnSubmissionService {
         const status = error?.status;
         const message = this.getErrorMessage(error).toLowerCase();
 
-        if (message.includes('data too long') || status === 413) {
+        if (message.includes('data too long')) {
+            return false;
+        }
+
+        if (this.isPayloadTooLarge(error)) {
             return false;
         }
 
@@ -332,8 +558,8 @@ export class FpnSubmissionService {
         const status = error?.status;
         const serverMessage = error?.error?.message || error?.message;
 
-        if (status === 413) {
-            return 'FPN is too large to send. Reduce the number of photos and try again.';
+        if (this.isPayloadTooLarge(error)) {
+            return 'FPN is too large to send in one request. Photos will be uploaded separately.';
         }
 
         if (status === 0) {
@@ -343,6 +569,13 @@ export class FpnSubmissionService {
         }
 
         return serverMessage || 'Network/server error.';
+    }
+
+    private isPayloadTooLarge(error: any): boolean {
+        const status = error?.status;
+        const message = String(error?.error?.message || error?.message || '').toLowerCase();
+
+        return status === 413 || message.includes('payload too large') || message.includes('entity too large');
     }
 
     private getBackoffMs(attempt: number): number {

@@ -22,6 +22,19 @@ export class ThermalPrinterService {
 
   constructor() { }
 
+  async printImageOn(url: string, printer: 'sunmi' | 'urovo'): Promise<PrinterResult> {
+    if (printer === 'sunmi') {
+      await this.printSunmiImageFromUrl(url);
+      return { printer: 'sunmi', status: 'printed' };
+    }
+
+    if (!this.canUseNativePrinter()) {
+      throw new Error('Urovo printing is only available on the Android device.');
+    }
+
+    return await UrovoPrinter.printImage({ url });
+  }
+
   async printImage(url: string): Promise<PrinterResult> {
     const errors: string[] = [];
 

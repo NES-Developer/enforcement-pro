@@ -1,87 +1,60 @@
 <ion-header [translucent]="true">
-    <!-- Main content -->
     <ion-router-outlet></ion-router-outlet>
-
-    <!-- Bottom Tab Bar -->
-    <ion-toolbar>
-        <ion-row>
-
-            <ion-col>
-                <ion-tab-button (click)="navigate('/dashboard')">
-                    <ion-icon name="home"></ion-icon>
+    <ion-toolbar class="ep-nav">
+        <ion-row class="ep-nav__row">
+            <ion-col class="ep-nav__col">
+                <ion-tab-button class="ep-nav__btn" (click)="navigate('/dashboard')">
+                    <ion-icon name="home-outline"></ion-icon>
+                    <span class="ep-nav__label">Home</span>
                 </ion-tab-button>
             </ion-col>
-            <ion-col>
-                <ion-tab-button (click)="forceRefresh()">
-                    <ion-icon name="refresh"></ion-icon>
+            <ion-col class="ep-nav__col">
+                <ion-tab-button class="ep-nav__btn" (click)="forceRefresh()">
+                    <ion-icon name="refresh-outline"></ion-icon>
+                    <span class="ep-nav__label">Refresh</span>
                 </ion-tab-button>
             </ion-col>
         </ion-row>
     </ion-toolbar>
 </ion-header>
-  
+
 <ion-content [fullscreen]="true">
-
-    <ion-item>
-      <ion-input
-        interface="action-sheet"
-        [(ngModel)]="searchQuery"
-        placeholder="Search"
-        (input)="filterSites()"
-      ></ion-input>
-    </ion-item>
-
-    <!-- Site List -->
-    <ion-list *ngIf=" searchQuery == '' ">
-        <div>
-            <div class="site-load" *ngIf="sites.length<1">
-                <img *ngIf="!sitesLoadFailed" src="../assets/loader.gif">
-                <ion-label *ngIf="sitesLoadFailed">Unable to load sites. Tap refresh to try again.</ion-label>
-              </div>
-            <ion-item *ngFor="let site of sites">
-                <ion-grid>
-                <ion-row>
-                    <ion-col size="3">
-                        <img [src]="getImageUrl(site.logo)" height="40px" />
-                    </ion-col>
-                    <ion-col size="6">
-                        <ion-label>{{ site.name }}</ion-label>
-                    </ion-col>
-                    <ion-col size="3">
-                        <ion-button (click)="setSite(site.id)" color="dark">Select</ion-button>
-                    </ion-col>
-                </ion-row>
-                </ion-grid>
-            </ion-item>
-        </div>
-        
-    </ion-list>
-    <!-- Handle the else -->
-    <ion-list *ngIf=" searchQuery != '' ">
-        <div *ngIf="filteredSites.length > 0">
-            <ion-item *ngFor="let site of filteredSites">
-            <ion-grid>
-                <ion-row>
-                <ion-col size="3">
-                    <img [src]="getImageUrl(site.logo)" height="40px" />
-                </ion-col>
-                <ion-col size="6">
-                    <ion-label>{{ site.name }}</ion-label>
-                </ion-col>
-                <ion-col size="3">
-                    <!-- <ion-button (click)="setSite({{ site }})" color="dark">Select</ion-button> -->
-                    <ion-button (click)="setSite(site.id)" color="dark">Select</ion-button>
-                </ion-col>
-                </ion-row>
-            </ion-grid>
-            </ion-item>
+    <div class="ep-page">
+        <div class="ep-page-head">
+            <p class="ep-kicker">Assignment</p>
+            <h1>Choose a site</h1>
+            <p>Search and lock in the location you are working.</p>
         </div>
 
-        <!-- No Results Message -->
-        <div *ngIf="filteredSites.length === 0">
-            <ion-label>No sites found. Try searching again!</ion-label>
+        <ion-searchbar
+            [(ngModel)]="searchQuery"
+            placeholder="Search sites"
+            (ionInput)="filterSites()">
+        </ion-searchbar>
+
+        <div class="site-load" *ngIf="searchQuery == '' && sites.length<1">
+            <img *ngIf="!sitesLoadFailed" src="../assets/loader.gif" alt="">
+            <p *ngIf="sitesLoadFailed">Unable to load sites. Tap refresh to try again.</p>
         </div>
-    </ion-list>
-  
-    
-  </ion-content>
+
+        <ng-container *ngIf="searchQuery == ''">
+            <article class="ep-site-card" *ngFor="let site of sites">
+                <img [src]="getImageUrl(site.logo)" alt="" />
+                <h3>{{ site.name }}</h3>
+                <ion-button size="small" (click)="setSite(site.id)">Select</ion-button>
+            </article>
+        </ng-container>
+
+        <ng-container *ngIf="searchQuery != ''">
+            <article class="ep-site-card" *ngFor="let site of filteredSites">
+                <img [src]="getImageUrl(site.logo)" alt="" />
+                <h3>{{ site.name }}</h3>
+                <ion-button size="small" (click)="setSite(site.id)">Select</ion-button>
+            </article>
+            <div class="ep-empty" *ngIf="filteredSites.length === 0">
+                <h3>No sites found</h3>
+                <p>Try another search.</p>
+            </div>
+        </ng-container>
+    </div>
+</ion-content>

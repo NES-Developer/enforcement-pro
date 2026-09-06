@@ -3,327 +3,116 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+    <div class="ep-page">
+        <div class="ep-page-head">
+            <p class="ep-kicker">Evidence notes</p>
+            <h1>Notebook</h1>
+            <p *ngIf="id == 0">{{ enviro_post.first_name }} {{ enviro_post.last_name }}</p>
+            <p *ngIf="id > 0">FPN {{ fpn_number }}</p>
+        </div>
 
-    <ion-item>
-        <h4>
-            Notebook Entries Screen
-        </h4>
-    </ion-item>
+        <section class="ep-section">
+            <div class="ep-section__head">
+                <p class="ep-kicker">Encounter</p>
+                <h3>Notebook entries</h3>
+            </div>
 
-    <ion-item>
-        <ion-label *ngIf="id == 0">
-            Offender Full Name: {{ enviro_post.first_name }} {{ enviro_post.last_name }}
-        </ion-label>
-        <ion-label *ngIf="id > 0">
-            FPN Number: {{ fpn_number }}
-        </ion-label>
-    </ion-item>
+            <ion-select interface="action-sheet" label="Is FPN advised *" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_fpn_advised">
+                <ion-select-option>yes</ion-select-option>
+                <ion-select-option>no</ion-select-option>
+            </ion-select>
 
-    <ion-item>
-        <ion-item-divider></ion-item-divider>
-    </ion-item>
-    
-    <!-- Is FPN Advised Select -->
-    <ion-item>
-        <ion-label>
-            Is FPN Advised *
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_fpn_advised" >
-            <ion-select-option>yes</ion-select-option>
-            <ion-select-option>no</ion-select-option>
-        </ion-select>
-    </ion-item>
-    
-    <!-- Is FPN Handed Select -->
-    <ion-item>
-        <ion-label>
-            Is FPN Handed *
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_fpn_handed" >
-            <ion-select-option>yes</ion-select-option>
-            <ion-select-option>no</ion-select-option>
-        </ion-select>
-    </ion-item>
-    
-    <!-- Height in Feet Text -->
-    <ion-item>
-        <ion-label>
-            Height in Feet
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input type="text" maxlength="250" [(ngModel)]="notebook_entries.height_in_feet" (ionChange)="saveEnviroData()" ></ion-input>
-    </ion-item>
-    
-    <!-- Height in Inch Text -->
-    <ion-item>
-        <ion-label>
-            Height in Inch
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input type="text" maxlength="250" [(ngModel)]="notebook_entries.height_in_inch" (ionChange)="saveEnviroData()" ></ion-input>
-    </ion-item>
-    
-    <!-- Build Select -->
-    <ion-item>
-        <ion-label>
-            Build
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" multiple="false" [(ngModel)]="notebook_entries.build" (ionChange)="saveEnviroData()" >
-            <ion-select-option *ngFor="let group of builds" [value]="group.id">
-                {{ group.textOnMachine }}
-            </ion-select-option>
-        </ion-select>
-    </ion-item>
-    
-    <!-- Hair Colours Select -->
-    <ion-item>
-        <ion-label>
-            Hair Colours *
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" multiple="false" [(ngModel)]="notebook_entries.hair" (ionChange)="saveEnviroData()">
-            <ion-select-option *ngFor="let group of hair_colours" [value]="group.id">
-                {{ group.textOnMachine }}
-            </ion-select-option>
-        </ion-select>
-    </ion-item>
-    
-    <!-- Distance from Offender Text -->
-    <ion-item>
-        <ion-label>
-            Distance from Offender
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input type="text" maxlength="250" [(ngModel)]="notebook_entries.distance_from_offender" (ionChange)="saveEnviroData()"></ion-input>
-    </ion-item>
-    
-    <!-- Distinguishing Features Text -->
-    <ion-item>
-        <ion-label>
-            Distinguishing Features
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input type="text" maxlength="250" [(ngModel)]="notebook_entries.distinguishing_features" (ionChange)="saveEnviroData()"></ion-input>
-    </ion-item>
-    
-    <!-- Nearest bin Text -->
-    <ion-item>
-        <ion-label>
-            Nearest bin
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input type="text" maxlength="250" [(ngModel)]="notebook_entries.nearest_bin" (ionChange)="saveEnviroData()"></ion-input>
-    </ion-item>
+            <ion-select interface="action-sheet" label="Is FPN handed *" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_fpn_handed">
+                <ion-select-option>yes</ion-select-option>
+                <ion-select-option>no</ion-select-option>
+            </ion-select>
 
-    
-    <!-- Offender Comments Text -->
-    <ion-item>
-        <ion-label>
-            Offender Comments
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input type="text" maxlength="250" [(ngModel)]="notebook_entries.offender_comments" (ionChange)="saveEnviroData()"></ion-input>
-    </ion-item>
-    
-    <!-- Police Comments Text -->
-    <ion-item>
-        <ion-label>
-            Police Comments
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input type="text" maxlength="250" [(ngModel)]="notebook_entries.police_comments" (ionChange)="saveEnviroData()"></ion-input>
-    </ion-item>
-    
-    <!-- BWC Assest Text -->
-    <ion-item>
-        <ion-label>
-            BWC Assest
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input type="text" maxlength="250" [(ngModel)]="notebook_entries.bwv_assest" (ionChange)="saveEnviroData()"></ion-input>
-    </ion-item>
+            <div class="ep-field-row">
+                <ion-input label="Height in feet" label-placement="stacked" fill="outline" type="text" maxlength="250" [(ngModel)]="notebook_entries.height_in_feet" (ionChange)="saveEnviroData()"></ion-input>
+                <ion-input label="Height in inch" label-placement="stacked" fill="outline" type="text" maxlength="250" [(ngModel)]="notebook_entries.height_in_inch" (ionChange)="saveEnviroData()"></ion-input>
+            </div>
 
-    <hr>
+            <ion-select interface="action-sheet" label="Build" label-placement="stacked" fill="outline" multiple="false" [(ngModel)]="notebook_entries.build" (ionChange)="saveEnviroData()">
+                <ion-select-option *ngFor="let group of builds" [value]="group.id">
+                    {{ group.textOnMachine }}
+                </ion-select-option>
+            </ion-select>
 
-    <ion-item>
-        <h4>
-            Extra FPN Details
-        </h4>
-    </ion-item>
+            <ion-select interface="action-sheet" label="Hair colours *" label-placement="stacked" fill="outline" multiple="false" [(ngModel)]="notebook_entries.hair" (ionChange)="saveEnviroData()">
+                <ion-select-option *ngFor="let group of hair_colours" [value]="group.id">
+                    {{ group.textOnMachine }}
+                </ion-select-option>
+            </ion-select>
 
-    <!-- Gender Select -->
-    <ion-item>
-        <ion-label>
-            Gender *
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" interface="action-sheet" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="notebook_entries.gender">
-            <ion-select-option>Male</ion-select-option>
-            <ion-select-option>Female</ion-select-option>
-            <ion-select-option>Other</ion-select-option>
-        </ion-select>
-    </ion-item>
+            <ion-input label="Distance from offender" label-placement="stacked" fill="outline" type="text" maxlength="250" [(ngModel)]="notebook_entries.distance_from_offender" (ionChange)="saveEnviroData()"></ion-input>
+            <ion-input label="Distinguishing features" label-placement="stacked" fill="outline" type="text" maxlength="250" [(ngModel)]="notebook_entries.distinguishing_features" (ionChange)="saveEnviroData()"></ion-input>
+            <ion-input label="Nearest bin" label-placement="stacked" fill="outline" type="text" maxlength="250" [(ngModel)]="notebook_entries.nearest_bin" (ionChange)="saveEnviroData()"></ion-input>
+            <ion-input label="Offender comments" label-placement="stacked" fill="outline" type="text" maxlength="250" [(ngModel)]="notebook_entries.offender_comments" (ionChange)="saveEnviroData()"></ion-input>
+            <ion-input label="Police comments" label-placement="stacked" fill="outline" type="text" maxlength="250" [(ngModel)]="notebook_entries.police_comments" (ionChange)="saveEnviroData()"></ion-input>
+            <ion-input label="BWC asset" label-placement="stacked" fill="outline" type="text" maxlength="250" [(ngModel)]="notebook_entries.bwv_assest" (ionChange)="saveEnviroData()"></ion-input>
+        </section>
 
-  <!-- Address Proof Select -->
-  <ion-item>
-        <ion-label>
-            Ethnicity *
-        </ion-label>
-    </ion-item>
-    <ion-item>
-    <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.ethnicity_id">
-        <ion-select-option *ngFor="let group of ethnicities" [value]="group.id">
-            {{ group.textOnMachine }}
-        </ion-select-option>
-    </ion-select>
-    </ion-item>
+        <section class="ep-section">
+            <div class="ep-section__head">
+                <p class="ep-kicker">Extra</p>
+                <h3>FPN details</h3>
+            </div>
 
-    <!-- Caution 1 and 2 Time -->
-    <ion-item>
-        <ion-label>
-            Caution 1
-        </ion-label>
-        <ion-label>
-            Caution 2
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input type="time" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.caution"></ion-input>
-        <ion-input type="time" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.second_caution"></ion-input>
-    </ion-item>
+            <ion-select interface="action-sheet" label="Gender *" label-placement="stacked" fill="outline" (ionChange)="saveEnviroData()" multiple="false" [(ngModel)]="notebook_entries.gender">
+                <ion-select-option>Male</ion-select-option>
+                <ion-select-option>Female</ion-select-option>
+                <ion-select-option>Other</ion-select-option>
+            </ion-select>
 
-    <!-- Visibility Select -->
-    <ion-item>
-        <ion-label>
-            Visibility *
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.visibility_id">
-            <ion-select-option *ngFor="let group of visibility" [value]="group.id">
-                {{ group.visibility }}
-            </ion-select-option>
-        </ion-select>
-    </ion-item>
+            <ion-select interface="action-sheet" label="Ethnicity *" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.ethnicity_id">
+                <ion-select-option *ngFor="let group of ethnicities" [value]="group.id">
+                    {{ group.textOnMachine }}
+                </ion-select-option>
+            </ion-select>
 
-    <!-- Weather Select -->
-    <ion-item>
-        <ion-label>
-            Weather *
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.weather_id">
-            <ion-select-option *ngFor="let group of weather" [value]="group.id">
-                {{ group.textOnMachine }}
-            </ion-select-option>
-        </ion-select>
-    </ion-item>
+            <div class="ep-field-row">
+                <ion-input label="Caution 1" label-placement="stacked" fill="outline" type="time" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.caution"></ion-input>
+                <ion-input label="Caution 2" label-placement="stacked" fill="outline" type="time" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.second_caution"></ion-input>
+            </div>
 
-    <!-- Is witness available -->
-    <ion-item>
-        <ion-label>Is witness available?</ion-label>  
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" interface="action-sheet" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_witness_available">
-            <ion-select-option>Yes</ion-select-option>
-            <ion-select-option>No</ion-select-option>
-        </ion-select>
-    </ion-item>
+            <ion-select interface="action-sheet" label="Visibility *" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.visibility_id">
+                <ion-select-option *ngFor="let group of visibility" [value]="group.id">
+                    {{ group.visibility }}
+                </ion-select-option>
+            </ion-select>
 
+            <ion-select interface="action-sheet" label="Weather *" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.weather_id">
+                <ion-select-option *ngFor="let group of weather" [value]="group.id">
+                    {{ group.textOnMachine }}
+                </ion-select-option>
+            </ion-select>
 
-    <!-- Witness Detail 1 Text -->
-    <ion-item *ngIf="notebook_entries.is_witness_available === 'Yes'">
-        <ion-label>
-            Witness Name
-        </ion-label>
-        <ion-label>
-            Witness Phone
-        </ion-label>
-    </ion-item>
-    <ion-item *ngIf="notebook_entries.is_witness_available === 'Yes'">
-        <ion-input type="text" maxlength="250"  (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.witness_name"></ion-input>
-        <ion-input type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.witness_phone"></ion-input>
-    </ion-item>
+            <ion-select interface="action-sheet" label="Is witness available?" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.is_witness_available">
+                <ion-select-option>Yes</ion-select-option>
+                <ion-select-option>No</ion-select-option>
+            </ion-select>
 
-    <!-- Witness Detail 2 Text -->
-    <ion-item *ngIf="notebook_entries.is_witness_available === 'Yes'">
-        <ion-label>
-            Witness Address
-        </ion-label>
-    </ion-item>
-    <ion-item *ngIf="notebook_entries.is_witness_available === 'Yes'">
-        <ion-input type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.witness_address"></ion-input>
-    </ion-item>
+            <ng-container *ngIf="notebook_entries.is_witness_available === 'Yes'">
+                <div class="ep-field-row">
+                    <ion-input label="Witness name" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.witness_name"></ion-input>
+                    <ion-input label="Witness phone" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.witness_phone"></ion-input>
+                </div>
+                <ion-input label="Witness address" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.witness_address"></ion-input>
+                <ion-textarea label="Witness statement" label-placement="stacked" fill="outline" auto-grow="true" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.witness_statement"></ion-textarea>
+            </ng-container>
 
-    <!-- Witness Statement Select -->
-    <ion-item *ngIf="notebook_entries.is_witness_available === 'Yes'">
-        <ion-label>
-            Witness Statement
-        </ion-label>
-    </ion-item>
-    <ion-item *ngIf="notebook_entries.is_witness_available === 'Yes'">
-        <ion-textarea  (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.witness_statement"></ion-textarea>
-    </ion-item>
+            <ion-textarea label="Officer statement" label-placement="stacked" fill="outline" auto-grow="true" (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.officer_statement"></ion-textarea>
+        </section>
 
-    <!-- Officer Statement Select -->
-    <ion-item>
-        <ion-label>
-            Officer Statement
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-textarea  (ionChange)="saveEnviroData()" [(ngModel)]="notebook_entries.officer_statement"></ion-textarea>
-    </ion-item>
+        <section class="ep-actions" *ngIf="id == 0">
+            <ion-button expand="block" color="medium" (click)="route('/queue')">Back</ion-button>
+            <ion-button expand="block" (click)="submitFpn(false)">Submit</ion-button>
+            <ion-button expand="block" color="success" (click)="submitFpn(true)">Submit & print</ion-button>
+        </section>
 
-
-    <ion-item *ngIf="id == 0">
-        <ion-col size="12">
-            <ion-button expand="full" shape="full" (click)="route('/queue')">Back</ion-button>
-        </ion-col>            
-    </ion-item>
-    <ion-item *ngIf="id == 0">
-        <ion-col size="12">
-            <ion-button expand="full" shape="full" (click)="submitFpn(false)">Submit</ion-button>
-        </ion-col>
-    </ion-item>
-    <ion-item *ngIf="id == 0">
-        <ion-col size="12">
-            <ion-button expand="full" shape="full" (click)="submitFpn(true)">Submit & Print</ion-button>
-        </ion-col>
-    </ion-item>
-    <ion-item *ngIf="id > 0">
-        <ion-col size="12">
-            <ion-button expand="full" shape="full" (click)="route('/dashboard')">Back</ion-button>
-        </ion-col>
-    </ion-item>
-    <ion-item *ngIf="id > 0">
-        <ion-col size="12">
-            <ion-button expand="full" shape="full" (click)="submitForm()">Submit</ion-button>
-        </ion-col>
-    </ion-item>
-
-    
-
-    <ion-item>
-    </ion-item>
-    <ion-item>
-    </ion-item>
-
+        <section class="ep-actions" *ngIf="id > 0">
+            <ion-button expand="block" color="medium" (click)="route('/dashboard')">Back</ion-button>
+            <ion-button expand="block" (click)="submitForm()">Submit</ion-button>
+        </section>
+    </div>
 </ion-content>

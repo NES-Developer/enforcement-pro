@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { compressDataUrl, estimateDataUrlBytes } from '../../helpers/image-compress';
 import { EnviroPost } from '../../models/enviro';
@@ -12,6 +12,7 @@ import { DataService } from '../../services/enforcementpro/data.service';
 export class EvidenceCaptureComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() compact = false;
   @Input() maxPhotos = 5;
+  @Output() photosChanged = new EventEmitter<number>();
 
   @ViewChild('video') video!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
@@ -44,6 +45,9 @@ export class EvidenceCaptureComponent implements OnInit, AfterViewInit, OnDestro
     const enviroPost = this.data.getEnviroPost();
     if (enviroPost) {
       this.enviro_post = enviroPost;
+    }
+    if (!Array.isArray(this.enviro_post.offence_images)) {
+      this.enviro_post.offence_images = [];
     }
   }
 
@@ -140,6 +144,7 @@ export class EvidenceCaptureComponent implements OnInit, AfterViewInit, OnDestro
 
   private saveEnviroData(): void {
     this.data.setEnviroPost(this.enviro_post);
+    this.photosChanged.emit(this.photoCount);
   }
 
   private async presentAlert(header: string, message: string): Promise<void> {

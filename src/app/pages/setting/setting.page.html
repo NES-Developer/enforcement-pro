@@ -1,124 +1,64 @@
-
-
 <ion-header [translucent]="true">
   <app-nav-bar></app-nav-bar>
 </ion-header>
 
-<ion-content class="ion-padding" [fullscreen]="true">
-  
+<ion-content [fullscreen]="true">
+  <div class="ep-page">
+    <div class="ep-page-head">
+      <p class="ep-kicker">Officer tools</p>
+      <h1>Settings</h1>
+      <p>Device, site, and session controls.</p>
+    </div>
 
-  <ion-item>
-        <ion-label>
-            <ion-button class="bg-success" expand="block" shape="full" (click)="navigate('/dashboard')">Home</ion-button>
-        </ion-label>
-    </ion-item>
+    <section class="ep-section">
+      <div class="ep-section__head">
+        <p class="ep-kicker">Build</p>
+        <h3>App version</h3>
+      </div>
+      <p class="ep-stat__value">{{ app_version }}</p>
+      <ion-button expand="block" (click)="navigate('/dashboard')">Home</ion-button>
+    </section>
 
+    <section class="ep-section">
+      <div class="ep-section__head">
+        <p class="ep-kicker">Location</p>
+        <h3>Site and zone</h3>
+      </div>
 
- 
+      <ion-select interface="action-sheet" label="Site" label-placement="stacked" fill="outline" multiple="false" [(ngModel)]="site_id" [disabled]="true" (ionChange)="storeAppLog()">
+        <ion-select-option *ngFor="let site of sites" [value]="site.id">
+          {{ site.name }}
+        </ion-select-option>
+      </ion-select>
 
-  <ion-item lines="none">
-      <ion-grid>
-        <ion-row>
-          <ion-col class="ion-text-center">
-            <ion-label color="medium">App Version</ion-label>
-          </ion-col>
-        </ion-row>
-        <ion-row>
-          <ion-col class="ion-text-center">
-            <ion-text color="primary">{{ app_version }}</ion-text>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
-    </ion-item>
-  
+      <ion-select interface="action-sheet" label="Zone" label-placement="stacked" fill="outline" multiple="false" [(ngModel)]="selected_zone" (ionChange)="storeAppLog()">
+        <ion-select-option *ngFor="let zone of zones" [value]="zone">
+          {{ zone.name }}
+        </ion-select-option>
+      </ion-select>
 
-    <!-- Site Select -->
-    <ion-item>
-        <ion-label>Site</ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" multiple="false" [(ngModel)]="site_id" [disabled]="true" (ionChange)="storeAppLog()">
-            <ion-select-option *ngFor="let site of sites" [value]="site.id"> 
-                {{ site.name }}     
-            </ion-select-option>
-        </ion-select>
-    </ion-item>
+      <div class="ep-field-row">
+        <ion-input label="Longitude" label-placement="stacked" fill="outline" [disabled]="true" type="text" maxlength="250" [(ngModel)]="position_lng" (ionChange)="storeAppLog()"></ion-input>
+        <ion-input label="Latitude" label-placement="stacked" fill="outline" [disabled]="true" type="text" maxlength="250" [(ngModel)]="position_lat" (ionChange)="storeAppLog()"></ion-input>
+      </div>
 
-    <!-- Zone Select -->
-    <ion-item>
-        <ion-label>Zones</ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-select  interface="action-sheet" multiple="false" [(ngModel)]="selected_zone" (ionChange)="storeAppLog()">
-            <ion-select-option *ngFor="let zone of zones" [value]="zone"> 
-                {{ zone.name }}     
-            </ion-select-option>
-        </ion-select>
-    </ion-item>
-    <ion-item>
-        <ion-label>
-            Longitude
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input [disabled]="true" type="text" maxlength="250" [(ngModel)]="position_lng" (ionChange)="storeAppLog()"></ion-input>
-    </ion-item>
+      <p class="ep-ticket__meta">FPN size: {{ getEnviroSizeInBytes() }} bytes</p>
+    </section>
 
-    <ion-item>
-        <ion-label>
-            Latitude
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        <ion-input [disabled]="true" type="text" maxlength="250" [(ngModel)]="position_lat" (ionChange)="storeAppLog()"></ion-input>
-    </ion-item>
-
-
-    <ion-item>
-        <ion-label>
-            FPN Size
-        </ion-label>
-    </ion-item>
-    <ion-item>
-        {{ getEnviroSizeInBytes() }} Bytes
-    </ion-item>
-    <!-- <ion-item>
-        <ion-label>
-            We advice keeping Enviro Size below 10 MB. Best way to do so is to ensure to capture 
-        </ion-label>
-    </ion-item> -->
-
-    <ion-item>
-        <ion-label>
-            <ion-button color="light" expand="block" shape="full" (click)="autoLogin()">
-                <ion-icon name="key-outline"></ion-icon>
-                Auto Login
-            </ion-button>
-        </ion-label>
-    </ion-item>
-
-    <ion-item>
-        <ion-label>
-            <ion-button expand="block" shape="full" (click)="ping()">Ping</ion-button>
-        </ion-label>
-    </ion-item>
-
-    <ion-item>
-        <ion-label>
-            <ion-button color="danger" expand="block" shape="full" (click)="cancelEnvio()">Cancel FPN</ion-button>
-        </ion-label>
-    </ion-item>
-
- 
-
-
-
-
-    <ion-item>
-        <ion-label>
-            <ion-button color="danger" expand="block" shape="full" (click)="forceCloseApp()">Force Close</ion-button>
-        </ion-label>
-    </ion-item>
-
-   
+    <section class="ep-section">
+      <div class="ep-section__head">
+        <p class="ep-kicker">Session</p>
+        <h3>Actions</h3>
+      </div>
+      <div class="ep-actions">
+        <ion-button expand="block" color="light" (click)="autoLogin()">
+          <ion-icon slot="start" name="key-outline"></ion-icon>
+          Auto login
+        </ion-button>
+        <ion-button expand="block" (click)="ping()">Ping</ion-button>
+        <ion-button expand="block" color="danger" (click)="cancelEnvio()">Cancel FPN</ion-button>
+        <ion-button expand="block" color="danger" (click)="forceCloseApp()">Force close</ion-button>
+      </div>
+    </section>
+  </div>
 </ion-content>

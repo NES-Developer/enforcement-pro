@@ -54,6 +54,7 @@ export class PatrolService {
         session.is_on_patrol = true;
 
         this.data.setPatrolSession(session);
+        this.data.resetPostedFpnCount();
         return session;
     }
 

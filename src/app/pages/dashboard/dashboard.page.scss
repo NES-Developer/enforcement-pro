@@ -1,80 +1,25 @@
-
-
-.center-wrapper {
-    // height: 100%;
-    // display: flex;
-    // flex-direction: column;
-    justify-content: center;   // vertical center
-    align-items: center;       // horizontal center
-    text-align: center;
-    // gap: 120px;
-    gap: 240px; // 👈 THIS controls spacing between ALL items
-
-  }
-  
-.logo {
-  height: 100px;
+.ep-hero__site {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.analytics-card {
-  margin: 12px 12px 18px;
-  border-radius: 14px;
-}
-
-.patrol-card {
-  margin: 12px;
+.ep-hero__site img {
+  height: 40px;
+  background: #fff;
   border-radius: 10px;
-  border-left: 5px solid var(--ion-color-danger);
+  padding: 4px;
 }
 
-.patrol-card.patrol-active {
-  border-left-color: var(--ion-color-success);
+.ep-hero__site ion-button {
+  --color: #fff8e8;
+  margin: 0;
+  min-height: 36px;
 }
 
-.patrol-hours {
-  color: #0f172a;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 10px;
+.ep-logout {
+  margin-top: 8px;
+  --color: var(--ep-crimson);
 }
-
-.logout-row {
-  justify-content: center;
-}
-
-.logout-row ion-item {
-  width: auto;
-}
-
-.stat-tile {
-  background: #f6f7f9;
-  border-radius: 12px;
-  padding: 12px;
-  min-height: 88px;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #5b6670;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-top: 6px;
-}
-
-.stat-value.stat-small {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.stat-sub {
-  font-size: 11px;
-  color: #7a8794;
-  margin-top: 4px;
-}
-  

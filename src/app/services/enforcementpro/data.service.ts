@@ -73,6 +73,7 @@ export class DataService {
     private selected_site: any;
     private selected_zone: any;
     private zone_detection_status: ZoneDetectionStatus = this.emptyZoneDetectionStatus();
+    private posted_fpn_count = 0;
 
     private enviro_que: EnviroPost[] = [];
     private site_offences: SiteOffence[] = [];
@@ -176,6 +177,7 @@ export class DataService {
 
         this.user = await this.loadObjectFromLocalStorage('user');
         this.token = await this.loadStringFromLocalStorage('token');
+        this.posted_fpn_count = Number(await this.loadStringFromLocalStorage('posted_fpn_count')) || 0;
 
         this.api_app_version = await this.loadStringFromLocalStorage('api_app_version');
         this.api_app_url = await this.loadStringFromLocalStorage('api_app_url');
@@ -607,7 +609,13 @@ export class DataService {
     }
 
     spliceEnviroQue(enviro_post: EnviroPost): void {
-        const index = this.enviro_que.indexOf(enviro_post);
+        let index = this.enviro_que.indexOf(enviro_post);
+        if (index < 0 && enviro_post?.local_id) {
+            index = this.enviro_que.findIndex(item => item.local_id === enviro_post.local_id);
+        }
+        if (index < 0 && enviro_post?.enviro_id) {
+            index = this.enviro_que.findIndex(item => item.enviro_id === enviro_post.enviro_id);
+        }
         if (index > -1) {
           this.enviro_que.splice(index, 1);
         }
@@ -737,6 +745,21 @@ export class DataService {
 
     getEnviroPost(): EnviroPost {
         return this.enviro_post;
+    }
+
+    getPostedFpnCount(): number {
+        return this.posted_fpn_count;
+    }
+
+    incrementPostedFpnCount(): number {
+        this.posted_fpn_count += 1;
+        this.saveStringToLocalStorage('posted_fpn_count', String(this.posted_fpn_count));
+        return this.posted_fpn_count;
+    }
+
+    resetPostedFpnCount(): void {
+        this.posted_fpn_count = 0;
+        this.saveStringToLocalStorage('posted_fpn_count', '0');
     }
 
     getAppLog(): AppLog {
@@ -890,10 +913,20 @@ export class DataService {
 
     updateEnviroInQue(old_enviro: EnviroPost, new_enviro: EnviroPost)
     {
-        const index = this.enviro_que.indexOf(old_enviro);
+        let index = this.enviro_que.indexOf(old_enviro);
+        if (index < 0 && old_enviro?.local_id) {
+            index = this.enviro_que.findIndex(item => item.local_id === old_enviro.local_id);
+        }
+        if (index < 0 && old_enviro?.enviro_id) {
+            index = this.enviro_que.findIndex(item => item.enviro_id === old_enviro.enviro_id);
+        }
         if (index > -1) {
             this.enviro_que[index] = new_enviro
         }
+        this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
+    }
+
+    persistEnviroQue(): void {
         this.saveArrayToLocalStorage('enviro_que', this.enviro_que);
     }
 

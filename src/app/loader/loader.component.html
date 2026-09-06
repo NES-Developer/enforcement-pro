@@ -1,4 +1,7 @@
 <div class="cover" *ngIf="loading$ | async">
-  <img src="../../assets/loader.gif">
-  <img src="../../assets/ic_app_logo.png">
+  <div class="ep-loader">
+    <img class="ep-loader__logo" src="../../assets/ic_app_logo.png" alt="Enforcement Pro">
+    <img class="ep-loader__spin" src="../../assets/loader.gif" alt="">
+    <p>Working…</p>
+  </div>
 </div>

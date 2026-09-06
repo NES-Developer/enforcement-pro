@@ -1,47 +1,26 @@
 <ion-content [fullscreen]="true">
+  <div class="ep-login">
+    <div class="ep-login__mark">
+      <img src="assets/ic_app_logo.png" alt="Enforcement Pro" />
+    </div>
+    <p class="ep-kicker">Officer access</p>
+    <h1 class="ep-login__title">Enforcement Pro</h1>
+    <p class="ep-login__sub">Sign in to start your duty.</p>
 
-    <ion-header collapse="condense">
-        <ion-toolbar>
-            <ion-title size="large">Welcome</ion-title>
-        </ion-toolbar>
-    </ion-header>
- 
-	<body class="img js-fullheight bg-dark" style="">
-	<section class="ftco-section">
-		<div class="container">
-			<div class="row justify-content-center">
-				<div class="col-md-6 text-center mb-5">
-                    <div class="">
-                        <img src="assets/ic_app_logo.png" class="bg-white rounded" style="height:100px;" />
-                    </div>
-				</div>
-			</div>
-			<div class="row justify-content-center">
-				<div class="col-md-6">
-					<div class="login-wrap p-0">
-                    <!-- src/app/pages/login/login.page.html -->
+    <div class="ep-login__card">
+      <form (submit)="onSubmit($event)" class="signin-form">
+        <div class="form-group">
+          <input #idInput type="number" name="id" class="form-control" placeholder="Officer ID" required>
+        </div>
+        <div class="form-group">
+          <input #pinInput name="pin" id="pin-field" type="number" class="form-control" placeholder="PIN" required>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </div>
+      </form>
+    </div>
 
-                        <form (submit)="onSubmit($event)" class="signin-form">
-                            <div class="form-group">
-                            <input #idInput type="number" name="id" class="form-control text-center" placeholder="ID" required>
-                            </div>
-                            <div class="form-group">
-                            <input #pinInput name="pin" id="pin-field" type="number" class="form-control text-center" placeholder="Pin" required>
-                            <span toggle="#pin-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
-                            </div>
-                            <div class="form-group">
-                            <button type="submit" class="form-control btn btn-primary submit px-3">Login</button>
-                            </div>
-                        </form>
-  
-
-		            </div>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	</body>
-
-
+    <p class="ep-login__foot">National Enforcement Solutions</p>
+  </div>
 </ion-content>
