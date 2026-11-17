@@ -2,9 +2,99 @@
   display: block;
 }
 
-ion-content.showLeaf,
-ion-content.hiddenLeaf {
-  --background: transparent;
+.ep-page--place {
+  max-width: none;
+  width: 100%;
+  padding: 8px 0 48px;
+}
+
+.ep-page--place .ep-section {
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+  padding: 16px 12px 20px;
+}
+
+.place-intro {
+  margin: 8px 0 0;
+  color: var(--ep-slate, #5a6a72);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.place-note {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff4d6;
+  color: #6b4e00;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.place-note--poor {
+  background: #fde8e4;
+  color: #8a2b22;
+}
+
+.place-status {
+  margin: 6px 2px 8px;
+  color: var(--ep-brass-deep, #8a6a12);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.place-actions {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+
+.place-actions ion-button,
+.place-confirm {
+  margin: 0;
+}
+
+.place-confirm {
+  margin-top: 4px;
+}
+
+.place-map {
+  position: relative;
+  width: calc(100% + 24px);
+  height: 440px;
+  margin: 0 -12px 12px;
+}
+
+.place-map #map {
+  height: 100%;
+  min-height: 440px;
+  width: 100%;
+  border-radius: 0;
+}
+
+.place-map--locked {
+  opacity: 0.78;
+}
+
+.place-map--locked #map {
+  pointer-events: none;
+}
+
+.place-map__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  border-radius: 0;
+  background: #efe8d8;
+  color: #3d4a50;
+  font-weight: 700;
 }
 
 .place-suggestions {
@@ -24,8 +114,11 @@ ion-content.hiddenLeaf {
   color: inherit;
 }
 
-.location-search {
-  margin: 8px 0 20px;
+.place-hint {
+  margin: 6px 2px 14px;
+  color: var(--ep-slate, #5a6a72);
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 ion-datetime-button {

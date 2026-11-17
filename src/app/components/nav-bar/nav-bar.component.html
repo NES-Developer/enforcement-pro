@@ -13,12 +13,6 @@
       </ion-tab-button>
     </ion-col>
     <ion-col class="ep-nav__col">
-      <ion-tab-button class="ep-nav__btn" [class.is-active]="isActive('/lemo')" (click)="navigate('/lemo')">
-        <ion-icon [name]="isActive('/lemo') ? 'sparkles' : 'sparkles-outline'"></ion-icon>
-        <span class="ep-nav__label">Lemo</span>
-      </ion-tab-button>
-    </ion-col>
-    <ion-col class="ep-nav__col">
       <ion-tab-button class="ep-nav__btn" [class.is-active]="isActive('/photo')" (click)="navigate('/photo')">
         <ion-icon [name]="isActive('/photo') ? 'camera' : 'camera-outline'"></ion-icon>
         <span class="ep-nav__label">Camera</span>

@@ -67,28 +67,6 @@ export class ApiService {
         );
     }
 
-    postLemoChat(body: {
-        message: string;
-        chat_id?: number | null;
-        site_id?: number | null;
-        zone_id?: number | null;
-        images?: string[];
-    }): Observable<any> {
-        const payload: Record<string, unknown> = {
-            message: body.message,
-            chat_id: body.chat_id,
-            site_id: body.site_id,
-            zone_id: body.zone_id,
-        };
-        if (body.images?.length) {
-            payload['images'] = body.images;
-        }
-
-        return this.appHttp.post(`${this.baseUrl}/lemo/chat`, payload, {
-            timeoutMs: body.images?.length ? 90000 : 45000
-        });
-    }
-
     getSites(): Observable<any> {
         return this.appHttp.get(`${this.baseUrl}/sites`);
     }

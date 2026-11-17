@@ -25,7 +25,6 @@ import { FpnSubmissionService } from '../../services/fpn-submission.service';
 import { PatrolService } from '../../services/patrol.service';
 import { TrackingService } from '../../services/tracking.service';
 import { ThermalPrinterService } from '../../services/thermal-printer.service';
-import { LemoEncourageService } from '../../services/lemo-encourage.service';
 import { OfflineTicketService } from '../../services/offline-ticket.service';
 import { QueueSyncService } from '../../services/queue-sync.service';
 import { enviroStepperStep, findFirstMissingFpnField } from '../../helpers/fpn-core-validation';
@@ -79,7 +78,6 @@ import { enviroStepperStep, findFirstMissingFpnField } from '../../helpers/fpn-c
         private patrol: PatrolService,
         private tracking: TrackingService,
         private printer: ThermalPrinterService,
-        private encourage: LemoEncourageService,
         private offlineTicket: OfflineTicketService,
         private queueSync: QueueSyncService
 
@@ -275,12 +273,24 @@ import { enviroStepperStep, findFirstMissingFpnField } from '../../helpers/fpn-c
         }
     }
 
+    private placeGate: { continueBlocker(): string } | null = null;
+
+    registerPlaceGate(gate: { continueBlocker(): string } | null): void {
+        this.placeGate = gate;
+    }
+
     nextStep() {
-        let checker = this.validator();
-        if (checker) {
-            if (this.currentStep < 8) {
-                this.currentStep++;
+        if (this.currentStep === 5 && this.placeGate) {
+            const message = this.placeGate.continueBlocker();
+            if (message) {
+                this.presentAlert('Wait!', message);
+                return;
             }
+        }
+
+        const checker = this.validator();
+        if (checker && this.currentStep < 8) {
+            this.currentStep++;
         }
     } 
 
@@ -335,8 +345,7 @@ import { enviroStepperStep, findFirstMissingFpnField } from '../../helpers/fpn-c
 
                         await this.printPostedTicket(this.fpn || result.response);
 
-                        const pepTalk = this.encourage.line(this.encourage.recordPosted());
-                        this.presentAlert('Success', `${result.message}\n\n${pepTalk}`);
+                        this.presentAlert('Success', result.message);
                         this.cancel();
                         return;
                     }

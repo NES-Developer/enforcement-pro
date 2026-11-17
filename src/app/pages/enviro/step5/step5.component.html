@@ -1,20 +1,15 @@
-<div class="ep-page">
+<div class="ep-page ep-page--place">
   <section class="ep-section">
     <div class="ep-section__head">
       <p class="ep-kicker">Where</p>
-      <h2>Enviro detail</h2>
+      <h2>Offence location</h2>
+      <p class="place-intro">Confirm where the offence happened. The map opens on your current location.</p>
     </div>
 
-    <ion-select interface="action-sheet" label="Send FPN by postal *" label-placement="stacked" fill="outline" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.fpn_issued">
-      <ion-select-option [value]="0">Yes</ion-select-option>
-      <ion-select-option [value]="1">No</ion-select-option>
-    </ion-select>
-
-    <ion-content [ngClass]="{ 'showLeaf': showLeaf, 'hiddenLeaf': !showLeaf }">
-      <div id="map-container">
-        <div id="map"></div>
-      </div>
-    </ion-content>
+    <p class="place-note place-note--poor" *ngIf="poorNetwork">
+      Network is poor, so the address search may not run. Enter the offence location, town / ward, and point of interest yourself. They still need to be real details.
+    </p>
+    <p class="place-note" *ngIf="locationHint && !poorNetwork">{{ locationHint }}</p>
 
     <ion-input
       #locationInput
@@ -23,72 +18,123 @@
       fill="outline"
       type="text"
       maxlength="250"
+      [clearInput]="!locationLocked"
+      [disabled]="locationLocked"
+      [placeholder]="resolvingLocation ? 'Getting your location…' : 'Street, town, or postcode'"
       (ionInput)="onLocationInput($event)"
-      (ionChange)="saveEnviroData()"
       [(ngModel)]="enviro_post.offence_location">
+      <ion-spinner *ngIf="resolvingLocation" slot="end" name="crescent" aria-hidden="true"></ion-spinner>
     </ion-input>
-    <div class="place-suggestions" *ngIf="suggestions.length">
+    <p class="place-status" *ngIf="statusMessage" aria-live="polite">{{ statusMessage }}</p>
+
+    <div class="place-suggestions" *ngIf="suggestions.length && !locationLocked">
       <button type="button" class="place-suggestions__item" *ngFor="let suggestion of suggestions" (click)="selectSuggestion(suggestion)">
         {{ suggestion.description }}
       </button>
     </div>
-    <ion-button expand="block" class="location-search" [disabled]="searching" (click)="toggleMap()">
-      {{ searching ? 'Searching…' : 'Search location' }}
+
+    <div class="place-actions" *ngIf="!locationLocked">
+      <ion-button expand="block" [disabled]="resolvingLocation" (click)="setCurrentLocation()">
+        Set to current location
+      </ion-button>
+      <ion-button expand="block" color="medium" [disabled]="searching || resolvingLocation" (click)="searchLocation()">
+        {{ searching ? 'Searching…' : 'Search location' }}
+      </ion-button>
+      <ion-button expand="block" fill="outline" color="medium" [disabled]="resolvingLocation" (click)="clearLocation()">
+        Clear
+      </ion-button>
+    </div>
+
+    <div class="place-map" [class.place-map--locked]="locationLocked">
+      <div id="map"></div>
+      <p class="place-map__fallback" *ngIf="mapUnavailable">The map could not be loaded. You can still type the offence location.</p>
+    </div>
+    <p class="place-hint" *ngIf="locationLocked">Location confirmed. The address and map are locked.</p>
+
+    <ion-button *ngIf="!locationLocked" expand="block" class="place-confirm" [disabled]="resolvingLocation" (click)="confirmLocation()">
+      Confirm location
+    </ion-button>
+    <ion-button *ngIf="locationLocked" expand="block" fill="outline" color="medium" (click)="changeLocation()">
+      Change location
     </ion-button>
 
-    <ion-select interface="action-sheet" label="Type of land *" label-placement="stacked" fill="outline" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.land_type_id">
-      <ion-select-option [value]="1">Public</ion-select-option>
-      <ion-select-option [value]="2">Private</ion-select-option>
-    </ion-select>
+    <div class="place-details" *ngIf="showDetails">
+      <ng-container *ngIf="zones.length; else townText">
+        <ion-searchbar
+          [(ngModel)]="townSearch"
+          (ionInput)="filterZones()"
+          placeholder="Search towns / wards">
+        </ion-searchbar>
+        <ion-select interface="action-sheet" label="Town / ward *" label-placement="stacked" fill="outline" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town_area">
+          <ion-select-option *ngFor="let zone of filteredZones" [value]="zone.name">
+            {{ zone.name }}
+          </ion-select-option>
+        </ion-select>
+      </ng-container>
+      <ng-template #townText>
+        <ion-input label="Town / ward *" label-placement="stacked" fill="outline" type="text" maxlength="100" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town_area"></ion-input>
+      </ng-template>
+      <p class="place-hint">Town / ward uses the same zones as step 1. It is set from the pin, or the closest zone.</p>
 
-    <ion-input label="Town / ward" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.town_area"></ion-input>
-    <ion-input label="POI *" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi"></ion-input>
+      <ion-input label="POI *" label-placement="stacked" fill="outline" type="text" maxlength="250" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi"></ion-input>
+      <p class="place-hint">Point of interest is the nearest landmark, such as a shop, library, or business.</p>
 
-    <ion-select interface="action-sheet" label="POI prefix" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi_prefix_id">
-      <ion-select-option *ngFor="let group of poi_prefix" [value]="group.id">
-        {{ group.textOnMachine }}
-      </ion-select-option>
-    </ion-select>
+      <ion-select interface="action-sheet" label="Type of land *" label-placement="stacked" fill="outline" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.land_type_id">
+        <ion-select-option [value]="1">Public</ion-select-option>
+        <ion-select-option [value]="2">Private</ion-select-option>
+      </ion-select>
 
-    <ion-select interface="action-sheet" label="Manually override issue and offence timestamp?" label-placement="stacked" fill="outline" [(ngModel)]="enviro_post.manual_time" (ionChange)="saveEnviroData()">
-      <ion-select-option [value]="true">Yes</ion-select-option>
-      <ion-select-option [value]="false">No</ion-select-option>
-    </ion-select>
+      <ion-select interface="action-sheet" label="POI prefix" label-placement="stacked" fill="outline" multiple="false" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.poi_prefix_id">
+        <ion-select-option *ngFor="let group of poi_prefix" [value]="group.id">
+          {{ group.textOnMachine }}
+        </ion-select-option>
+      </ion-select>
 
-    <ng-container *ngIf="enviro_post.manual_time">
-      <p class="ep-kicker">Offence datetime</p>
-      <ion-datetime-button datetime="offenceDatetime"></ion-datetime-button>
-      <ion-modal [keepContentsMounted]="true">
-        <ng-template>
-          <ion-datetime
-            id="offenceDatetime"
-            presentation="date-time"
-            [(ngModel)]="enviro_post.offence_datetime"
-            (ionChange)="saveEnviroData()"
-            [formatOptions]="{
-              date: { weekday: 'short', month: 'long', day: '2-digit' },
-              time: { hour: '2-digit', minute: '2-digit' }
-            }"
-          ></ion-datetime>
-        </ng-template>
-      </ion-modal>
+      <ion-select interface="action-sheet" label="Send FPN by postal *" label-placement="stacked" fill="outline" (ionChange)="saveEnviroData()" [(ngModel)]="enviro_post.fpn_issued">
+        <ion-select-option [value]="0">Yes</ion-select-option>
+        <ion-select-option [value]="1">No</ion-select-option>
+      </ion-select>
 
-      <p class="ep-kicker" style="margin-top: 14px;">Issue datetime</p>
-      <ion-datetime-button datetime="issueDatetime"></ion-datetime-button>
-      <ion-modal [keepContentsMounted]="true">
-        <ng-template>
-          <ion-datetime
-            id="issueDatetime"
-            presentation="date-time"
-            [(ngModel)]="enviro_post.issue_datetime"
-            (ionChange)="saveEnviroData()"
-            [formatOptions]="{
-              date: { weekday: 'short', month: 'long', day: '2-digit' },
-              time: { hour: '2-digit', minute: '2-digit' }
-            }"
-          ></ion-datetime>
-        </ng-template>
-      </ion-modal>
-    </ng-container>
+      <ion-select interface="action-sheet" label="Manually override issue and offence timestamp?" label-placement="stacked" fill="outline" [(ngModel)]="enviro_post.manual_time" (ionChange)="saveEnviroData()">
+        <ion-select-option [value]="true">Yes</ion-select-option>
+        <ion-select-option [value]="false">No</ion-select-option>
+      </ion-select>
+
+      <ng-container *ngIf="enviro_post.manual_time">
+        <p class="ep-kicker">Offence datetime</p>
+        <ion-datetime-button datetime="offenceDatetime"></ion-datetime-button>
+        <ion-modal [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime
+              id="offenceDatetime"
+              presentation="date-time"
+              [(ngModel)]="enviro_post.offence_datetime"
+              (ionChange)="saveEnviroData()"
+              [formatOptions]="{
+                date: { weekday: 'short', month: 'long', day: '2-digit' },
+                time: { hour: '2-digit', minute: '2-digit' }
+              }"
+            ></ion-datetime>
+          </ng-template>
+        </ion-modal>
+
+        <p class="ep-kicker" style="margin-top: 14px;">Issue datetime</p>
+        <ion-datetime-button datetime="issueDatetime"></ion-datetime-button>
+        <ion-modal [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime
+              id="issueDatetime"
+              presentation="date-time"
+              [(ngModel)]="enviro_post.issue_datetime"
+              (ionChange)="saveEnviroData()"
+              [formatOptions]="{
+                date: { weekday: 'short', month: 'long', day: '2-digit' },
+                time: { hour: '2-digit', minute: '2-digit' }
+              }"
+            ></ion-datetime>
+          </ng-template>
+        </ion-modal>
+      </ng-container>
+    </div>
   </section>
 </div>

@@ -15,12 +15,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 // import { FPNPage } from '../../fpn.page';
 import { NavBarModule } from '../../components/nav-bar/nav-bar.module';
-
-// import { SignaturePadModule } from '@lemonadejs/signature';
-// import SignaturePadModule from '@lemonadejs/signature';
-
-
-
+import { EvidenceCaptureModule } from '../../components/evidence-capture/evidence-capture.module';
 import { Step1Component } from '../enviro/step1/step1.component';
 import { Step2Component } from '../enviro/step2/step2.component';
 import { Step3Component } from '../enviro/step3/step3.component';
@@ -29,7 +24,6 @@ import { Step5Component } from '../enviro/step5/step5.component';
 import { Step6Component } from '../enviro/step6/step6.component';
 import { Step7Component } from '../enviro/step7/step7.component';
 import { StepEvidenceComponent } from '../enviro/step-evidence/step-evidence.component';
-import { EvidenceCaptureModule } from '../../components/evidence-capture/evidence-capture.module';
 
 
 @NgModule({

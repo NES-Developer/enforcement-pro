@@ -1,3 +1,4 @@
+import { isGenericPlaceText } from './place-text';
 import { EnviroPost } from '../models/enviro';
 import { NotebookEntry } from '../models/notebook-entry';
 
@@ -23,32 +24,6 @@ export interface FpnFieldGap {
 export interface FpnValidationOptions {
   requireZone?: boolean;
 }
-
-export const LEMO_WIZARD_STEPS: readonly FpnWizardStep[] = [
-  'zone',
-  'offence_group',
-  'offence',
-  'offender',
-  'proofs',
-  'incident',
-  'place',
-  'images',
-  'signature',
-  'confirm',
-];
-
-const WIZARD_LABELS: Record<FpnWizardStep, string> = {
-  zone: 'Zone',
-  offence_group: 'Offence group',
-  offence: 'Offence',
-  offender: 'Offender',
-  proofs: 'Validation',
-  incident: 'Offence details',
-  place: 'Location',
-  images: 'Evidence',
-  signature: 'Signature',
-  confirm: 'Confirm',
-};
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE = /^(\+44|0)[\d\s-]{9,14}$/;
@@ -123,11 +98,14 @@ export function findFirstMissingFpnField(
   if (isBlank(draft.language)) {
     return gap('language', 'Please provide Language.', 4, 'incident');
   }
-  if (isBlank(draft.offence_location)) {
-    return gap('offence_location', 'Please provide Offence Location.', 5, 'place');
+  if (isBlank(draft.offence_location) || isGenericPlaceText(draft.offence_location)) {
+    return gap('offence_location', 'Enter a real offence address. Placeholder text such as "test" is not accepted.', 5, 'place');
   }
-  if (isBlank(draft.poi)) {
-    return gap('poi', 'Please provide POI.', 5, 'place');
+  if (isBlank(draft.town_area) || isGenericPlaceText(draft.town_area)) {
+    return gap('town_area', 'Select the town / ward. It is required.', 5, 'place');
+  }
+  if (isBlank(draft.poi) || isGenericPlaceText(draft.poi)) {
+    return gap('poi', 'Enter a real point of interest, such as the nearest shop, library, or business.', 5, 'place');
   }
   if (isMissingId(draft.land_type_id)) {
     return gap('land_type_id', 'Please provide Land Type.', 5, 'place');
@@ -183,32 +161,6 @@ export function enviroStepperStep(
   options: FpnValidationOptions = {}
 ): number {
   return findFirstMissingFpnField(enviro, options)?.stepperStep ?? 8;
-}
-
-export function lemoWizardProgress(step: FpnWizardStep | null | undefined): {
-  current: number;
-  total: number;
-  label: string;
-} {
-  const total = LEMO_WIZARD_STEPS.length;
-  if (!step) {
-    return { current: 0, total, label: '' };
-  }
-
-  const index = LEMO_WIZARD_STEPS.indexOf(step);
-  return {
-    current: index >= 0 ? index + 1 : 0,
-    total,
-    label: WIZARD_LABELS[step] || '',
-  };
-}
-
-export function previousLemoWizardStep(step: FpnWizardStep | null | undefined): FpnWizardStep | null {
-  const index = LEMO_WIZARD_STEPS.indexOf(step as FpnWizardStep);
-  if (index <= 0) {
-    return null;
-  }
-  return LEMO_WIZARD_STEPS[index - 1];
 }
 
 export function ensureNotebookEntries(enviro: EnviroPost): NotebookEntry {

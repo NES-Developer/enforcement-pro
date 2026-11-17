@@ -7,8 +7,6 @@ import {
   formatDateOfBirth,
   hasInProgressFpnDraft,
   isValidDateOfBirth,
-  lemoWizardProgress,
-  previousLemoWizardStep,
 } from './fpn-core-validation';
 
 function completeDraft(): EnviroPost {
@@ -32,6 +30,7 @@ function completeDraft(): EnviroPost {
   enviro.action_id = 5;
   enviro.language = 'English';
   enviro.offence_location = 'High Street';
+  enviro.town_area = 'Central';
   enviro.poi = 'Tesco';
   enviro.land_type_id = 1;
   enviro.offence_images = ['data:image/png;base64,abc'];
@@ -69,6 +68,21 @@ describe('fpn-core-validation', () => {
 
     expect(findFirstMissingFpnField(enviro)).toBeNull();
     expect(enviroStepperStep(enviro)).toBe(8);
+  });
+
+  it('rejects placeholder location, town, and point of interest', () => {
+    const enviro = completeDraft();
+    enviro.offence_location = 'test';
+
+    expect(findFirstMissingFpnField(enviro)?.field).toBe('offence_location');
+
+    enviro.offence_location = 'High Street';
+    enviro.town_area = 'n/a';
+    expect(findFirstMissingFpnField(enviro)?.field).toBe('town_area');
+
+    enviro.town_area = 'Central';
+    enviro.poi = '';
+    expect(findFirstMissingFpnField(enviro)?.field).toBe('poi');
   });
 
   it('sends missing timestamps back to the location step', () => {
@@ -115,23 +129,8 @@ describe('fpn-core-validation', () => {
     expect(findFirstMissingNotebookField(enviro)?.field).toBe('is_fpn_advised');
   });
 
-  it('detects an in-progress draft and previous wizard step', () => {
+  it('detects an in-progress draft', () => {
     expect(hasInProgressFpnDraft(completeDraft())).toBeTrue();
     expect(hasInProgressFpnDraft(new EnviroPost())).toBeFalse();
-    expect(previousLemoWizardStep('offender')).toBe('offence');
-    expect(previousLemoWizardStep('zone')).toBeNull();
-  });
-
-  it('reports wizard progress for advance and confirm', () => {
-    expect(lemoWizardProgress('offender')).toEqual({
-      current: 4,
-      total: 10,
-      label: 'Offender',
-    });
-    expect(lemoWizardProgress('confirm')).toEqual({
-      current: 10,
-      total: 10,
-      label: 'Confirm',
-    });
   });
 });
